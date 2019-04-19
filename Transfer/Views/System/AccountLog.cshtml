@@ -1,0 +1,367 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "SystemMain";
+    ViewBag.SubMenu = "SystemAccountLogSub";
+    ViewBag.Title = "帳號使用紀錄";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td width="450px">
+                        <label>帳號查詢 : </label>
+                        @*<input type="text" id="account" name="account" style="width:300px">*@
+                        @Html.DropDownList("setUser",
+                             (SelectList)ViewBag.users,
+                              new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                    <td>
+                        <table>
+                            <tr>
+                                @{
+                                    foreach (RadioButton item in ViewBag.radio)
+                                    {
+                                        <td>
+                                            <div class="radio radio-info">
+                                                @Html.RadioButton(item.Name, item.Value, item.Checked, new { @class = "", @id = item.Id })
+                                                <label>@item.Value</label>
+                                            </div>
+                                        </td>
+                                    }
+                                }
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <table>
+                            <tr>
+                                @{
+                                    foreach (RadioButton item in ViewBag.radio2)
+                                    {
+                                        <td>
+                                            <div class="radio radio-info">
+                                                @Html.RadioButton(item.Name, item.Value, item.Checked, new { @class = "", @id = item.Id })
+                                                <label>@item.Value</label>
+                                            </div>
+                                        </td>
+                                    }
+                                }
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            @*<i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+沒有輸入查詢條件時為全部查詢"></i>*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <table style="width:100%">
+                    <tr>
+                        <td style="width:60%">
+                            <div id="jqgridDiv" class="jqd">
+                            </div>
+                        </td>
+                        <td style="width:40%">
+                            <div id="jqgridDiv2" class="jqd">
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="AccountDialog">
+        <div id="jqgridDiv3" class="jqd">
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.searchAccountLog = '@Url.Action("SearchAccountLog", "System")';
+        url.getAccountLog = '@Url.Action("GetCacheDataInUserLog", "System")';
+        url.changeSearch = '@Url.Action("changeEffective", "System")';
+        //#endregion 註冊URL
+
+        var dialogId = 'AccountDialog';
+        var selectOptionId = 'setUser';
+
+        $("#" + dialogId).dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            position: { my: "top center", at: "top center", of: window },
+            closeText: "取消",
+            resizable: true,
+            title: "檢視",
+            modal: true
+        });
+
+        $('#' + selectOptionId + ',' + 'input[name=Range]').on('change', function (date) {
+            var selectValue = $('#' + selectOptionId).val().trim();
+            if (selectValue.length > 0) {
+                AccountSearch("User")
+            }
+            else {
+                clearJqgrid('jqgridDiv');
+                clearJqgrid('jqgridDiv2');
+            }
+        })
+
+        $('input[name=Effective]').on('change', function () {
+            clearJqgrid('jqgridDiv');
+            clearJqgrid('jqgridDiv2');
+            var searchAll = $('input[name=Effective]:checked').attr('id').indexOf('All') > -1;
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    searchAll: searchAll,
+                }),
+                dataType: "json",
+                url: url.changeSearch,
+                contentType: 'application/json',
+            })
+            .done(function (result) {                            
+                $("#" + selectOptionId + " option").remove();
+                var optionObj = [];
+                $.each(result, function (i, v) {
+                    optionObj.push({ value: v.Item1, text: v.Item2 })
+                })
+                customerUtility.addoption(selectOptionId, optionObj);
+            });
+        })
+
+        //#region 註冊click事件
+        //$('input:button').each(function () {
+        //    var id = $(this).attr('id');
+        //    switch (id) {
+        //        case 'btnSearch':
+        //            $("#" + id).on('click', function () { AccountSearch("User") });
+        //            break;
+        //    }
+        //})
+        //#endregion 註冊click事件
+
+        //#region Search Account
+        function AccountSearch(type)
+        {
+            clearJqgrid('jqgridDiv');
+            clearJqgrid('jqgridDiv2');
+            var searchAll = $('input[name=Effective]:checked').attr('id').indexOf('All') > -1
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    //model: AccountLogViewModel($('#account').val()),
+                    model: AccountLogViewModel($('#' + selectOptionId).val()),
+                    type: type,
+                    range: $('input[name=Range]:checked').attr('id')
+                }),
+                dataType: "json",
+                url: url.searchAccountLog,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("jqgridDiv", "list1", "pager1", type);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion Search Account
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(divId) {
+            $('#'+divId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(jqgridDivId, listId, pagerId ,type) {
+            var colNames = [];
+            var colModel = [];
+            var title = '';
+            if (type == "User")
+            {
+                title  = '使用者登入紀錄';
+                colNames = ["使用者帳號", "使用者名稱","IP位置", "登入時間", "登出時間"];
+                colModel = [
+                        { name: "User_Account", index: "User_Account", align: 'left', width: 80 },
+                        { name: "User_Name", index: "User_Name", align: 'left', width: 80 },
+                        { name: "IP_Location", index: "IP_Location", align: 'center', width: 120 },
+                        { name: "Login_Time", index: "Login_Time", align: 'center' },
+                        { name: "Logout_Time", index: "Logout_Time", align: 'center' },
+                ];
+            }
+            if (type == "Browser")
+            {
+                title = '使用者瀏覽紀錄';
+                colNames = ["Menu參數", "Menu名稱", "進入頁面時間", "使用者帳號", "登入時間"];
+                colModel = [
+                        { name: "Menu_Id", index: "Menu_Id", align: 'left', width: 100 },
+                        { name: "Menu_Detail", index: "Menu_Detail", align: 'left' },
+                        { name: "Browse_Time", index: "Browse_Time", align: 'center' },
+                        { name: "User_Account", index: "User_Account", align: 'left', hidden: true },
+                        { name: "Login_Time", index: "Login_Time", align: 'center', hidden: true },
+                ];
+            }
+            if (type == "Event")
+            {
+                title = '使用者操作紀錄';
+                colNames = ["呼叫程式名稱", "執行動作", "執行開始時間", "執行結束時間","執行結果"];
+                colModel = [
+                        { name: "Action_Name", index: "Action_Name", align: 'left' },
+                        { name: "Event_Name", index: "Event_Name", align: 'left', width:500},
+                        { name: "Event_Begin", index: "Event_Begin", align: 'center' },
+                        { name: "Event_Complete", index: "Event_Complete", align: 'center' },
+                        { name: "Event_Flag", index: "Event_Flag", align: 'center' },
+                ];
+            }
+            $('#' + jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#' + jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getAccountLog,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: type,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNames,
+                colModel: colModel,
+                rowNum: 15, //一頁筆數
+                rowList: [15,30,45], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: 450,
+                //width: jqgridCustom.getwidth(),
+                caption: title, //標題
+                shrinkToFit: false,
+                contentType: "application/json",
+                onSelectRow: ShowLog,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        function ShowLog(cellvalue, options, rdata)
+        {
+            var grid_id = '';
+            if (rdata) {
+                grid_id = rdata.currentTarget.id;
+                if (grid_id == 'list1')
+                {
+                    clearJqgrid('jqgridDiv2');
+                    var title = 'test2';
+                    var type = "Browser";
+                    var data = $("#" + grid_id).getRowData(cellvalue);
+                    var obj = AccountLogViewModel(data.User_Account, null, data.Login_Time);
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            model: obj,
+                            type: type
+                        }),
+                        dataType: "json",
+                        url: url.searchAccountLog,
+                        contentType: 'application/json',
+                    })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            createJqgrid("jqgridDiv2", "list2", "pager2", type);
+                        }
+                        else {
+                            customerUtility.alert(result.DESCRIPTION,'e');
+                        }
+                    });
+                }
+                if (grid_id == 'list2')
+                {
+                    clearJqgrid('jqgridDiv3');
+                    var type = "Event";
+                    grid_id = rdata.currentTarget.id;
+                    var data = $("#" + grid_id).getRowData(cellvalue);
+                    var obj = AccountLogViewModel(
+                        data.User_Account, null, data.Login_Time, null, data.Browse_Time, data.Menu_Id);
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            model: obj,
+                            type: type
+                        }),
+                        dataType: "json",
+                        url: url.searchAccountLog,
+                        contentType: 'application/json',
+                    })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            createJqgrid("jqgridDiv3", "list3", "pager3", type);
+                            $("#" + dialogId).dialog({
+                                position: { my: "top center", at: "top center", of: window },
+                            });
+                            $("#" + dialogId).dialog("open");
+                        }
+                        else {
+                            customerUtility.alert(result.DESCRIPTION,'e');
+                        }
+                    });
+                }
+            }
+        }
+
+        function AccountLogViewModel(
+        User_Account,
+        User_Name,
+        Login_Time,
+        Logout_Time,
+        Browse_Time,
+        Menu_Id,
+        Menu_Detail,
+        Action_Name,
+        Event_Name,
+        Event_Begin,
+        Event_Complete,
+        Event_Flag,
+        IP_Location
+        ) {
+            var obj = {};
+            obj['User_Account'] = User_Account;
+            obj['User_Name'] = User_Name;
+            obj['Login_Time'] = Login_Time;
+            obj['Logout_Time'] = Logout_Time;
+            obj['Browse_Time'] = Browse_Time;
+            obj['Menu_Id'] = Menu_Id;
+            obj['Menu_Detail'] = Menu_Detail;
+            obj['Action_Name'] = Action_Name;
+            obj['Event_Name'] = Event_Name;
+            obj['Event_Begin'] = Event_Begin;
+            obj['Event_Complete'] = Event_Complete;
+            obj['Event_Flag'] = Event_Flag;
+            obj['IP_Location'] = IP_Location;
+            return obj;
+        }
+
+    });
+</script>

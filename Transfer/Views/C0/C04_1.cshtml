@@ -1,0 +1,338 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "C1Main";
+    ViewBag.SubMenu = "C04_1Sub";
+    ViewBag.Title = "總經資料落後期數資料轉換";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="" class="form-group">
+                            <label>落後期數設定 : </label>
+                            <input type="text" id="from" name="from" style="width:50px">
+                            <label> ~&ensp;</label>
+                            <input type="text" id="to" name="to" style="width:50px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td >
+                            <input type="button" class="btn btn-primary" style="margin-right:15px;margin-top:5px;" value="轉換欄位篩選" id="btnC04ProSearch" />
+                            <input type="button" class="btn btn-primary" style="margin-right:15px;margin-top:5px;" value="轉檔" id="btnC04Transfer" disabled/>
+                            <input type="button" class="btn btn-primary dlexcel" style="margin-top:5px;" value="匯出Excel" id="btnC04_1Dl" disabled />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div id="divCheck" style="text-align:right;display:none" >
+            <a href="#" id="btnOriginalCheck" style="text-decoration:underline;padding-right:15px;" return:false;>原始因子全選</a>
+            <a href="#" id="btnOriginalNoneCheck" style="text-decoration:underline;padding-right:15px;" return:false;>原始因子全不選</a>
+            <a href="#" id="btnDerivativeCheck" style="text-decoration:underline;padding-right:15px;" return:false;>衍生落後全選</a>
+            <a href="#" id="btnDerivativeNoneCheck" style="text-decoration:underline;padding-right:15px;" return:false;>衍生落後全不選</a>
+        </div>
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var C04ProData = [];
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchC04Pros", "C0")';
+        url.transfer = '@Url.Action("TrnasferC04", "C0")'
+        url.getDbData = '@Url.Action("GetCacheData", "C0")';
+        url.getC04Excel = '@Url.Action("GetC0Excel", "C0")';
+        //#endregion 註冊URL
+
+        var divCheck = 'divCheck';
+
+        verified.number('myForm', 'from');
+        verified.number('myForm', 'to');
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnC04ProSearch':
+                    $('#' + id).on('click', function () { C04Search() });
+                    break;
+                case 'btnC04Transfer':
+                    $('#' + id).on('click', function () { C04Transfer() });
+                    break;
+                case 'btnC04_1Dl':
+                    $('#' + id).click(C04DlExcel);
+                    break;
+            }
+        });
+
+        $('#btnOriginalCheck').on('click',function(){
+            for(var i of C04ProData)
+            {
+                i.Original_Factor = "Y";
+            };
+            SetC04Pro(getPage());
+        });
+        $('#btnOriginalNoneCheck').on('click',function(){
+            for(var i of C04ProData)
+            {
+                i.Original_Factor = null;
+            };
+            SetC04Pro(getPage());
+        });
+        $('#btnDerivativeCheck').on('click',function(){
+            for(var i of C04ProData)
+            {
+                i.Derivative = "Y";
+            };
+            SetC04Pro(getPage());
+        });
+        $('#btnDerivativeNoneCheck').on('click',function(){
+            for(var i of C04ProData)
+            {
+                i.Derivative = null;
+            };
+            SetC04Pro(getPage());
+        });
+        //#endregion 註冊click事件
+
+        function C04Search() {
+            $('#' + divCheck).show();
+            clearJqgrid();
+            $('#btnC04_1Dl').prop('disabled', true);
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url.search,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    C04ProData = result.Datas.Data;
+                    SetC04Pro(1);
+                    $('#btnC04Transfer').prop('disabled', false);
+                }
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+        function C04Transfer()
+        {
+            if ($('#myForm').valid())
+            {
+                let _from = $('#from').val().trim();
+                let _to = $('#to').val().trim();
+                let _Nfrom = Number(_from);
+                let _Nto = Number(_to);
+                if (_Nfrom < 0 || _Nto < 0)
+                {
+                    customerUtility.alert('落後期數設定不能為負數', 'w');
+                    return false;
+                }
+                if (_from != '' && _to != '')
+                {
+                    if (_Nfrom > _Nto)
+                    {
+                        customerUtility.alert('落後期數設定請由小到大', 'w');
+                        return false;
+                    }
+                }
+                if (_Nfrom > 9 || _Nto > 9)
+                {
+                    customerUtility.alert('落後期數設定不能大於9', 'w');
+                    return false;
+                }
+                clearJqgrid();
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        from: $('#from').val(),
+                        to: $('#to').val(),
+                        data: C04ProData,
+                    }),
+                    dataType: "json",
+                    url: url.transfer,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid("list1", "pager1", result.Datas.Data);
+                        $('#btnC04_1Dl').prop('disabled', false);
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                });
+                $('#' + divCheck).hide();
+            }
+        }
+
+        function SetC04Pro(page)
+        {
+            clearJqgrid();
+            createJqgrid0( "list0", "pager0",page);
+        }
+
+        function getPage()
+        {
+            return $('.ui-pg-input').val();
+        }
+
+        function C04DlExcel() {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: "C04Trnasfer"
+                }),
+                url: url.getC04Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                    { Controller = "C0", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.C04_Transfer.ToString()';
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        function formatterCheck(cellvalue, options, rdata)
+        {
+            return "<div class='checkbox checkbox-info' title=' ' style='padding-top: 0px; margin-top: 0px; margin-bottom: 0px;'><input type='checkbox' id='" + options.gid + options.colModel.index + options.rowId +
+                "' "+(cellvalue == "Y" ? ' checked ' : ' ') +"' tage='"+ options.colModel.index+"' name='"+rdata.Table_Property+"' title =' ' class='cbox customerCheck'></div>";
+        }
+
+        //#region createJqgrid0 (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid0(listId, pagerId, page) {
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                data: C04ProData,
+                datatype: "local",
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: ['資料表對應欄位','中文欄位','原始因子值輸出','衍生落後期數'],
+                colModel: [
+                   { name: "Table_Property", index: "Table_Property", width: 200, sortable: false },
+                   { name: "Property_Name", index: "Property_Name", width: 500, sortable: false },
+                   { name: "Original_Factor", index: "Original_Factor", width: 110, sortable: false,formatter:formatterCheck},
+                   { name: "Derivative", index: "Derivative", width: 95, sortable: false,formatter:formatterCheck},
+                ],
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                sortorder: "desc",
+                caption: '欄位選擇', //標題
+                viewrecords: true,
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                page : page,
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    $('.customerCheck').off('change')
+                    $('.customerCheck').on('change',function(){
+                        let _name = $(this).attr('name');
+                        let _tage = $(this).attr('tage');
+                        for(var i of C04ProData)
+                        {
+                            if(i.Table_Property == _name)
+                            {
+                                let _checked = $(this).prop('checked');
+                                if(_tage == 'Original_Factor')
+                                    i.Original_Factor = _checked ? "Y" : null;
+                                if(_tage == 'Derivative')
+                                    i.Derivative = _checked ? "Y" : null;
+                                SetC04Pro(getPage());
+                            }
+                        }
+                    });
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+
+        }
+        //#endregion createJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(listId, pagerId,_data) {
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    url: url.getDbData,
+                    datatype: "json",
+                    mtype: "POST",
+                    postData:
+                    {
+                        type: 'C04_Transfer',
+                    },
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: _data.colNames,
+                    colModel: _data.colModel,
+                    rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    sortorder: "desc",
+                    caption: '落後期數資料', //標題
+                    viewrecords: true,
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        $('#btnC04Dl').prop('disabled', false);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false, search: false, refresh: false });
+
+        }
+        //#endregion createJqgrid
+    });
+</script>

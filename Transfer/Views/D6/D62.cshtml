@@ -1,0 +1,947 @@
+﻿@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D62Sub";
+    ViewBag.Title = "D62必要條件評估檔";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:260px">
+            <table>
+                <tr>
+                    <td style="white-space:nowrap;" colspan="6">
+                        <label>選擇動作: </label>
+                        @Html.DropDownList("action",
+                                           (SelectList)ViewBag.action,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>評估基準日/報導日: </label>
+                    </td>
+                    <td style="white-space:nowrap;" colspan="5">
+                        <input type="text" id="searchReport_Date_Start" name="searchReport_Date_Start">
+                        ~
+                        <input type="text" id="searchReport_Date_End" name="searchReport_Date_End">
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>帳戶編號: </label>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <input type="text" id="searchReference_Nbr" name="searchReference_Nbr">
+                    </td>
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>債券編號: </label>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <input type="text" id="searchBond_Number" name="searchBond_Number">
+                    </td>
+                    <td style="white-space:nowrap;text-align:right">
+                    </td>
+                    <td style="white-space:nowrap;">
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>基本要件是否通過: </label>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        @Html.DropDownList("searchBasic_Pass",
+                                           (SelectList)ViewBag.YN,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>是否為觀察名單: </label>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        @Html.DropDownList("searchWatch_IND",
+                                           (SelectList)ViewBag.YN,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>是否為預警名單: </label>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        @Html.DropDownList("searchWarning_IND",
+                                           (SelectList)ViewBag.YN,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;text-align:right">
+                        <label>是否有信用利差: </label>
+                    </td>
+                    <td style="white-space:nowrap;" colspan="5">
+                        @Html.DropDownList("searchChg_In_Spread_IND",
+                                           (SelectList)ViewBag.YN,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                        &nbsp;&nbsp;
+                        <input type="checkbox" id="seaechBeforeHasChgInSpread" value="Y" hidden>@*包含先前有信用利差的資料*@
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;padding-top:20px" colspan="6">
+                        <input type="button" class="btn btn-primary" style="margin-right:13px" value="查詢" id="btnSearch" />
+                        &nbsp;&nbsp;
+                        <input type="button" class="btn btn-primary dlexcel" value="匯出Excel" id="btnExportExcel" disabled />
+                    </td>
+                </tr>
+            </table>
+            <table class="action transfer" style="display:none">
+                <tr>
+                    <td>
+                        <label>評估基準日/報導日: </label>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <input type="text" id="Report_Date" name="Report_Date">
+                    </td>
+                    <td style="padding-left:20px">
+                        @*<label>版本: </label>*@
+                    </td>
+                    <td style="white-space:nowrap;">
+                        @*<div class="select-editable" style="display:none">
+                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                            <input type="text" name="Version" id="Version" value="" />
+                        </div>*@
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align:bottom;padding-top:20px" colspan="4">
+                        <input type="button" class="btn btn-primary" value="執行評估" id="btnTransfer" />
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <td style="padding-left:200px">
+                        <i id="iMessage" class="fa fa-exclamation-circle title" style="font-size:18px;" alt="">
+                            評估狀態
+                        </i>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr id="trReference_Nbr">
+                <td style="white-space:nowrap; text-align:right">
+                    帳戶編號/群組編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanReference_Nbr"></span>
+                </td>
+            </tr>
+            <tr id="trBond_Number">
+                <td style="white-space:nowrap; text-align:right">
+                    債券編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanBond_Number"></span>
+                </td>
+            </tr>
+            <tr id="trLots">
+                <td style="white-space:nowrap; text-align:right">
+                    Lots：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanLots"></span>
+                </td>
+            </tr>
+            <tr id="trPortfolio_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    Portfolio英文：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanPortfolio_Name"></span>
+                </td>
+            </tr>
+            <tr id="trReport_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    基準日：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanReport_Date"></span>
+                </td>
+            </tr>
+            <tr id="trCurrent_External_Rating">
+                <td style="white-space:nowrap; text-align:right">
+                    最近(報導日)外部信評評等：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanCurrent_External_Rating"></span>
+                </td>
+            </tr>
+            <tr id="trAccumulation_Loss_This_Month">
+                <td style="white-space:nowrap; text-align:right">
+                    未實現累計損失月數_本月狀況：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAccumulation_Loss_This_Month"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    信用利差：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editChg_In_Spread" name="editChg_In_Spread">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    信用利差超過拓寬300基點(含)以上：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanSpread_Change_Over"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    信用利差_上個月狀況：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanChg_In_Spread_last_Month"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    信用利差_本月狀況<br/>(信用利差目前累計逾越月數)：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanChg_In_Spread_This_Month"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    是否為觀察名單：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editWatch_IND",
+                             (SelectList)ViewBag.YN,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    對應D70-觀察名單參數檔規則編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanMap_Rule_Id_D70"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    觀察名單手動調整原因：
+                </td>
+                <td style="white-space:nowrap">
+                    <textarea id="editWatch_IND_Override_Desc" name="editWatch_IND_Override_Desc" style="width:500px;height:100px"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    是否為預警名單：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editWarning_IND",
+                             (SelectList)ViewBag.YN,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    對應D71-預警名單參數檔規則編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanMap_Rule_Id_D71"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    預警名單手動調整原因：
+                </td>
+                <td style="white-space:nowrap">
+                    <textarea id="editWarning_IND_Override_DESC" name="editWarning_IND_Override_DESC" style="width:500px;height:100px"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    觀察名單手動調整狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanWatch_IND_Override"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    觀察名單手動調整日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanWatch_IND_Override_Date"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    觀察名單手動調整者：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanWatch_IND_Override_User_Name"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    預警名單手動調整狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanWarning_IND_Override"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    預警名單手動調整日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanWarning_IND_Override_Date"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    預警名單手動調整者：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanWarning_IND_Override_User_Name"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnClose" value="關閉視窗" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetD62Data", "D6")';
+        url.getDbData = '@Url.Action("GetCacheD62Data", "D6")';
+        url.transfer = '@Url.Action("SaveD62", "D6")';
+        url.getExcel = '@Url.Action("GetD62Excel", "D6")';
+        url.getReportDataVersion = '@Url.Action("GetVersion", "D6")';
+        url.getD62ByChgInSpread = '@Url.Action("getD62ByChg_In_Spread", "D6")';
+        url.modifyData = '@Url.Action("modifyD62", "D6")';
+        //#endregion 註冊URL
+
+        //#region 產生datepicker
+        created.createDatepicker('searchReport_Date_Start', true, '');
+        created.createDatepicker('searchReport_Date_End', true, '');
+        created.createDatepicker('Report_Date', true, '');
+        //#endregion
+
+        //#region
+        $('#action').on('change', function () {
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+
+            $('#btnExportExcel').prop('disabled', true);
+            clearJqgrid();
+        });
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnSearch':
+                    $("#" + id).click(searchData);
+                    break;
+                case 'btnExportExcel':
+                    $("#" + id).on('click', function () { dlExcel(); });
+                    break;
+                case 'btnTransfer':
+                    $("#" + id).click(transfer);
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnClose':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region gridSet
+        var gridTitle = '@ViewBag.Title';
+        //#endregion gridSet
+
+        var searchReportDateStart = "";
+        var searchReportDateEnd = "";
+        var searchReferenceNbr = "";
+        var searchBondNumber = "";
+        var searchBasicPass = "";
+        var searchWatchIND = "";
+        var searchWarningIND = "";
+        var searchChgInSpreadIND = "";
+        var seaechBeforeHasChgInSpread = "";
+        //#region searchData
+        function searchData() {
+            if (CheckData() == true){
+                queryData();
+            }
+        }
+        //#endregion searchData
+
+        //#region CheckData
+        function CheckData() {
+            searchReportDateStart = $('#searchReport_Date_Start').val().trim();
+            searchReportDateEnd = $('#searchReport_Date_End').val().trim();
+            searchReferenceNbr = $('#searchReference_Nbr').val().trim();
+            searchBondNumber = $('#searchBond_Number').val().trim();
+            searchBasicPass = $('#searchBasic_Pass').val().trim();
+            searchWatchIND = $('#searchWatch_IND').val().trim();
+            searchWarningIND = $('#searchWarning_IND').val().trim();
+            searchChgInSpreadIND = $('#searchChg_In_Spread_IND').val().trim();
+            seaechBeforeHasChgInSpread = "";
+            if ($("#seaechBeforeHasChgInSpread").prop("checked") == true) {
+                seaechBeforeHasChgInSpread = $("#seaechBeforeHasChgInSpread").val();
+            }
+
+            if (searchReportDateStart == "") {
+                alert("請輸入 報導日 起日");
+                return false;
+            }
+            else {
+                if (verified.isDate(searchReportDateStart, false) == false) {
+                    alert("報導日 起日 錯誤(yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            if (searchReportDateEnd == "") {
+                alert("請輸入 報導日 迄日");
+                return false;
+            }
+            else {
+                if (verified.isDate(searchReportDateEnd, false) == false) {
+                    alert("報導日 迄日 錯誤(yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            if (Date.parse(searchReportDateStart) > Date.parse(searchReportDateEnd)) {
+                alert("報導日 起日 不可大於 迄日");
+                return false;
+            }
+            
+            return true;
+        }
+        //#endRegion
+
+        //#region queryData
+        function queryData() {
+            clearJqgrid();
+            $("#iMessage").attr("alt", "");
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    reportDateStart: searchReportDateStart,
+                    reportDateEnd: searchReportDateEnd,
+                    referenceNbr: searchReferenceNbr,
+                    bondNumber: searchBondNumber,
+                    basicPass : searchBasicPass,
+                    watchIND : searchWatchIND,
+                    warningIND : searchWarningIND,
+                    chgInSpreadIND : searchChgInSpreadIND,
+                    beforeHasChgInSpread : seaechBeforeHasChgInSpread
+                }),
+                dataType: "json",
+                url: url.search,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", gridTitle);
+                    $('#btnExportExcel').prop('disabled', false);
+                    $("#iMessage").attr("alt",result.DESCRIPTION.replace(new RegExp("<br/>", "g"),"\n"));
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        function createJqgrid(listId, pagerId, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 50, sortable: false },
+                                    { name: "Reference_Nbr", index: "Reference_Nbr", align: 'left' , width: 150},
+                                    { name: "Version", index: "Version", align: 'left' , width: 100},
+                                    { name: "Report_Date", index: "Report_Date", align: 'left' , width: 150},
+                                    { name: "Processing_Date", index: "Processing_Date", align: 'left' , width: 120},
+                                    { name: "Bond_Type", index: "Bond_Type", align: 'left' , width: 200},
+                                    { name: "Assessment_Sub_Kind", index: "Assessment_Sub_Kind", align: 'left' , width: 150},
+                                    { name: "Lien_position", index: "Lien_position", align: 'left' , width: 120},
+                                    { name: "Bond_Number", index: "Bond_Number", align: 'left' , width: 150},
+                                    { name: "Lots", index: "Lots", align: 'left' , width: 100},
+                                    { name: "Portfolio", index: "Portfolio", align: 'left' , width: 250},
+                                    { name: "Portfolio_Name", index: "Portfolio_Name", align: 'left' , width: 200},
+                                    { name: "Origination_Date", index: "Origination_Date", align: 'left' , width: 200},
+                                    { name: "Original_External_Rating", index: "Original_External_Rating", align: 'left' , width: 200},
+                                    { name: "Current_External_Rating", index: "Current_External_Rating", align: 'left' , width: 200},
+                                    { name: "Rating_Ori_Good_IND", index: "Rating_Ori_Good_IND", align: 'left' , width: 250},
+                                    { name: "Rating_Curr_Good_Ind", index: "Rating_Curr_Good_Ind", align: 'left' , width: 250},
+                                    { name: "Curr_Ori_Rating_Diff", index: "Curr_Ori_Rating_Diff", align: 'left' , width: 200},
+                                    { name: "Basic_Pass", index: "Basic_Pass", align: 'left' , width: 200},
+                                    { name: "Map_Rule_Id_D69", index: "Map_Rule_Id_D69", align: 'left' , width: 280},
+                                    { name: "Cost_Value", index: "Cost_Value", align: 'left' , width: 250},
+                                    { name: "Market_Value_Ori", index: "Market_Value_Ori", align: 'left' , width: 200},
+                                    { name: "Value_Change_Ratio", index: "Value_Change_Ratio", align: 'left' , width: 200},
+                                    { name: "Value_Change_Ratio_Pass", index: "Value_Change_Ratio_Pass", align: 'left' , width: 220},
+                                    { name: "Accumulation_Loss_last_Month", index: "Accumulation_Loss_last_Month", align: 'left' , width: 250},
+                                    { name: "Accumulation_Loss_This_Month", index: "Accumulation_Loss_This_Month", align: 'left' , width: 220},
+                                    { name: "Chg_In_Spread", index: "Chg_In_Spread", align: 'left' , width: 200},
+                                    { name: "Spread_Change_Over", index: "Spread_Change_Over", align: 'left' , width: 250},
+                                    { name: "Chg_In_Spread_last_Month", index: "Chg_In_Spread_last_Month", align: 'left' , width: 200},
+                                    { name: "Chg_In_Spread_This_Month", index: "Chg_In_Spread_This_Month", align: 'left' , width: 320},
+                                    { name: "Watch_IND", index: "Watch_IND", align: 'left' , width: 200},
+                                    { name: "Map_Rule_Id_D70", index: "Map_Rule_Id_D70", align: 'left' , width: 280},
+                                    { name: "Warning_IND", index: "Warning_IND", align: 'left' , width: 200},
+                                    { name: "Map_Rule_Id_D71", index: "Map_Rule_Id_D71", align: 'left' , width: 280},
+                                    { name: "Watch_IND_Override", index: "Watch_IND_Override", align: 'left' , width: 200},
+                                    { name: "Watch_IND_Override_Desc", index: "Watch_IND_Override_Desc", align: 'left' , width: 200},
+                                    { name: "Watch_IND_Override_Date", index: "Watch_IND_Override_Date", align: 'left' , width: 200},
+                                    { name: "Watch_IND_Override_User", index: "Watch_IND_Override_User", align: 'left' , width: 200},
+                                    { name: "Watch_IND_Override_User_Name", index: "Watch_IND_Override_User_Name", align: 'left' , width: 200},
+                                    { name: "Warning_IND_Override", index: "Warning_IND_Override", align: 'left' , width: 200},
+                                    { name: "Warning_IND_Override_DESC", index: "Warning_IND_Override_DESC", align: 'left' , width: 200},
+                                    { name: "Warning_IND_Override_Date", index: "Warning_IND_Override_Date", align: 'left' , width: 200},
+                                    { name: "Warning_IND_Override_User", index: "Warning_IND_Override_User", align: 'left' , width: 200},
+                                    { name: "Warning_IND_Override_User_Name", index: "Warning_IND_Override_User_Name", align: 'left' , width: 200}
+                              ];
+
+            var colNameArray = [
+                                   '',
+                                   '帳戶編號/群組編號',
+                                   '資料版本',
+                                   '評估基準日/報導日',
+                                   '資料處理日期',
+                                   '債券種類',
+                                   'Stage評估次分類',
+                                   '債券擔保順位',
+                                   '債券編號',
+                                   'Lots',
+                                   'Portfolio',
+                                   'Portfolio英文',
+                                   '債券購入(認列)日期',
+                                   '起始(原始購買)外部評等',
+                                   '最近(報導日)外部信評評等',
+                                   '原始購買評等是否符合信用風險低條件',
+                                   '報導日是否符合信用風險低條件',
+                                   '評等下降數',
+                                   '基本要件通過與否',
+                                   '對應D69-基本要件參數檔規則編號',
+                                   '金融資產餘額-攤銷後之成本數(原幣)',
+                                   '市價(原幣)',
+                                   '未實現累計損失率',
+                                   '未實現累計損失率是否低於30%',
+                                   '未實現累計損失月數_上個月狀況',
+                                   '未實現累計損失月數_本月狀況',
+                                   '信用利差',
+                                   '信用利差超過拓寬300基點(含)以上',
+                                   '信用利差_上個月狀況',
+                                   '信用利差_本月狀況(信用利差目前累計逾越月數)',
+                                   '是否為觀察名單',
+                                   '對應D70-觀察名單參數檔規則編號',
+                                   '是否為預警名單',
+                                   '對應D71-預警名單參數檔規則編號',
+                                   '觀察名單手動調整狀態',
+                                   '觀察名單手動調整原因',
+                                   '觀察名單手動調整日期',
+                                   '觀察名單手動調整者帳號',
+                                   '觀察名單手動調整者名稱',
+                                   '預警名單手動調整狀態',
+                                   '預警名單手動調整原因',
+                                   '預警名單手動調整日期',
+                                   '預警名單手動調整者帳號',
+                                   '預警名單手動調整者名稱'
+                               ];
+
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+
+                    $(".actionEditIcon").hide();
+                    $(".actionViewIcon").hide();
+                    $(".actionDeleIcon").hide();
+
+                    if ($("#action").val() == "search"){
+                        $(".actionEditIcon").show();
+                    }
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region 下載Excel 檔案
+        function dlExcel() {
+            if (CheckData() == true){
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        reportDateStart: searchReportDateStart,
+                        reportDateEnd: searchReportDateEnd,
+                        referenceNbr: searchReferenceNbr,
+                        bondNumber: searchBondNumber,
+                        basicPass: searchBasicPass,
+                        watchIND: searchWatchIND,
+                        warningIND: searchWarningIND,
+                        chgInSpreadIND: searchChgInSpreadIND,
+                        beforeHasChgInSpread: seaechBeforeHasChgInSpread
+                    }),
+                    dataType: "json",
+                    url: url.getExcel,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        window.location.href = "@Url.RouteUrl(new
+                        {
+                            Controller = "D6", Action = "DownloadExcel"})/?type=D62";
+                        }
+                    else {
+                        toastr.error(result.DESCRIPTION);
+                    }
+                })
+            }
+        }
+        //#endregion 下載Excel 檔案
+
+        //#region 執行評估
+        function transfer() {
+            if (confirm("請確認已完成該版本之減損計算，再執行基本要件評估作業，\n確定現在執行評估？")) {
+                var reportDate = $('#Report_Date').val().trim();
+                //var version = $('#Version').val().trim();
+                var version = "";
+
+                if (reportDate == "") {
+                    alert("請輸入 評估基準日/報導日");
+                    return false;
+                }
+                else {
+                    if (verified.isDate(reportDate, false) == false) {
+                        alert("評估基準日/報導日 格式錯誤(yyyy/MM/dd)");
+                        return false;
+                    }
+                }
+
+                //if (version == "") {
+                //    toastr.error("請輸入 版本");
+                //    return false;
+                //}
+                //else {
+                //    if (isNaN(version)) {
+                //        toastr.error("版本 必須為數字");
+                //        return false;
+                //    }
+                //}
+
+                clearJqgrid();
+                $("#iMessage").attr( "alt", "");
+
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        reportDate: reportDate,
+                        version: version
+                    }),
+                    dataType: "json",
+                    url: url.transfer,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION.replace(new RegExp("<br/>", "g"),"\n"));
+
+                        searchReportDateStart = $("#Report_Date").val();
+                        searchReportDateEnd = $("#Report_Date").val();
+                        searchReferenceNbr = "";
+                        searchBondNumber = "";
+                        searchBasicPass = "";
+                        searchWatchIND = "";
+                        searchWarningIND = "";
+                        searchChgInSpreadIND = "";
+                        seaechBeforeHasChgInSpread = "";
+
+                        queryData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                })
+            }
+        }
+        //#endregion
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            SetAction("Modify", i, "修改");
+        }
+        actfun.View = function(i)
+        {
+
+        }
+        actfun.Dele = function(i)
+        {
+
+        }
+        //#endregion
+
+        //#region SetAction
+        function SetAction(actionType, rowid, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            if (actionType == "Add") {
+            }
+            else {
+                var data = $("#list1").getRowData(rowid);
+
+                $('#spanReference_Nbr').html(data.Reference_Nbr);
+                $('#spanBond_Number').html(data.Bond_Number);
+                $('#spanLots').html(data.Lots);
+                $('#spanPortfolio_Name').html(data.Portfolio_Name);
+                $('#spanReport_Date').html(data.Report_Date);
+                $('#spanCurrent_External_Rating').html(data.Current_External_Rating);
+                $('#spanAccumulation_Loss_This_Month').html(data.Accumulation_Loss_This_Month);
+                $('#editChg_In_Spread').val(data.Chg_In_Spread);
+                $('#spanSpread_Change_Over').html(data.Spread_Change_Over);
+                $('#spanChg_In_Spread_last_Month').html(data.Chg_In_Spread_last_Month);
+                $('#spanChg_In_Spread_This_Month').html(data.Chg_In_Spread_This_Month);
+                $('#editWatch_IND').val(data.Watch_IND);
+                $('#spanMap_Rule_Id_D70').html(data.Map_Rule_Id_D70);
+                $('#editWatch_IND_Override_Desc').val(data.Watch_IND_Override_Desc);
+                $('#editWarning_IND').val(data.Warning_IND);
+                $('#spanMap_Rule_Id_D71').html(data.Map_Rule_Id_D71);
+                $('#editWarning_IND_Override_DESC').val(data.Warning_IND_Override_DESC);
+                $('#spanWatch_IND_Override').html(data.Watch_IND_Override);
+                $('#spanWatch_IND_Override_Date').html(data.Watch_IND_Override_Date);
+                $('#spanWatch_IND_Override_User_Name').html(data.Watch_IND_Override_User_Name);
+                $('#spanWarning_IND_Override').html(data.Warning_IND_Override);
+                $('#spanWarning_IND_Override_Date').html(data.Warning_IND_Override_Date);
+                $('#spanWarning_IND_Override_User_Name').html(data.Warning_IND_Override_User_Name);
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region
+        $('#editChg_In_Spread').on('blur', function () {
+            var referenceNbr = $('#spanReference_Nbr').html();
+            var bondNumber = $('#spanBond_Number').html();
+            var lots = $('#spanLots').html();
+            var portfolioName = $('#spanPortfolio_Name').html();
+            var reportDate = $('#spanReport_Date').html();
+            var currentExternalRating = $('#spanCurrent_External_Rating').html();
+            var accumulationLossThisMonth = $('#spanAccumulation_Loss_This_Month').html();
+            var chgInSpreadLastMonth = $('#spanChg_In_Spread_last_Month').html();
+            var chgInSpread = $('#editChg_In_Spread').val().trim();
+
+            if (chgInSpread != "") {
+                if (isNaN(chgInSpread)) {
+                    alert("信用利差 必須為數字");
+                    return false;
+                }
+            }
+
+            var obj = {
+                Reference_Nbr: referenceNbr,
+                Bond_Number: bondNumber,
+                Lots: lots,
+                Portfolio_Name: portfolioName,
+                Report_Date: reportDate,
+                Current_External_Rating: currentExternalRating,
+                Accumulation_Loss_This_Month: accumulationLossThisMonth,
+                Chg_In_Spread_last_Month: chgInSpreadLastMonth,
+                Chg_In_Spread: chgInSpread
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.getD62ByChgInSpread,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+                    $('#spanSpread_Change_Over').html(data.Spread_Change_Over);
+                    $('#spanChg_In_Spread_This_Month').html(data.Chg_In_Spread_This_Month);
+                    $('#editWatch_IND').val(data.Watch_IND);
+                    $('#spanMap_Rule_Id_D70').html(data.Map_Rule_Id_D70);
+                    $('#editWarning_IND').val(data.Warning_IND);
+                    $('#spanMap_Rule_Id_D71').html(data.Map_Rule_Id_D71);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        });
+        //#endregion
+
+        //#region
+        function SaveData() {
+            var actionType = $('#actionType').val();
+            var referenceNbr = $('#spanReference_Nbr').html();
+            var chgInSpread = $('#editChg_In_Spread').val().trim();
+            var spreadChangeOver = $('#spanSpread_Change_Over').html();
+            var chgInSpreadThisMonth = $('#spanChg_In_Spread_This_Month').html();
+            var watchIND = $('#editWatch_IND').val().trim();
+            var mapRuleIdD70 = $('#spanMap_Rule_Id_D70').html();
+            var watchINDOverrideDesc = $('#editWatch_IND_Override_Desc').val().trim();
+            var warningIND = $('#editWarning_IND').val().trim();
+            var mapRuleIdD71 = $('#spanMap_Rule_Id_D71').html();
+            var warningINDOverrideDESC = $('#editWarning_IND_Override_DESC').val().trim();
+
+            if (chgInSpread != "") {
+                if (isNaN(chgInSpread)) {
+                    alert("信用利差 必須為數字");
+                    return false;
+                }
+            }
+
+            var obj = {
+                Reference_Nbr: referenceNbr,
+                Chg_In_Spread: chgInSpread,
+                Spread_Change_Over: spreadChangeOver,
+                Chg_In_Spread_This_Month: chgInSpreadThisMonth,
+                Watch_IND: watchIND,
+                Map_Rule_Id_D70: mapRuleIdD70,
+                Watch_IND_Override_Desc: watchINDOverrideDesc,
+                Warning_IND: warningIND,
+                Map_Rule_Id_D71: mapRuleIdD71,
+                Warning_IND_Override_DESC: warningINDOverrideDESC
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.modifyData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    searchData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region
+        function SearchReset() {
+            $('#searchReference_Nbr').val("");
+            $('#searchBond_Number').val("");
+            $('#searchBasic_Pass').val("");
+            $('#searchWatch_IND').val("");
+            $('#searchWarning_IND').val("");
+            $('#searchChg_In_Spread_IND').val("");
+            $("#seaechBeforeHasChgInSpread").prop("checked", false)
+        }
+        //#endregion
+
+    });
+</script>

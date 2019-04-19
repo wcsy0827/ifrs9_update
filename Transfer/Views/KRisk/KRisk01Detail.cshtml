@@ -1,0 +1,306 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "KRiskMain";
+    ViewBag.SubMenu = "KRisk01Sub";
+    ViewBag.Title = "執行減損計算(債券)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr style="height:43px">
+                        <td style="width:550px; padding-top:5px;" class="form-group">
+                            <label>報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="width:450px;padding-top:10px;" class="version">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>版本 : </label>
+                                    </td>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version" id="version" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width:450px;padding-top:10px;display:none" class="version2" >
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>版本 : </label>
+                                    </td>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="versionSelect2" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version2" id="version2" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:10px">
+                            <label>產品別 : </label>
+                            @Html.DropDownList("product",
+                           (SelectList)ViewBag.product,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td colspan="3" style="padding-top:10px">
+                            <input type="button" class="btn btn-primary" value="執行減損計算(債券)" id="btnKrisk" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+查詢結果請至C07(減損計算輸出資料-債券)"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.kriskComplete = '@Url.Action("KriskBondsComplete", "KRisk")';
+        url.getReportDataVersion = '@Url.Action("GetVersion", "KRisk")';
+        url.getC01Version = '@Url.Action("GetC01", "KRisk")';
+        //#endregion 註冊URL
+
+        var Product_Code_TW = '401' //台灣債券產品組合
+
+        //#region 選擇reportDate 後要觸發的動作
+        var versionFun = customerUtility.getVersion('versionSelect',
+            'datepicker',
+            '@Ref.Transfer_Table_Type.C01.ToString()',
+            url.getReportDataVersion);
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 選擇reportDate 後要觸發的動作(目前查詢HK,VN)
+        var versionFun2 = function () {
+            var selectId = 'versionSelect2';
+            var datepickerId = 'datepicker';
+            var fun = {};
+            fun.fail = function () {
+                $("#" + selectId + " option").remove();
+                var optionObj = [];
+                optionObj.push({ value: "", text: "" });
+                customerUtility.addoption(selectId, optionObj);
+            };
+            fun.success = function checkReportDate() {
+                var text = $('#product :selected').text();
+                var f = text.indexOf("(") + 1;
+                var e = text.indexOf(")");
+                var productCode = text.substr(f, (e - f));
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        date: $('#' + datepickerId).val(),
+                        product: productCode
+                    }),
+                    dataType: "json",
+                    url: url.getC01Version,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    $("#" + selectId + " option").remove();
+                    if (result.RETURN_FLAG) {
+                        var optionObj = [];
+                        optionObj.push({ value: "", text: "" })
+                        $.each(result.Datas.Data, function (key, value) {
+                            optionObj.push({ value: value, text: value })
+                        })
+                        customerUtility.addoption(selectId, optionObj);
+                    }
+                    else {
+                        fun.fail();
+                    }
+                });
+            };
+            return fun;
+        }();
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 註冊datepicker
+        K01CreateDatepicker('datepicker', true, null, versionFun, versionFun2);
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        verified.number('myFrom', 'version');
+        verified.required("myForm", "version", message.required(message.version));
+        verified.number('myFrom', 'version2');
+        verified.required("myForm", "version2", message.required(message.version));
+        //#endregion 註冊verified
+
+        //#region 選擇產品別
+        $('#product').on('change', function () {
+            $('.version,.version2').hide();
+            $('#datepicker').val('');
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+            var text = $('#product :selected').text();
+            var f = text.indexOf("(") + 1;
+            var e = text.indexOf(")");
+            var productCode = text.substr(f, (e - f));
+            if (productCode == Product_Code_TW) {
+                $('.version').show();
+            }
+            else {
+                $('.version2').show();
+            }
+                
+        });
+        //#endregion 選擇產品別
+
+        //#region 特殊datepicker
+        function K01CreateDatepicker(datepickerid, reportDateFlag, date, completeEvent, completeEvent2) {
+            reportDateFlag = reportDateFlag || false;
+            var d = null;
+            if (!(date === d)) {
+                if (reportDateFlag) {
+                    d = verified.reportDate();
+                }
+                else {
+                    if (verified.isDate(date, false)) {
+                        d = verified.datepickerStrToDate(date);
+                    }
+                    else {
+                        d = getOnlyDate();
+                    }
+                }
+            }
+
+            $("#" + datepickerid).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy/mm/dd',
+                showOn: "both",
+                buttonText: '<i class="fa fa-calendar fa-2x toggle-btn"></i>',
+                onSelect: function (value) {
+                    if (verified.isDate(value, reportDateFlag)) {
+                        $(this).parent().children().each(function () {
+                            if ($(this).is('label') && $(this).hasClass('error'))
+                                $(this).remove();
+                            if ($(this).is('input') && $(this).hasClass('error'))
+                                $(this).removeClass('error');
+                        })
+                    }
+                },
+                onClose: function (value) {
+                    var text = $('#product :selected').text();
+                    var f = text.indexOf("(") + 1;
+                    var e = text.indexOf(")");
+                    var productCode = text.substr(f, (e - f));
+                    if (verified.isDate(value, reportDateFlag)) {
+                        if (productCode == Product_Code_TW) {
+                            if (typeof completeEvent == 'function')
+                                completeEvent();
+                        }
+                        else {
+                            if (typeof completeEvent2 == 'function')
+                                completeEvent2();
+                        }
+                    }
+                    if (verified.isDate(value, reportDateFlag)) {
+                        if (productCode == Product_Code_TW) {
+                            completeEvent.success();
+                        }
+                        else {
+                            completeEvent2.success();
+                        }
+                    }
+                    else {
+                        if (productCode == Product_Code_TW) {
+                            completeEvent.fail();
+                        }
+                        else {
+                            completeEvent2.fail();
+                        }
+                    }
+                }
+            }).datepicker('setDate', d);
+
+            if (typeof completeEvent != "undefined" &&
+                typeof completeEvent.success == 'function') {
+                completeEvent.success();
+            }
+        }
+        //#endregion 特殊datepicker
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnKrisk':
+                    $('#' + id).on('click', function () { kriskComplete() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 通知Krisk 完成事件
+        function kriskComplete()
+        {
+            if ($('#myForm').valid())
+            {
+                var text = $('#product :selected').text();
+                var f = text.indexOf("(") + 1;
+                var e = text.indexOf(")");
+                var productCode = text.substr(f, (e - f));
+                var version = '';
+                if (productCode == Product_Code_TW) {
+                    version = $('#version').val();
+                }
+                else {
+                    version = $('#version2').val();
+                }
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: url.kriskComplete,
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        date: $('#datepicker').val(),
+                        version: version,
+                        product: $('#product').val(),
+                        productCode: productCode,
+                    }),
+                })
+                .done(function (result) {
+                    if(result.result == "0")
+                    {
+                        customerUtility.alert(result.message, 's');
+                        customerUtility.checkDialog('KRisk01', '@Ref.Check_Table_Type.Bonds_C07_Transfer_Check.ToString()');
+                    }
+                    if(result.result == "1")
+                    {
+                        customerUtility.alert(result.message,'e');
+                    }
+                });
+            }
+        }
+        //#endregion
+
+    });
+</script>

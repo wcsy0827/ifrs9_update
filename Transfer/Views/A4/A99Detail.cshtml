@@ -1,0 +1,158 @@
+﻿@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A4Main";
+    ViewBag.SubMenu = "A99Sub";
+    ViewBag.Title = "資料表轉換B01、C01(房貸)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myFrom">
+                <table width="100%">
+                    <tr>
+                        <td style="width:600px" class="form-group">
+                            <label>日期 : </label>&emsp;&emsp;
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="padding-top:8px">
+                            @*<label>版本 : </label>
+                                <input type="text" id="version" name="version">*@
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:10px">
+                            <label>轉檔類型 : </label>
+                            @Html.DropDownList("transferType",
+                           (SelectList)ViewBag.selectOption,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="padding-top:10px">
+                            <input type="button" class="btn btn-primary" value="轉檔" id="btnA99Transfer" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                @Html.TextArea("log", string.Empty, 20, 30,
+               new { @class = "form-control", @style = "max-width:none", disabled = "disabled" })
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+
+        //#region 產生datepicker
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 產生datepicker
+
+        //#region 註冊URL
+        var url = {};
+        url.transfer = '@Url.Action("TransferToOther", "A4")';
+        url.getLogData = '@Url.Action("GetLogData","A4")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA99Transfer':
+                    $("#" + id).on('click', function () { transferData() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 轉檔
+        function transferData() {
+            var date = $('#datepicker').val();
+            var type = $('#transferType').val();
+            verified.datepicker("myFrom", "datepicker", false, date);
+            if ($('#myFrom').valid()) {
+                callTransfer(type, "", date, type === "All")
+            }
+        }
+        //#endregion
+
+        var debt = '@Ref.Debt_Type.M.ToString()'; //房貸
+        function callTransfer(type, version, date, next) {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: type,
+                    version: version,
+                    date: date,
+                    next: next,
+                    debt: debt
+                }),
+                dataType: "json",
+                url: url.transfer,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                getLog(debt);
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+                    var _sub = result.DESCRIPTION.substr(0, 3);
+                    if (_sub == "B01") {
+                        customerUtility.checkDialog(type + debt, '@Ref.Check_Table_Type.Mortgage_B01_Transfer_Check.ToString()');
+                    }
+                    else if (_sub == "C01") {
+                        customerUtility.checkDialog(type + debt, '@Ref.Check_Table_Type.Mortgage_C01_Transfer_Check.ToString()');
+                    }
+                    else if (_sub == "C02") {
+                        customerUtility.checkDialog(type + debt, '@Ref.Check_Table_Type.Mortgage_C02_Transfer_Check.ToString()');
+                    }
+
+                    if (data.split(',')[0] === "true") //要轉下一個
+                    {
+                        customerUtility.alert(("success => " + result.DESCRIPTION
+                            + " 接著轉 : " + data.split(',')[1]),'s');
+                        callTransfer(data.split(',')[1], version, date, true);
+                    }
+                    else {
+                        customerUtility.alert(("success => " + result.DESCRIPTION),'s');
+                    }
+                }
+                else {
+                    customerUtility.alert(("error => " + result.DESCRIPTION), 'e');
+                    var _sub = result.DESCRIPTION.substr(0, 3);
+                    if (_sub == "B01") {
+                        customerUtility.checkDialog(type + debt, '@Ref.Check_Table_Type.Mortgage_B01_Before_Check.ToString()');
+                    }
+                    else if (_sub == "C01") {
+                        customerUtility.checkDialog(type + debt, '@Ref.Check_Table_Type.Mortgage_C01_Before_Check.ToString()');
+                    }
+                    else if (_sub == "C02") {
+                        customerUtility.checkDialog(type + debt, '@Ref.Check_Table_Type.Mortgage_C02_Before_Check.ToString()');
+                    }
+                }
+            });
+        }
+
+        getLog(debt);
+        function getLog(debt) {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    debt: debt
+                }),
+                dataType: "json",
+                url: url.getLogData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.length > 0) {
+                    $('#log').text("")
+                        .text(result.replace(new RegExp(",", "g"), "\n"));
+                }
+            })
+        }
+    });
+</script>

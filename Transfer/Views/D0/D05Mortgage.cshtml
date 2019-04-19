@@ -1,0 +1,506 @@
+﻿@{
+    ViewBag.Menu = "D0Main";
+    ViewBag.SubMenu = "D05MortgageSub";
+    ViewBag.Title = "D05(套用產品組合代碼-房貸)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .ui-datepicker-trigger {
+        border: none;
+        background: none;
+    }
+
+    .error {
+        color: red;
+    }
+</style>
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:200px">
+            <table>
+                <tr>
+                    <td>查詢時，如無輸入任何查詢條件，則查全部。</td>
+                </tr>
+            </table>
+            <form id="myForm1">
+                <table style="width:100%;margin-top:5px">
+                    <tr>
+                        <td style="white-space:nowrap;width:50%">
+                            <label>套用產品群代碼 :</label>
+                            @Html.DropDownList("Group_Product_Code",
+                             (SelectList)ViewBag.GroupProduct,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap">
+                            <label>產品 :</label>
+                            @Html.DropDownList("Product_Code",
+                             (SelectList)ViewBag.ProductCode,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <label>資料處理日期 :</label>
+                            <input type="text" id="Processing_Date1" name="Processing_Date1" maxlength="10">
+                            ~
+                            <input type="text" id="Processing_Date2" name="Processing_Date2" maxlength="10">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td id="tdSearch">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td id="tdReset">
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    套用產品群代碼：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editGroup_Product_Code",
+                             (SelectList)ViewBag.GroupProduct,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    產品：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editProduct_Code" id="editProduct_Code" maxlength="64">
+                </td>
+            </tr>
+            <tr id="trProcessing_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    資料處理日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanProcessing_Date"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="刪除" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnCancel" value="取消" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetD05AllData", "D0")';
+        url.getData = '@Url.Action("GetD05Data", "D0")';
+        url.saveData = '@Url.Action("SaveD05", "D0")';
+        url.deleteData = '@Url.Action("DeleteD05", "D0")';
+        //#endregion 註冊URL
+
+        //#region 產生datepicker
+        created.createDatepicker('Processing_Date1', false, null);
+        created.createDatepicker('Processing_Date2', false, null);
+        //#endregion
+
+        //#region Set Default
+        var debtType = '@Transfer.Enum.Ref.GroupProductCode.M.ToString()';
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnCancel':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Group_Product_Code').val("");
+            $('#Product_Code').val("");
+            $('#Processing_Date1').val("");
+            $('#Processing_Date2').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var groupProductCode = $('#Group_Product_Code').val().trim();
+            var productCode = $('#Product_Code').val().trim();
+            var processingDate1 = $('#Processing_Date1').val().trim();
+            var processingDate2 = $('#Processing_Date2').val().trim();
+
+            if (processingDate1 != "") {
+                if (verified.isDate(processingDate1, false) == false) {
+                    toastr.error("資料處理日期 起日格式錯誤(yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            if (processingDate2 != "") {
+                if (verified.isDate(processingDate2, false) == false) {
+                    toastr.error("資料處理日期 迄日格式錯誤(yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            if (processingDate1 != "" && processingDate2 != "") {
+                if (Date.parse(processingDate1) > Date.parse(processingDate2)) {
+                    toastr.error("資料處理日期 起日 不可大於 迄日");
+                    return false;
+                }
+            }
+
+            showJqgrid("2", groupProductCode, productCode, processingDate1, processingDate2);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, groupProductCode, productCode, processingDate1, processingDate2) {
+            clearJqgrid();
+
+            var title = ''; //標頭
+            var colNameArray = []; //每個欄位名稱要對應傳入資料屬性
+            var dataString = "";
+            var urlString = "";
+
+            title = '@ViewBag.Title';
+            colNameArray = ['Group_Product_Code', 'Group_Product',
+                            'Product_Code', 'Processing_Date'];
+
+            switch (type) {
+                case "1":
+                    dataString = JSON.stringify({
+                        debtType: debtType
+                    });
+
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    dataString = JSON.stringify({
+                        debtType: debtType,
+                        groupProductCode: groupProductCode,
+                        productCode: productCode,
+                        processingDate1: processingDate1,
+                        processingDate2: processingDate2
+                    });
+
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: dataString,
+                dataType: "json",
+                url: urlString,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var widthArray =
+                        ['L', 'L',
+                         'L', 'L'
+                        ];
+
+                    var data = result.Datas.Data;
+
+                    createJqgrid("list1", "pager1", colNameArray, widthArray, data, title);
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //widthArray (寬度設定 L=> 210 M=>120)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, colNameArray, widthArray, data, title) {
+            var colModelArray = [];
+            var jagridLWidth = 210;
+            var jagridMWidth = 120;
+
+            if (colNameArray.length > 0 && colNameArray.length === widthArray.length) {
+                colModelArray = [
+                                    { name: "act", index: "act", width: 70, sortable: false },
+                                    { name: "Group_Product_Code", index: "Group_Product_Code", align: 'center' },
+                                    { name: "Group_Product", index: "Group_Product", width: '410px', align: 'center' },
+                                    { name: "Product_Code", index: "Product_Code", align: 'center' },
+                                    { name: "Processing_Date", index: "Processing_Date", align: 'center' },
+                ];
+
+                colNameArray = ['Actions', '套用產品群代碼', '產品群別說明',
+                                '產品', '資料處理日期'];
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    width: jqgridCustom.getwidth(),
+                    shrinkToFit: false,
+                    viewsortcols: [true, 'vertical', true],
+                    viewrecords: true,
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        jqgridCustom.randerAction(listId, 'D05');
+                        $(".actionEditIcon").hide();
+                    },
+                });
+
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+            var groupProductCode = $('#editGroup_Product_Code').val().trim();
+            var productCode = $('#editProduct_Code').val().trim();
+
+            if (groupProductCode == "") {
+                toastr.error("套用產品群代碼 必填");
+                return false;
+            }
+
+            if (productCode == "") {
+                toastr.error("產品 必填");
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    debtType: debtType,
+                    actionType: actionType,
+                    groupProductCode: groupProductCode,
+                    productCode: productCode
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    toastr.success(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            showJqgrid("1", "", "", "", "");
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定刪除？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        groupProductCode:$('#editGroup_Product_Code').val(),
+                        productCode: $('#editProduct_Code').val()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        toastr.success(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        toastr.error(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+    });
+
+    //#region SetAction
+    function SetAction(actionType, id, dialogTitle) {
+        $("#actionType").val(actionType);
+
+        $("#dialogEdit").dialog({
+            title: dialogTitle,
+            position: { my: "center", at: "center", of: window },
+        });
+
+        if (actionType == "Add") {
+            $('#editGroup_Product_Code').val("");
+            $('#editProduct_Code').val("");
+            $('#spanProcessing_Date').html("");
+            $('#trProcessing_Date').hide();
+        }
+        else {
+            if (id == null) {
+                alert("請選取要" + dialogTitle + "的資料行");
+                return false;
+            }
+
+            $('#editGroup_Product_Code').val($("#list1").getCell(id, "Group_Product_Code"));
+            $('#editProduct_Code').val($("#list1").getCell(id, "Product_Code"));
+            $('#spanProcessing_Date').html($("#list1").getCell(id, "Processing_Date"));
+            $('#trProcessing_Date').show();
+        }
+
+        $('#editGroup_Product_Code').prop('disabled', true);
+        $('#editProduct_Code').prop('disabled', true);
+        $('#spanProcessing_Date').prop('disabled', true);
+
+        switch (actionType) {
+            case "Add":
+            case "Modify":
+                $('#editGroup_Product_Code').prop('disabled', false);
+                $('#editProduct_Code').prop('disabled', false);
+                $('#spanProcessing_Date').prop('disabled', false);
+
+                if (actionType == "Modify") {
+                    $('#editGroup_Product_Code').prop('disabled', true);
+                    $('#editProduct_Code').prop('disabled', true);
+                }
+
+                $('#btnSave').show();
+                $('#btnDelete').hide();
+
+                break;
+            case "View":
+                $('#btnSave').hide();
+                $('#btnDelete').hide();
+
+                break;
+            case "Delete":
+                $('#btnSave').hide();
+                $('#btnDelete').show();
+
+                break;
+        }
+
+        $("#dialogEdit").dialog("open");
+    }
+    //#endregion
+
+    function D05list1Edit(id) {
+        //SetAction("Modify", id, "修改");
+    }
+
+    function D05list1View(id) {
+        SetAction("View", id, "檢視");
+    }
+
+    //#region DeleteData
+    function D05list1Dele(id) {
+        SetAction("Delete", id, "刪除");
+    }
+    //#endregion
+</script>

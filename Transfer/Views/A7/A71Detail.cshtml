@@ -1,0 +1,160 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A7Main";
+    ViewBag.SubMenu = "A71Sub";
+    ViewBag.Title = "轉移矩陣資料檔查詢_Moody(A71)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <div>
+                <input type="button" class="btn btn-primary" value="轉移矩陣資料檔_Moody查詢" id="btnA71Search" />
+            </div>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+查詢前請至A7上傳Moody Exhibit 29資料。(每年4月更新)"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetData", "A7")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA71Search':
+                    $("#" + id).on('click', function () { showJqgrid('@Ref.Table_Type.A71.ToString()') });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type) {
+            clearJqgrid();
+            var title = '@Ref.Table_Type.A71.GetDescription()'; //標頭
+            var colNameArray = ['From_To', 'Aaa', 'Aa1', 'Aa2',
+                             'Aa3', 'A1', 'A2', 'A3',
+                             'Baa1', 'Baa2', 'Baa3',
+                             'Ba1', 'Ba2', 'Ba3',
+                             'B1', 'B2', 'B3',
+                             'Caa1', 'Caa2', 'Caa3',
+                             'Ca_C', 'WR', 'Default_Value']; //每個欄位名稱要對應傳入資料屬性
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: type
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data; // json Data 由Ajax 拿到
+                    createJqgrid("list1", "pager1", colNameArray, data, title);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //widthArray (寬度設定 L=> 210 M=>120)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, colNameArray, data, title) {
+            var colModelArray = [];
+            //var jagridLWidth = 210;
+            var jagridMWidth = 80;
+            if (colNameArray.length > 0) {
+                for (let i = 0; i < colNameArray.length; i++) {
+                    var obj = {
+                        name: colNameArray[i],
+                        index: colNameArray[i],
+                        width: jagridMWidth
+                    }
+
+                    if (colNameArray[i].indexOf("From_To") > -1) {
+                        $.extend(obj, { frozen: true }, { sortable: false });
+                        colNameArray[i] = colNameArray[i].replace("_", "&#8260") + ':'; // _ => /
+                    }
+                    if (colNameArray[i].indexOf("Ca_C") > -1)
+                        colNameArray[i] = colNameArray[i].replace("_", "&#8211"); // _ => -
+                    if (colNameArray[i].indexOf("Default_Value") > -1)
+                        colNameArray[i] = colNameArray[i].split('_')[0];
+                    colModelArray.push(obj);
+                    //colNameArray.unshift('Actions');
+                    //colModelArray.unshift({name:'act',index:'act', width:75,sortable:false});
+                }
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    //width: '100',
+                    width: jqgridCustom.getwidth(),
+                    //sortname: 'id',
+                    //viewrecords: true,
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    viewrecords: true,
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        jqgridCustom.hideFrozenTitle();
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+                $("#" + listId).jqGrid('setFrozenColumns');
+                $('#' + listId).trigger("reloadGrid");
+            }
+        }
+        //#endregion createJqgrid
+
+    });
+</script>

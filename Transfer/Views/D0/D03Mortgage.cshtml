@@ -1,0 +1,817 @@
+﻿@{
+    ViewBag.Menu = "D0Main";
+    ViewBag.SubMenu = "D03MortgageSub";
+    ViewBag.Title = "D03Mortgage(減損階段條件設定)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table style="width:100%;">
+                    <tr>
+                        <td style="white-space:nowrap;text-align:right">
+                            參數編號：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Parm_ID" name="Parm_ID" maxlength="30">
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            處理狀態：
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Status",
+                                               (SelectList)ViewBag.Status,
+                                               new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap;">
+                            使用狀態：
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("IsActive",
+                                                 (SelectList)ViewBag.IsActive,
+                                                 new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        您登入的帳號：<span>@ViewBag.UserAccount</span>
+        <br />
+        是否有呈送複核的權限：<span id="spanIsSender">@ViewBag.IsSender</span>
+        <input type="hidden" id="IsSender" value="@ViewBag.IsSender" />
+        <input type="hidden" id="UserAccount" value="@ViewBag.UserAccount" />
+        <table>
+            <tr>
+                <td style="white-space:nowrap;">
+                    可複核人員：
+                    @Html.DropDownList("Auditor",
+                             (SelectList)ViewBag.Auditor,
+                             new { @class = "form-control", @style = "display:inline-block;width:200px" })
+                </td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnSendToAudit" value="呈送複核" />
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnAudit" value="複核確認" />
+                    &nbsp;&nbsp;
+                    <input type="button" class="btn btn-primary" id="btnReject" value="複核退回" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr id="trParm_ID">
+                <td style="white-space:nowrap; text-align:right">
+                    參數編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanParm_ID"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Stage 1：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editStage1" name="editStage1" maxlength="255">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Stage 2：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editStage2" name="editStage2" maxlength="255">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Stage 3：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editStage3" name="editStage3" maxlength="255">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    規則適用起始日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editUsing_Start_Date" name="editUsing_Start_Date" maxlength="10">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    規則適用截止日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editUsing_End_Date" name="editUsing_End_Date" maxlength="10">
+                </td>
+            </tr>
+            <tr id="trRule_setter_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    規則設定者：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setter_Name"></span>
+                </td>
+            </tr>
+            <tr id="trRule_setting_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    規則編輯日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setting_Date"></span>
+                </td>
+            </tr>
+            <tr id="trAuditor_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    可複核人員：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAuditor_Name"></span>
+                </td>
+            </tr>
+            <tr id="trAudit_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    複核日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAudit_Date"></span>
+                </td>
+            </tr>
+            <tr id="trStatus">
+                <td style="white-space:nowrap; text-align:right">
+                    處理狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanStatus" style="display:none"></span>
+                    <span id="spanStatus_Name"></span>
+                </td>
+            </tr>
+            <tr id="trIsActive">
+                <td style="white-space:nowrap; text-align:right">
+                    使用狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanIsActive" style="display:none"></span>
+                    <span id="spanIsActive_Name"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="設為失效" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnClose" value="關閉視窗" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetD03AllData", "D0")';
+        url.getDbData = '@Url.Action("GetCacheD03Data", "D0")';
+        url.getData = '@Url.Action("GetD03Data", "D0")';
+        url.saveData = '@Url.Action("SaveD03", "D0")';
+        url.deleteData = '@Url.Action("DeleteD03", "D0")';
+        url.sendToAudit = '@Url.Action("SendD03ToAudit", "D0")';
+        url.audit = '@Url.Action("D03Audit", "D0")';
+        //#endregion 註冊URL
+
+        //#region 產生datepicker
+        created.createDatepicker('editUsing_Start_Date', false, null);
+        created.createDatepicker('editUsing_End_Date', false, null);
+        //#endregion
+
+        //#region
+        if ($("#spanIsSender").html() != "Y") {
+            $("#btnAdd").hide();
+        }
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnClose':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+                case 'btnSendToAudit':
+                    $("#" + id).on('click', function () { SendToAudit(); });
+                    break;
+                case 'btnAudit':
+                    $("#" + id).on('click', function () { AuditData("2"); });
+                    break;
+                case 'btnReject':
+                    $("#" + id).on('click', function () { AuditData("3"); });
+                    break;
+            }
+        })
+        //#endregion
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Parm_ID').val("");
+            $('#Status').val("");
+            $('#IsActive').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var parmID = $('#Parm_ID').val().trim();
+            var status = $('#Status').val().trim();
+            var isActive = $('#IsActive').val().trim();
+
+            var obj = {
+                Parm_ID: parmID,
+                Status: status,
+                IsActive: isActive
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = '@ViewBag.Title';
+            var urlString = "";
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: urlString
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 80, sortable: false },
+                                    { name: "Parm_ID", index: "Parm_ID", align: 'left', width:100 },
+                                    { name: "IsActive", index: "IsActive", align: 'left' },
+                                    { name: "IsActive_Name", index: "IsActive_Name", align: 'left', width: 100 },
+                                    { name: "Status", index: "Status", align: 'left' },
+                                    { name: "Status_Name", index: "Status_Name", align: 'left' },
+                                    { name: "Stage1", index: "Stage1", align: 'left' },
+                                    { name: "Stage2", index: "Stage2", align: 'left' },
+                                    { name: "Stage3", index: "Stage3", align: 'left' },
+                                    { name: "Using_Start_Date", index: "Using_Start_Date", align: 'left'},
+                                    { name: "Using_End_Date", index: "Using_End_Date", align: 'left'},
+                                    { name: "Rule_setter", index: "Rule_setter", align: 'left' },
+                                    { name: "Rule_setter_Name", index: "Rule_setter_Name", align: 'left', width: 120 },
+                                    { name: "Rule_setting_Date", index: "Rule_setting_Date", align: 'left', width: 120 },
+                                    { name: "Auditor", index: "Auditor", align: 'left' },
+                                    { name: "Auditor_Name", index: "Auditor_Name", align: 'left', width: 120 },
+                                    { name: "Audit_Date", index: "Audit_Date", align: 'left', width: 120 }
+                                ];
+
+            var colNameArray = [
+                                'Actions',
+                                '參數編號',
+                                '使用狀態(代碼)',
+                                '使用狀態',
+                                '處理狀態(代碼)',
+                                '處理狀態',
+                                'Stage 1',
+                                'Stage 2',
+                                'Stage 3',
+                                '規則適用起始日期',
+                                '規則適用截止日期',
+                                '規則設定者(帳號)',
+                                '規則設定者',
+                                '規則編輯日期',
+                                '可複核人員帳號',
+                                '可複核人員',
+                                '複核日期'
+                               ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                multiselect: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+                    $(".actionEditIcon").hide();
+
+                    if ($("#spanIsSender").html() != "Y") {
+                        $(".actionDeleIcon").hide();
+                    }
+                }
+            });
+
+            $("#" + listId).jqGrid('hideCol', ["Rule_setter", "Auditor",
+                                               "Status", "IsActive"]);
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            //SetAction("Modify", i, "修改");
+        }
+        actfun.View = function(i)
+        {
+            SetAction("View", i, "檢視");
+        }
+        actfun.Dele = function(i)
+        {
+            SetAction("Delete", i, "設為失效");
+        }
+
+        //#region SetAction
+        function SetAction(actionType, rowid, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            if (actionType == "Add") {
+                $('#spanParm_ID').html("");
+                $('#editStage1').val("");
+                $('#editStage2').val("");
+                $('#editStage3').val("");
+                $('#editUsing_Start_Date').val("");
+                $('#editUsing_End_Date').val("");
+                $('#spanRule_setter_Name').html("");
+                $('#spanRule_setting_Date').html("");
+                $('#spanAuditor_Name').html("");
+                $('#spanAudit_Date').html("");
+                $('#spanStatus').html("");
+                $('#spanStatus_Name').html("");
+                $('#spanIsActive').html("");
+                $('#spanIsActive_Name').html("");
+
+                $('#trParm_ID').hide();
+                $('#trRule_setter_Name').hide();
+                $('#trRule_setting_Date').hide();
+                $('#trAuditor_Name').hide();
+                $('#trAudit_Date').hide();
+                $('#trStatus').hide();
+                $('#trIsActive').hide();
+            }
+            else {
+                var data = $("#list1").getRowData(rowid);
+
+                $('#spanParm_ID').html(data.Parm_ID);
+                $('#editStage1').val(data.Stage1);
+                $('#editStage2').val(data.Stage2);
+                $('#editStage3').val(data.Stage3);
+                $('#editUsing_Start_Date').val(data.Using_Start_Date);
+                $('#editUsing_End_Date').val(data.Using_End_Date);
+                $('#spanRule_setter_Name').html(data.Rule_setter_Name);
+                $('#spanRule_setting_Date').html(data.Rule_setting_Date);
+                $('#spanSender_Name').html(data.Sender_Name);
+                $('#spanSend_Date').html(data.Send_Date);
+                $('#spanAuditor_Name').html(data.Auditor_Name);
+                $('#spanAudit_Date').html(data.Audit_Date);
+                $('#spanStatus').html(data.Status);
+                $('#spanStatus_Name').html(data.Status_Name);
+                $('#spanIsActive').html(data.IsActive);
+                $('#spanIsActive_Name').html(data.IsActive_Name);
+
+                $('#trParm_ID').show();
+                $('#trRule_setter_Name').show();
+                $('#trRule_setting_Date').show();
+                $('#trAuditor_Name').show();
+                $('#trAudit_Date').show();
+                $('#trStatus').show();
+                $('#trIsActive').show();
+            }
+
+            $('#editStage1').prop('disabled', true);
+            $('#editStage2').prop('disabled', true);
+            $('#editStage3').prop('disabled', true);
+            $('#editUsing_Start_Date').prop('disabled', true);
+            $('#editUsing_Start_Date').next().hide();
+            $('#editUsing_End_Date').prop('disabled', true);
+            $('#editUsing_End_Date').next().hide();
+
+            switch (actionType) {
+                case "Add":
+                case "Modify":
+                    $('#editStage1').prop('disabled', false);
+                    $('#editStage2').prop('disabled', false);
+                    $('#editStage3').prop('disabled', false);
+                    $('#editUsing_Start_Date').prop('disabled', false);
+                    $('#editUsing_Start_Date').next().show();
+                    $('#editUsing_End_Date').prop('disabled', false);
+                    $('#editUsing_End_Date').next().show();
+
+                    $('#btnSave').show();
+                    $('#btnDelete').hide();
+                    break;
+                case "View":
+                    $('#btnSave').hide();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "Delete":
+                    $('#btnSave').hide();
+                    $('#btnDelete').show();
+
+                    break;
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = null;
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+
+            var parmID = $('#spanParm_ID').val().trim();
+            var stage1 = $('#editStage1').val().trim();
+            var stage2 = $('#editStage2').val().trim();
+            var stage3 = $('#editStage3').val().trim();
+            var usingStartDate = $('#editUsing_Start_Date').val().trim();
+            var usingEndDate = $('#editUsing_End_Date').val().trim();
+
+            if (stage1 == "") {
+                alert("Stage 1 必填");
+                return false;
+            }
+
+            if (stage2 == "") {
+                alert("Stage 2 必填");
+                return false;
+            }
+
+            if (stage3 == "") {
+                alert("Stage 3 必填");
+                return false;
+            }
+
+            if (usingStartDate == "") {
+                alert("規則適用起始日期 必填");
+                return false;
+            }
+            else {
+                if (verified.isDate(usingStartDate, false) == false) {
+                    alert("規則適用起始日期 錯誤 (yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            if (usingEndDate == "") {
+                alert("規則適用截止日期 必填");
+                return false;
+            }
+            else {
+                if (verified.isDate(usingEndDate, false) == false) {
+                    alert("規則適用截止日期 錯誤 (yyyy/MM/dd)");
+                    return false;
+                }
+
+                if (Date.parse(usingStartDate) > Date.parse(usingEndDate)) {
+                    alert("規則適用起始日期 不可大於 規則適用截止日期");
+                    return false;
+                }
+            }
+
+            var obj = {
+                Parm_ID: parmID,
+                Stage1: stage1,
+                Stage2: stage2,
+                Stage3: stage3,
+                Using_Start_Date: usingStartDate,
+                Using_End_Date: usingEndDate
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定設為失效？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        parmID: $('#spanParm_ID').html()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+
+        //#region SendToAudit
+        function SendToAudit() {
+            if ($("#IsSender").val() != "Y") {
+                alert("您沒有呈送複核的權限");
+                return false;
+            }
+
+            var auditor = $("#Auditor").val().trim();
+
+            if (auditor == "") {
+                alert("請選擇可複核人員");
+                return false;
+            }
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var parmID = "";
+
+            if (!rowKey) {
+                alert("請勾選要呈送複核的資料");
+                return false;
+            }
+            else if (confirm("確定呈送複核？")) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        alert("參數編號：" + grid.getCell(selectedIDs[i], "Parm_ID") + "，已複核完成，不可呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Rule_setter") == auditor) {
+                        alert("參數編號：" + grid.getCell(selectedIDs[i], "Parm_ID") + "，規則設定者 和 您選擇的可複核人員 不可相同");
+                        return false;
+                    }
+
+                    parmID += grid.getCell(selectedIDs[i], "Parm_ID") + ",";
+                }
+
+                parmID = parmID.substr(0, parmID.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    parmID: parmID,
+                    auditor: auditor
+                }),
+                dataType: "json",
+                url: url.sendToAudit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region AuditData
+        function AuditData(status) {
+            var userAccount = $("#UserAccount").val().trim();
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var parmID = "";
+
+            var confirmWord = "";
+            if (status == "2") {
+                confirmWord = "確定複核？";
+            }
+            else if (status == "3") {
+                confirmWord = "確定退回？";
+            }
+
+            if (!rowKey) {
+                alert("請勾選要複核的資料");
+                return false;
+            }
+            else if (confirm(confirmWord)) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "0") {
+                        alert("參數編號：" + grid.getCell(selectedIDs[i], "Parm_ID") + "，尚未呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        if (status == "2") {
+                            alert("參數編號：" + grid.getCell(selectedIDs[i], "Parm_ID") + "，已複核完成，不可再做 複核確認");
+                            return false;
+                        }
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Auditor").trim() != userAccount) {
+                        alert("參數編號：" + grid.getCell(selectedIDs[i], "Parm_ID") + "，您不是此筆資料的可複核人員");
+                        return false;
+                    }
+
+                    parmID += grid.getCell(selectedIDs[i], "Parm_ID") + ",";
+                }
+
+                parmID = parmID.substr(0, parmID.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    parmID: parmID,
+                    status: status
+                }),
+                dataType: "json",
+                url: url.audit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+    });
+</script>

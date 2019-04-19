@@ -1,0 +1,311 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A5Main";
+    ViewBag.SubMenu = "D73Sub";
+    ViewBag.Title = "查詢信評檢核結果";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table width="100%">
+                    <tr>
+                        <td style="width:580px" class="form-group">
+                            <label>報導日 : </label>
+                            <input type="text" id="datepicker1" name="datepicker1">
+                        </td>
+                        <td style="width:450px; padding-top:8px">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>版本 : </label>
+                                    </td>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version" id="version" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:5px">
+                <tr>
+                    <td style="">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnD73Search" style="margin-right:10px" />
+                    </td>
+                </tr>
+            </table>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="D73Dialog1" title=""style="display:none">
+        <table style="width:100%">
+            <tr>
+                <td>
+                    <textarea id="D73TextArea" maxlength="255" style="overflow-y: scroll; white-space:pre-wrap;max-width:100%;width:100%;height:500px;"></textarea>
+                </td>
+            </tr>
+            @*<tr>
+                <td style="padding-top:10px;float:right;">
+                    <input type="button" class="btn btn-primary" value="取消" id="btnD73TextAreaCancel" style="" />
+                </td>
+            </tr>*@
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("SearchD73", "D7")';
+        url.getDbData = '@Url.Action("GetDefaultCacheData", "D7")';
+        url.getReportDataVersion = '@Url.Action("GetD73Version", "D7")';
+        url.getTextArea = '@Url.Action("D73GetTxtStr", "D7")';
+        url.getDlText = '@Url.Action("D73GetTxtFile", "D7")';
+        url.DeleData = '@Url.Action("D73DelTxtFile", "D7")';
+        //#endregion 註冊URL
+
+        //#region 選擇reportDate 後要觸發的動作
+        var versionFun = customerUtility.getVersion('versionSelect',
+            'datepicker1',
+            'D73',
+            url.getReportDataVersion);
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 產生datepicker
+        created.createDatepicker('datepicker1', true, null, versionFun);
+        //#endregion
+
+        //#region 參數
+        var dialogId = 'D73Dialog1';
+        var dialogformId = dialogId + 'Form';
+        var textAreaId = 'D73TextArea';
+        //#endregion 參數
+
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD73Search':
+                    $("#" + id).on('click', function () { search() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+
+        //#region 查詢條件
+
+        function search() {
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    date: $('#datepicker1').val(),
+                    ver: $('#version').val(),
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", '@Ref.Table_Type.D73.tableNameGetDescription()');
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION, 'e');
+                }
+            });
+        }
+
+        //#endregion 查詢條件
+
+        function D73View(Id) {
+            $("#" + dialogId).dialog({
+                title: '檢視檔案',
+                position: { my: "top+10%", at: "center top", of: window },
+                width: '60%',
+                autoOpen: false,
+                resizable: true,
+                closeText: "取消",
+                modal: true
+            });
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Id: Id,
+                }),
+                dataType: "json",
+                url: url.getTextArea,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    $('#' + textAreaId).val(result.Datas.Data);
+                }
+                $("#" + dialogId).dialog("open");
+            });
+            //$('#btnD73TextAreaCancel').off('click');
+            //$('#btnD73TextAreaCancel').on('click', function () {
+            //    $('#' + textAreaId).val('');
+            //    $("#" + dialogId).dialog("close");
+            //});
+        }
+
+        function D73Dl(File_path, File_Name) {
+            window.location.href = "@Url.RouteUrl(new { Controller = "D7", Action = "D73GetTxtFile" })/?filePath=" + File_path + "&fileName=" + File_Name;
+        }
+
+        function D73Dele(id) {
+            if (!confirm("確定把檔案刪除?")) {
+                return false
+            }
+            else {
+                clearJqgrid();
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        Id: id,
+                        date:$('#datepicker1').val(),
+                        ver: $('#version').val()
+                    }),
+                    dataType: "json",
+                    url: url.DeleData,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid("list1", "pager1", '@Ref.Table_Type.D73.tableNameGetDescription()');
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                    }
+                });
+            }
+        }
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region Audit formate button
+        function ActionFormatter(cellvalue, options, rdata) {
+            let str = '';
+            str += '<div class="btn-group">';
+            str += '<a title="檢視" class="btn actionViewIcon" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D73' + options.gid + 'View' + options.rowId + '" return:false;="">';
+            str += '<i class="fa fa-search fa-lg"></i></a>';
+            if (rdata.Delete_YN != "Y")
+            {
+                str += '<a title="下載" class="btn actionDlIcon" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D73' + options.gid + 'Dl' + options.rowId + '" return:false;="">';
+                str += '<i class="fa fa-download fa-lg"></i></a>';
+                str += '<a title="刪除" class="btn actionDeleIcon" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D73' + options.gid + 'Dele' + options.rowId + '" return:false;="">';
+                str += '<i class="fa fa-trash fa-lg"></i></a>';
+            }
+            str += '</div>';
+            return str;
+        }
+        //#endregion
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colNames = ['Action', '編號', '報導日', '版本', '檔案名稱', '建立日期', '刪除註記', '文件存放位址', '刪除資料日期', '資料刪除者'];
+            var colModels = [
+                { name: "Action", width: 100, align: "left", sortable: false, editable: false, formatter: ActionFormatter },
+                { name: "ID", index: "ID", align: 'left', width: 100 },
+                { name: "Report_Date", index: "Report_Date", align: 'center', width: 120 },
+                { name: "Version", index: "Version", align: 'right', width: 65 },
+                { name: "File_Name", index: "File_Name", align: 'left', width: 350 },
+                { name: "Create_Date", index: "Create_Date", align: 'center', width: 120 },
+                { name: "Delete_YN", index: "Delete_YN", align: 'left', align: 'center', width: 120 },
+                { name: "File_path", index: "File_path", align: 'left', hidden: true },
+                { name: "Delete_Date", index: "Delete_Date", align: 'left', hidden: true },
+                { name: "Processing_User", index: "Processing_User", align: 'left', hidden: true },
+            ];
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: "D73Db",
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNames,
+                colModel: colModels,
+                //rownumbers: true, //每列編號
+                //rownumWidth: 40,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                caption: title, //標題
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true, //顯示總數
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    $('#' + listId + ' > tbody > tr:gt(0) > td[aria-describedby$=' + listId + '_Action]').each(function () {
+                        //#region 設定Action功能
+                        let tr = $(this).parents('tr:first');
+                        let ID = tr.find($.validator.format('td[aria-describedby$={0}_ID]', listId)).text();
+                        let File_path = tr.find($.validator.format('td[aria-describedby$={0}_File_path]', listId)).text();
+                        let File_Name = tr.find($.validator.format('td[aria-describedby$={0}_File_Name]', listId)).text();
+                        $(this).find('.actionViewIcon').off('click');
+                        $(this).find('.actionViewIcon').on('click', function () {
+                            D73View(ID);
+                        });
+                        $(this).find('.actionDlIcon').off('click');
+                        $(this).find('.actionDlIcon').on('click', function () {
+                            D73Dl(File_path, File_Name);
+                        });
+                        $(this).find('.actionDeleIcon').off('click');
+                        $(this).find('.actionDeleIcon').on('click', function () {
+                            D73Dele(ID);
+                        });
+                        //#endregion 設定Action功能
+                    });
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+    });
+</script>

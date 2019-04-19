@@ -1,0 +1,222 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "C1Main";
+    ViewBag.SubMenu = "C04Sub";
+    ViewBag.Title = "查詢C04總經資料內容";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="padding-right:20px">
+                            <label>起始季別 : </label>
+                            @Html.DropDownList("dateStart",
+                        (SelectList)ViewBag.SelectDateRange,
+                        new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="padding-right:20px">
+                            <label>截止季別 : </label>
+                            @Html.DropDownList("dateEnd",
+                        (SelectList)ViewBag.SelectDateRange,
+                        new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <div class="control-group">
+                                <div class="checkbox checkbox-info">
+                                    @Html.CheckBox("lastFlag", false)
+                                    <label>僅顯示近期最新資料</label>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <input type="button" class="btn btn-primary" style="margin-right:13px;margin-left:30px;margin-top:5px;" value="C04查詢" id="btnC04Search" />
+                            <input type="button" class="btn btn-primary dlexcel" style="margin-top:5px;" value="匯出Excel" id="btnC04Dl" disabled />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchC04", "C0")';
+        url.getDbData = '@Url.Action("GetDefaultCacheData", "C0")';
+        url.getC04Excel = '@Url.Action("GetC0Excel", "C0")';
+        //#endregion 註冊URL
+       
+        //#region 選取季別的事件
+        var _dateRange = @Html.Raw(Json.Encode(ViewBag.DateRange));
+        $('#dateStart,#dateEnd').on('change',function(){
+            var id = $(this).attr('id');
+            var val = $(this).val();
+            var _otherId = '';
+            var _newRange = [" "];
+            if(id == 'dateStart')
+            {
+                _otherId = 'dateEnd';
+                $.each(_dateRange,function(i,v){
+                    if(val == " " || v >= val)
+                        _newRange.push(v);
+                });
+                setRange(_otherId,_newRange,$('#'+_otherId).val());
+            }
+            if(id == 'dateEnd')
+            {
+                _otherId = 'dateStart';
+                $.each(_dateRange,function(i,v){
+                    if(val == " " || v <= val)
+                        _newRange.push(v);
+                });
+                setRange(_otherId,_newRange,$('#'+_otherId).val());
+            }
+        });
+
+        function setRange(setId , newRange, oldValue)
+        {
+            var optionObj = [];
+            $.each(newRange, function (key, value) {
+                optionObj.push({ value: value, text: value })
+            })
+            $("#" + setId + " option").remove();
+            customerUtility.addoption(setId, optionObj);
+            $('#'+setId).val(oldValue);
+        }
+
+        //#endregion 選取季別的事件
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnC04Search':
+                    $('#' + id).on('click', function () { C04Search() });
+                    break;
+                case 'btnC04Dl':
+                    $('#' + id).click(C04DlExcel);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+
+
+        function C04Search() {
+            clearJqgrid();
+            $('#btnC04Dl').prop('disabled', true);
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dateStart: $('#dateStart').val(),
+                    dateEnd: $('#dateEnd').val(),
+                    lastFlag: $('#lastFlag').prop('checked'),
+                }),
+                dataType: "json",
+                url: url.search,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid( "list1", "pager1");
+                    $('#btnC04Dl').prop('disabled', false);
+                }
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+        function C04DlExcel() {
+            $.ajax({
+                type: "POST",
+                data : JSON.stringify({
+                    type: "C04"
+                }),
+                url: url.getC04Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                    { Controller = "C0", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.C04_1.ToString()';
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(listId, pagerId) {
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    url: url.getDbData,
+                    datatype: "json",
+                    mtype: "POST",
+                    postData:
+                    {
+                        type: 'C04_1',
+                    },
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                    colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                    rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    sortorder: "desc",
+                    caption: '@Ref.Table_Type.C04.GetDescription()', //標題
+                    viewrecords: true,
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        $('#btnC04Dl').prop('disabled', false);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+
+        }
+        //#endregion createJqgrid
+    });
+</script>

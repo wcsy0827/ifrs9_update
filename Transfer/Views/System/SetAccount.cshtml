@@ -1,0 +1,348 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "SystemMain";
+    ViewBag.SubMenu = "SystemAccountSub";
+    ViewBag.Title = "設定帳號";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td width="450px">
+                        <label>帳號查詢 : </label>
+                        <input type="text" id="account" name="account" style="width:300px">
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding-top:10px">
+                        <input type="button" class="btn btn-primary" value="新增" id="btnAdd" />
+                    </td>
+                </tr>
+            </table>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+沒有輸入查詢條件時為全部查詢"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="AccountDialog"></div>
+</div>
+<script type="text/javascript">
+    var _debt1 = @Html.Raw(Json.Encode(ViewBag.debt));
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.searchAccount = '@Url.Action("SearchAccount", "System")';
+        url.getAccount = '@Url.Action("GetCacheData", "System")';
+        url.saveAccount = '@Url.Action("SaveAccount", "System")';
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var _debt = @Html.Raw(Json.Encode(ViewBag.debt));
+        var dialogId = 'AccountDialog';
+        var dialogformId = dialogId + 'Form';
+        var accountId = dialogId + 'account';
+        var passwordId = dialogId + 'password';
+        var passwordConfirmId = dialogId + 'passwordConfirm';
+        var nameId = dialogId + 'name';
+        var adminFlagId = dialogId + 'adminFlag';
+        var debtFlagId = dialogId + 'debtFlag';
+        var loginFlagId = dialogId + 'loginFlag';
+        var saveId = dialogId + 'btnSave';
+        var deleteId = dialogId + 'btnDelete';
+        //#endregion 共用參數
+
+        //#region 產生 dialog
+        var obj = [
+           { 'name': 'account', 'type': 'string', 'title': '使用者帳號', 'max': '30', 'req': 'true' },
+           { 'name': 'password', 'type': 'string', 'title': '使用者密碼', 'max': '30', 'req': 'true' },
+           { 'name': 'passwordConfirm', 'type':'string', 'title': '確認密碼' },
+           { 'name': 'name', 'type': 'string', 'title': '使用者名稱', 'max': '30' },
+           { 'name': 'adminFlag', 'type': 'selectOption', 'title': '是否為管理員'},
+           { 'name': 'debtFlag', 'type': 'selectOption', 'title': '類別'},
+           { 'name': 'loginFlag', 'type': 'selectOption', 'title': '是否登入中'},
+        ]
+        jqgridCustom.createDialog(dialogId, obj);
+        //#endregion 產生 dialog
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { AccountSearch() });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { dialogOpen('@Ref.Action_Type.Add.ToString()') });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region Search Account
+        function AccountSearch()
+        {
+            clearJqgrid();
+            var title = '@Ref.Table_Type.UserTable.GetDescription()'; //標頭
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    account: $('#account').val()
+                }),
+                dataType: "json",
+                url: url.searchAccount,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion Search Account
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getAccount,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    //type: "Db",
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                caption: title, //標題
+                viewrecords: true, //顯示總數
+                shrinkToFit: false,
+                contentType: "application/json",
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'Account',actfun);
+                }
+            });
+
+            $("#" + listId).jqGrid('hideCol', ["Effective"]);
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Edit.ToString()',i);
+        }
+        actfun.Dele = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Dele.ToString()',i);
+        }
+        actfun.View = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.View.ToString()',i);
+        }
+
+        function dialogOpen(type,rowid)
+        {
+            var title = '';
+            $('#'+saveId+',#'+deleteId).hide();
+            $('#'+loginFlagId).show();
+            $("#"+adminFlagId+" option").remove();
+            $("#"+loginFlagId+" option").remove();
+            $("#"+debtFlagId+" option").remove();
+            var optionObj = [];
+            optionObj.push({value:"N",text:"N"})
+            optionObj.push({value:"Y",text:"Y"})
+            customerUtility.addoption(adminFlagId,optionObj);
+            customerUtility.addoption(loginFlagId,optionObj);
+            customerUtility.addoption(debtFlagId,_debt);
+            $('#'+accountId).attr('disabled',false);
+            $('#'+nameId).attr('disabled',false);
+            $('#'+adminFlagId).attr('disabled',false);
+            $('#'+loginFlagId).attr('disabled',false);
+            $('#'+debtFlagId).attr('disabled',false);
+            if(type == '@Ref.Action_Type.Add.ToString()')
+            {
+                title = '@Ref.Action_Type.Add.GetDescription()';
+                $('#'+passwordId+'tr').show();
+                $('#'+passwordConfirmId+'tr').show();
+                $('#'+saveId).show();
+                $('#'+loginFlagId+'tr').hide();
+                $('#'+accountId).val('');
+                $('#'+passwordId).val('');
+                $('#'+passwordConfirmId).val('');
+                $('#'+nameId).val('');
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Edit.ToString()')
+            {
+                title = '@Ref.Action_Type.Edit.GetDescription()';
+                $('#'+passwordId+'tr').show();
+                $('#'+passwordConfirmId+'tr').show();
+                $('#'+saveId).show();
+                dialogSetData(rowid);
+                $('#'+accountId).attr('disabled',true);
+                //$('#'+adminFlagId).attr('disabled',true);
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Dele.ToString()')
+            {
+                title = '@Ref.Action_Type.Dele.GetDescription()';
+                $('#'+passwordId+'tr').hide();
+                $('#'+passwordConfirmId+'tr').hide();
+                $('#'+deleteId).show();
+                dialogSetData(rowid);
+                $('#'+accountId).attr('disabled',true);
+                $('#'+nameId).attr('disabled',true);
+                $('#'+adminFlagId).attr('disabled',true);
+                $('#'+loginFlagId).attr('disabled',true);
+                $('#'+debtFlagId).attr('disabled',true);
+                $('#'+deleteId).off('click');
+                $('#'+deleteId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.View.ToString()')
+            {
+                title = '@Ref.Action_Type.View.GetDescription()';
+                $('#'+passwordId+'tr').hide();
+                $('#'+passwordConfirmId+'tr').hide();
+                dialogSetData(rowid);
+                $('#'+accountId).attr('disabled',true);
+                $('#'+nameId).attr('disabled',true);
+                $('#'+adminFlagId).attr('disabled',true);
+                $('#'+loginFlagId).attr('disabled',true);
+                $('#'+debtFlagId).attr('disabled',true);
+            }
+            $("#" + dialogId).dialog({
+                title: title,
+                position: { my: "center", at: "center", of: window },
+            });
+            $("#" + dialogId).dialog("open");
+            $('#'+dialogformId).validate().resetForm();
+        }
+
+        function dialogSetData(rowid)
+        {
+            rowid = rowid || 0;
+            //清空
+            $('#'+accountId).val('');
+            $('#'+passwordId).val('');
+            $('#'+passwordConfirmId).val('');
+            $('#'+nameId).val('');
+            if(rowid > 0)
+            {
+                var data = $("#list1").getRowData(rowid);
+                //set value
+                $('#'+accountId).val(data.User_Account);
+                $('#'+nameId).val(data.User_Name);
+                $('#'+adminFlagId).val(data.AdminFlag).change();
+                $('#'+loginFlagId).val(data.LoginFlag).change();
+                $('#'+debtFlagId).val(data.DebtFlag.split(':',1)[0]).change();
+            }
+        }
+
+        //#region save Account
+        function dialogSave(action)
+        {
+            if(action == '@Ref.Action_Type.Edit.ToString()' || $('#'+dialogformId).valid())
+            {
+                let flag = false;
+                if(action =='@Ref.Action_Type.Dele.ToString()')
+                {
+                    if(!confirm("確定刪除?"))
+                    {
+                        return false;
+                    }
+                    flag = true;
+                }
+                else
+                {
+                    if($('#'+passwordId).val() !== $('#'+passwordConfirmId).val())
+                    {
+                        customerUtility.alert('密碼與確認密碼不同,請重新輸入!','w');
+                        $('#'+passwordId).val('');
+                        $('#'+passwordConfirmId).val('');
+                        return false;
+                    }
+                    flag = true;
+                }
+                if(flag)
+                {
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            action: action, //action
+                            account: $('#'+accountId).val(),
+                            pwd: $('#'+passwordId).val(),
+                            name : $('#'+nameId).val(),
+                            adminFlag: $('#'+adminFlagId).val(),
+                            loginFlag: $('#'+loginFlagId).val(),
+                            debtFlag: $('#'+debtFlagId).val()
+                        }),
+                        dataType: "json",
+                        url: url.saveAccount,
+                        contentType: 'application/json',
+                    })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            $("#" + dialogId).dialog("close");
+                            customerUtility.alert(result.DESCRIPTION,'s');
+                            clearJqgrid();
+                            createJqgrid("list1", "pager1", '@Ref.Table_Type.UserTable.GetDescription()');
+                        }
+                        else {
+                            customerUtility.alert(result.DESCRIPTION,'e');
+                        }
+                    });
+                }
+            }
+        }
+        //#endregion save Account
+
+    });
+</script>

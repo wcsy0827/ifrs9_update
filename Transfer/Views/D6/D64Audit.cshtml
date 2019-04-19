@@ -1,0 +1,843 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D64AuditSub";
+    ViewBag.Title = "量化評估調整複核";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    #D65Dialog5 label {
+        font-size: 12px;
+    }
+</style>
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:185px">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="width:650px;" class="form-group">
+                            <label>報導日&emsp; : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="width:450px; padding-top:8px">
+                            <label>查詢狀態 : </label>
+                            @Html.DropDownList("Status",
+                            (SelectList)ViewBag.Status,
+                             new { @class = "form-control", @style = "display:inline-block;" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:5px;">
+                            <label>帳戶編號 : </label>
+                            <input type="text" id="referenceNbr" name="referenceNbr">
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>債券編號 : </label>
+                            <input type="text" id="bondNumber" name="bondNumber">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:5px;" colspan="2">
+                            <input type="button" class="btn btn-primary" value="查詢" id="btnD64Search" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="D64Dialog"></div>
+    <div id="D64Dialog2">
+        <div id="jqgridDiv2" class="jqd">
+        </div>
+    </div>
+    <div id="D64Dialog3" style="display:none">
+        <table style="width:100%">
+            <tr>
+                <td>
+                    <div id="jqgridDiv3" class="jqd" style="padding-top:10px;width:100%"></div>
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td>
+                    <input type="hidden" id="D64Check_Reference" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="D64Dialog4" style="display:none">
+        <table style="width:100%">
+            <tr>
+                <td colspan="2">
+                    <textarea id="D64TextArea" maxlength="255" style="overflow-y: scroll; white-space:pre-wrap;max-width:100%;width:100%;height:200px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top:10px;">
+                    <input type="button" class="btn btn-primary" value="存檔" id="btnD64TextAreaSave" style="" />
+                </td>
+                <td style="padding-top:10px;float:right;">
+                    <input type="button" class="btn btn-primary" value="取消" id="btnD64TextAreaCancel" style="" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="D64Dialog5" style="display:none">
+        <table style="width:100%" id="D64Table5"></table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchD63", "D6")';
+        url.getDbData = '@Url.Action("GetCacheData", "D6")';
+        url.D64Data = '@Url.Action("GetD64","D6")';
+        url.getQuantifyFile = '@Url.Action("GetQuantifyFile", "D6")';
+        url.getTextArea = '@Url.Action("GetTextArea","D6")';
+        url.saveTextArea = '@Url.Action("SaveTextArea","D6")';
+        url.getChg_In_Spread = '@Url.Action("GetChg_In_Spread","D6")';
+        url.updateD63 = '@Url.Action("UpdateD63","D6")';
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var account = '@ViewBag.Account'
+        var dialogId2 = 'D64Dialog2';
+        var dialogId3 = 'D64Dialog3';
+        var dialogId4 = 'D64Dialog4';
+        var dialogId5 = 'D64Dialog5';
+        //#endregion 共用參數
+
+        $('#D64TextArea').prop('disabled', true);
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //#endregion 註冊verified
+
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD64Search':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 查詢量化評估需求資訊檔
+        function search()
+        {
+            clearJqgrid('jqgridDiv');
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        date: $('#datepicker').val(),
+                        assessmentSubKind : "All",
+                        bondNumber : $('#bondNumber').val(),
+                        index: $('#Status').val(),
+                        Send_to_AuditorFlag: true,
+                        referenceNbr: $('#referenceNbr').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    if(result.RETURN_FLAG)
+                        createJqgrid("jqgridDiv","list1", "pager1");
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+        //#endregion 查詢量化評估需求資訊檔
+
+        //#region jagrid 欄位自訂格式化
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDivId) {
+            $('#'+jqgridDivId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region Audit formate button
+        function D64rejectFormatterBtn(cellvalue, options, rdata)
+        {
+            return '<input type="button" class="btn btn-primary" value="拒絕" id="' + options.gid + "Reject" + options.rowId + '" ' +
+                   ' title="拒絕" style="width:50px;height:23px;" ' + ((rdata.Auditor_Return == 'Y' || rdata.Audit_date != '' || account != rdata['Auditor']) ? 'disabled' : '') + '>';
+        }
+        //#endregion
+
+        //#region Audit formate button
+        function D64confirmFormatterBtn(cellvalue, options, rdata)
+        {
+            return '<input type="button" class="btn btn-primary" value="確認" id="' + options.gid + "Confirm" + options.rowId + '" ' +
+                   ' title="確認" style="width:50px;height:23px;" ' + ((rdata.Auditor_Return == 'Y' || rdata.Audit_date != '' || account != rdata['Auditor']) ? 'disabled' : '') + '>';
+        }
+        //#endregion
+
+        function D64Chg_In_Spread(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog Dialog5' style='text-decoration:underline;' return:false; id='" + options.gid + "Chg_In_Spread" + options.rowId + "' title='檢視'>檢視</a>";
+        }
+
+        function formatterFileHyperlink(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog Dialog3' style='text-decoration:underline;' return:false; id='" + options.gid + "File" + options.rowId + "' name='" + cellvalue + "' title='檢視("+rdata.FileCount+")'>檢視</a><span>("+rdata.FileCount+")</span>";
+        }
+
+        function D64FormatterAuditor_Reply(cellvalue, options, rdata)
+        {
+            return "<a href='#' class='openDialog Dialog4' style='text-decoration:underline;' return:false; id='" + options.gid + "Auditor_Reply" + options.rowId + "' title='修改或檢視'>修改或檢視</a>";
+        }
+
+        function formatterAssessment_Result(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog Dialog4' style='text-decoration:underline;' return:false; id='" + options.gid + "AR" + options.rowId + "' title='檢視'>檢視</a>";
+        }
+
+        function formatterMemo(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog Dialog4' style='text-decoration:underline;' return:false; id='" + options.gid + "Memo" + options.rowId + "' title='檢視'>檢視</a>";
+        }
+
+        function formatterDLFileHyperlink(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog dlfile' return:false; style='text-decoration:underline;' id='" + options.gid + "DLFile" + options.rowId + "' name='" + cellvalue + "' title='" + cellvalue + "'>" + cellvalue + "</a>";
+        }
+        //#endregion jagrid 欄位自訂格式化
+
+        //#region 檔案畫面
+        function fileDialogOpen(checkReference) {
+            clearJqgrid("jqgridDiv3");
+            $('#file').next().find('input').val('');
+            $("#" + dialogId3).dialog({
+                title: "檔案上傳案檢視",
+                position: { my: "top+10%", at: "center top", of: window },
+                width: 'auto',
+                autoOpen: false,
+                resizable: false,
+                closeText: "取消",
+                modal: true
+            });
+            $('#D64Check_Reference').val('');
+            $('#D64Check_Reference').val(checkReference);
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Check_Reference: checkReference
+                }),
+                dataType: "json",
+                url: url.getQuantifyFile,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                var data = {};
+                if (result.RETURN_FLAG) {
+                    data = result.Datas.Data;
+                }
+                $("#" + dialogId3).dialog("open");
+                createJqgrid2("list3", "pager3", data);
+            });
+        }
+        //#endregion 檔案畫面
+
+        //#region 備註畫面
+        function textAreaDialogOpen(
+            id,
+            Reference_Nbr,
+            Version,
+            Assessment_Result_Version,
+            Check_Item_Code,
+            ReportDate,
+            Auditor,
+            Status) {
+            let textAreaId = 'D64TextArea';
+            let table = "D64";
+            $('#' + textAreaId).val('');
+            let title = '';
+            let type = ''
+            $('#btnD64TextAreaSave').hide();
+            $('#' + textAreaId).prop('disabled', true);
+            if (id.indexOf('AR') > -1) {
+                title = '評估結果說明';
+                type = 'Assessment_Result';
+            }
+            if (id.indexOf('Memo') > -1) {
+                title = '備註';
+                type = 'Memo';
+            }
+            if (id.indexOf("Auditor_Reply") > -1) {
+                title = '複核者之回覆意見';
+                type = 'Auditor_Reply';
+                table = "D63";
+                if(Auditor == account )
+                {
+                    $('#btnD64TextAreaSave').show();
+                    $('#' + textAreaId).prop('disabled', false);
+                }
+                if (Status == '@Ref.Evaluation_Status_Type.ReviewCompleted.GetDescription()' ||
+                      Status == '@Ref.Evaluation_Status_Type.Reject.GetDescription()')
+                {
+                    $('#btnD64TextAreaSave').hide();
+                    $('#' + textAreaId).prop('disabled', true);
+                }
+            }
+            if (title != '') {
+                $("#" + dialogId4).dialog({
+                    title: title,
+                    position: { my: "top+10%", at: "center top", of: window },
+                    width: '500px',
+                    autoOpen: false,
+                    resizable: false,
+                    closeText: "取消",
+                    modal: true
+                });
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        ReportDate: ReportDate,
+                        Reference_Nbr: Reference_Nbr,
+                        Vresion: Version,
+                        Assessment_Result_Version: Assessment_Result_Version,
+                        Check_Item_Code: Check_Item_Code,
+                        type: type,
+                        table:table
+                    }),
+                    dataType: "json",
+                    url: url.getTextArea,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $('#' + textAreaId).val(result.Datas.Data);
+                    }
+                    $("#" + dialogId4).dialog("open");
+                });
+
+                $('#btnD64TextAreaCancel').off('click');
+                $('#btnD64TextAreaCancel').on('click', function () {
+                    $('#' + textAreaId).val('');
+                    $("#" + dialogId4).dialog("close");
+                });
+                $('#btnD64TextAreaSave').off('click');
+                $('#btnD64TextAreaSave').on('click',function(){
+                    let maxValue = 255;
+                    if (typeof ($('#'+textAreaId).attr('maxlength')) != 'undefined') {
+                        maxValue = parseInt($('#'+textAreaId).attr('maxlength'));
+                    }
+                    let nowValue = $('#'+textAreaId).val().Blength();
+                    if(nowValue > maxValue)
+                    {
+                        customerUtility.alert(("內容超過最大限制"+maxValue+",目前為"+nowValue),'w');
+                        return false;
+                    }
+                    else
+                    {
+                        $.ajax({
+                            type: "POST",
+                            data: JSON.stringify({
+                                value: $('#'+textAreaId).val(),
+                                ReportDate: ReportDate,
+                                Reference_Nbr:Reference_Nbr,
+                                Vresion:Version,
+                                Assessment_Result_Version:Assessment_Result_Version,
+                                Check_Item_Code:Check_Item_Code,
+                                type:type,
+                                table:table
+                            }),
+                            dataType: "json",
+                            url: url.saveTextArea,
+                            contentType: 'application/json'
+                        })
+                        .done(function (result) {
+                            var data = {};
+                            if (result.RETURN_FLAG) {
+                                customerUtility.alert(result.DESCRIPTION,'s');
+                                $("#" + dialogId4).dialog("close");
+                            }
+                            else
+                            {
+                                customerUtility.alert(result.DESCRIPTION,'e');
+                            }
+                        });
+
+                    }
+                });
+            }
+        }
+        //#endregion 備註畫面
+
+        //#region 減損計算結果畫面
+        function ELDialogOpen(Reference_Nbr)
+        {
+
+            $("#" + dialogId5).dialog({
+                title: '減損試算結果',
+                position: { my: "top+10%", at: "center top", of: window },
+                width: '900px',
+                autoOpen: false,
+                resizable: true,
+                closeText: "取消",
+                modal: true
+            });
+            let tableId = "D64Table5";
+            clearJqgrid(tableId);
+            let colNameArray = ["債券幣別", "計算基準", "一年期預期損失", "存續期間預期損失"
+                //,"一年期預期損失(違約率=100%)"
+            ];
+            let colModelArray = [
+                { name: "Currency_Code", index: "Currency_Code", width: 100, sortable: false },
+                { name: "Base", index: "Base", width: 100, sortable: false },
+                { name: "Stage_1", index: "Stage_1", width: 280, sortable: false },
+                { name: "Stage_2", index: "Stage_2", width: 330, sortable: false },
+                //{ name: "Stage_3", index: "Stage_3", width: 220, sortable: false },
+            ];
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Reference_Nbr: Reference_Nbr
+                }),
+                dataType: "json",
+                url: url.getChg_In_Spread,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    $.each(result.Datas.Data, function (i, v) {
+                        let jqgridDiv = "jqgridDiv_" + i;
+                        let listId = "list_" + i;
+                        let str = '';
+                        str += '<tr>';
+                        str += '<td style="width:10%">';
+                        str += '<label> 專案名稱 : </label>';
+                        str += '</td>';
+                        str += '<td style="width:38%">';
+                        str += '<label>';
+                        str += v.PRJID;
+                        str += '</label>';
+                        str += '</td>';
+                        str += '<td style="width:10%">';
+                        str += '<label>流程名稱 : </label>';
+                        str += '</td>';
+                        str += '<td style="width:42%">';
+                        str += '<label>';
+                        str += v.FLOWID;
+                        str += '</label>';
+                        str += '</td>';
+                        str += '</tr>';
+                        str += '<tr>';
+                        str += '<td colspan="4">';
+                        str += '<div id="'+jqgridDiv+'" class="jqd" style="padding-top:10px;width:100%"></div>';
+                        str += '</td>';
+                        str += '</tr>';
+                        $('#' + tableId).append(str);
+                        let data = v.ChgInSpread;
+
+                        $('#' + jqgridDiv).append('<table id="' + listId + '"></table>');
+                        $("#" + listId).jqGrid({
+                            data: data,
+                            datatype: "local",
+                            mtype: "POST",
+                            colNames: colNameArray,
+                            colModel: colModelArray,
+                            rowNum: 3, //一頁筆數
+                            height: '85',
+                            autowidth: true,
+                            sortorder: "desc",
+                            caption: "減損試算結果", //標題
+                            resizable: false,
+                            shrinkToFit: false,
+                            //autoencode: true,
+                            viewsortcols: [true, 'vertical', true],
+                            ajaxRowOptions: { contentType: "application/json" },
+                            //serializeRowData: function (data) {
+                            //    return JSON.stringify(data);
+                            //},
+                            loadComplete: function () {
+                                var table = $(this);
+                                jqgridCustom.updatePagerIcons(table);
+                                $("#" + listId).jqGrid('setGroupHeaders', {
+                                    useColSpanStyle: true,
+                                    groupHeaders: [
+                                      { startColumnName: 'Currency_Code', numberOfColumns: 2, titleText: '減損試算結果' },
+                                      { startColumnName: 'Stage_1', numberOfColumns: 1, titleText: 'Stage 1' },
+                                      { startColumnName: 'Stage_2', numberOfColumns: 1, titleText: 'Stage 2' },
+                                      //{ startColumnName: 'Stage_3', numberOfColumns: 1, titleText: 'Stage 3' }
+                                    ]
+                                });
+                                $(this).find('tr[id=3]').find('td:first').hide();
+                                $(this).find('tr[id=2]').find('td:first').attr('rowspan', '2');
+                            }
+                        });
+                    });
+                    $("#" + dialogId5).dialog("open");
+                }
+                else {
+                    customerUtility.alert('查無資料!','w');
+                }
+            });
+        }
+        //#endregion 減損計算結果畫面
+
+        //#region update D63
+        function D64EvaluationClick(
+            Reference_Nbr,
+            Assessment_Result_Version,
+            Status,
+            flag)
+        {
+            let _flag = false;
+            if(flag == "Reject")
+            {
+                if (!confirm("確認退回評估結果版本為第" + Assessment_Result_Version + "版?"))
+                {
+                    return false;
+                }
+                _flag = true;
+            }
+            if(flag == "Confirm")
+            {
+                if (!confirm("確認最後評估結果版本為第" + Assessment_Result_Version + "版?"))
+                {
+                    return false;
+                }
+                _flag = true;
+            }
+            if(_flag)
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        Reference_Nbr:Reference_Nbr,
+                        Assessment_Result_Version:Assessment_Result_Version,
+                        action:Status,
+                    }),
+                    dataType: "json",
+                    url: url.updateD63,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        var page = getPage("jqgridDiv");
+                        clearJqgrid("jqgridDiv");
+                        createJqgrid("jqgridDiv","list1", "pager1",page);
+                    }
+                    else{
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+
+        //#endregion
+
+        //#region createJqgrid (建立JqGrid套件(localData)) 觀看檔案清單
+
+        function createJqgrid2(listId, pagerId, data) {
+            var colNameArray = [];
+            var colModelArray = [];
+            colNameArray = ["檔名"];
+            colModelArray = [
+             { name: "File_Name", index: "File_Name", align: 'left' , width: 450, formatter: formatterDLFileHyperlink},
+            ];
+            //if()
+
+            $('#jqgridDiv3').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv3').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                 rowNum: 10, //一頁筆數
+                pager: '#' + pagerId,
+                height: 300,
+                width: 500,
+                sortorder: "desc",
+                caption: "檔案清單", //標題
+                resizable: false,
+                shrinkToFit: false,
+                viewrecords: true, //顯示總數
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){
+                        $(this).find('td').find('a.dlfile').each(function(){
+                            $(this).off('click');
+                            $(this).on('click',function(){
+                                customerUtility.onbeforeunloadFlag = false;
+                                window.location.href = "@Url.RouteUrl(new
+                                { Controller = "D6", Action = "DLQuantifyFile" })/?Check_Reference="
+                                    +$('#D64Check_Reference').val()
+                                    +"&fileName="+$(this).attr("name");
+                            });
+                        });
+
+                    });
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false, search: false, refresh: false });
+        }
+
+
+        //#endregion createJqgrid (建立JqGrid套件(localData))
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(jqgridDivId, listId, pagerId,page) {
+            page = page || "1";
+            $('#' + jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#' + jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            var title = '';
+            var names = [];
+            var model = [];
+            var table = '';
+            if (listId == 'list1')
+            {
+                table = '@Ref.Table_Type.D63.ToString()';
+                title = '量化評估複核資訊';
+                names = @Html.Raw(Json.Encode(ViewBag.jqgridColNames));
+                model = @Html.Raw(Json.Encode(ViewBag.jqgridColModel));
+                names.splice(2,0,"減損計算結果");
+                names.splice(1,0,"拒絕");
+                names.splice(1,0,"確認");
+                names.splice(1,0,"複核者之回覆意見");
+                model.splice(2,0, { name: "Chg_In_Spread", width: 90, align: "Chg_In_Spread", sortable: false, editable: false, formatter: D64Chg_In_Spread });
+                model.splice(1,0, { name: "reject", width: 70, align: "center", sortable: false, editable: false, formatter: D64rejectFormatterBtn });
+                model.splice(1,0, { name: "confirm", width: 70, align: "center", sortable: false, editable: false, formatter: D64confirmFormatterBtn });
+                model.splice(1,0, { name: "Auditor_Reply" , width: 120, index:"Auditor_Reply",formatter: D64FormatterAuditor_Reply, sortable: false});
+            }
+            if (listId == 'list2')
+            {
+                table = '@Ref.Table_Type.D64.ToString()';
+                title = '評估結果檔';
+                names = ["測試指標編號", "測試指標名稱", "測試指標說明", "指標證明文件存放位址",
+                         "評估結果版本","評估結果說明","量化指標值",
+                         "檢查條件","門檻", "通過給定值", "是否通過量化評估",
+                         "備註","帳戶編號", "資料版本", "評估日", "評估者"];
+                model = [
+                        { name: "Check_Item_Code", index: "Check_Item_Code", align: 'left', width: 140 },
+                        { name: "Check_Item", index: "Check_Item", align: 'left', width: 220, sortable: false  },
+                        { name: "Check_Item_Memo", index: "Check_Item_Memo", align: 'left', width: 220 , sortable: false },
+                        { name: "Check_Reference", index: "Check_Reference", align: 'center' , sortable: false , formatter: formatterFileHyperlink },
+                        { name: "Assessment_Result_Version", index: "Assessment_Result_Version", align: 'right', width: 90 },
+                        { name: "Assessment_Result", index: "Assessment_Result", align: 'center', width: 100,formatter: formatterAssessment_Result, sortable: false},
+                        { name: "Check_Item_Value", index: "Check_Item_Value", align: 'left', width: 140 },
+                        { name: "Check_Symbol", index: "Check_Symbol", align: 'right', width: 70, sortable: false },
+                        { name: "Threshold", index: "Threshold", align: 'right', width: 70, sortable: false },
+                        { name: "Pass_Value", index: "Pass_Value", align: 'right', width: 90 },
+                        { name: "Quantitative_Pass", index: "Quantitative_Pass", align: 'left', width: 125 },
+                        { name: "Memo", index: "Memo", width: 80,formatter:formatterMemo, sortable: false, align: 'center'},
+                        { name: "Reference_Nbr", index: "Reference_Nbr", hidden: true },
+                        { name: "Version", index: "Version", hidden: true },
+                        { name: "Report_Date", index: "Report_Date", hidden: true },
+                        { name: "Assessor", index: "Assessor", align: 'left', width: 150, hidden: true  },
+                ];
+            }
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    table: table,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: names,
+                colModel: model,
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                page : page,
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                shrinkToFit: false,
+                viewrecords: true, //顯示總數
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    jqgridCustom.updatePagerIcons($(this));
+                    if(page != '1' && $('#'+listId).getRowData().length == 0)
+                    {
+                        $('#'+listId).setGridParam({page:1}).trigger('reloadGrid');
+                    }
+                    if (listId == 'list1')
+                    {
+                        jqgridCustom.randerAction(listId, 'D64', actfun);
+                        $('.actionDeleIcon').hide();
+                        $('.actionEditIcon').hide();
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){
+                            let tr = $(this);
+                            let Reference_Nbr = tr.find($.validator.format('td[aria-describedby$={0}_Reference_Nbr]', listId)).text();
+                            let Assessment_Result_Version = tr.find($.validator.format('td[aria-describedby$={0}_Assessment_Result_Version]', listId)).text();
+                            let Version = tr.find($.validator.format('td[aria-describedby$={0}_Version]', listId)).text();
+                            let ReportDate = tr.find($.validator.format('td[aria-describedby$={0}_Report_Date]', listId)).text();
+                            let Auditor = tr.find($.validator.format('td[aria-describedby$={0}_Auditor]', listId)).text();
+                            let Status = tr.find($.validator.format('td[aria-describedby$={0}_Status]', listId)).text();
+                            tr.find('td').find('a.Dialog4').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    textAreaDialogOpen(
+                                        $(this).attr('id'),
+                                        Reference_Nbr,
+                                        Version,
+                                        Assessment_Result_Version,
+                                        null,
+                                        ReportDate,
+                                        Auditor,
+                                        Status);
+                                });
+                            });
+                            tr.find('input:enabled').each(function(){
+                                if($(this).attr('id').indexOf('Reject') > -1)
+                                {
+                                    $(this).off('click');
+                                    $(this).on('click',
+                                        function () { D64EvaluationClick(Reference_Nbr, Assessment_Result_Version,'@Ref.Evaluation_Status_Type.Reject.GetDescription()',"Reject") });
+                                }
+                                if($(this).attr('id').indexOf('Confirm') > -1)
+                                {
+                                    $(this).off('click');
+                                    $(this).on('click',
+                                        function () { D64EvaluationClick(Reference_Nbr, Assessment_Result_Version,'@Ref.Evaluation_Status_Type.ReviewCompleted.GetDescription()',"Confirm") });
+                                }
+                            });
+                            tr.find('td').find('a.Dialog5').each(function () {
+                                $(this).off('click');
+                                $(this).on('click', function () {
+                                    ELDialogOpen(Reference_Nbr);
+                                });
+                            });
+                        });
+                    }
+                    if (listId == 'list2')
+                    {
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){
+                            let tr = $(this);
+                            let Reference_Nbr = tr.find($.validator.format('td[aria-describedby$={0}_Reference_Nbr]', listId)).text();
+                            let Version = tr.find($.validator.format('td[aria-describedby$={0}_Version]', listId)).text();
+                            let Assessment_Result_Version = tr.find($.validator.format('td[aria-describedby$={0}_Assessment_Result_Version]', listId)).text();
+                            let Check_Item_Code = tr.find($.validator.format('td[aria-describedby$={0}_Check_Item_Code]', listId)).text();
+                            let ReportDate = tr.find($.validator.format('td[aria-describedby$={0}_Report_Date]', listId)).text();
+                            tr.find('td').find('a.Dialog3').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    fileDialogOpen($(this).attr('name'));
+                                });
+                            });
+                            tr.find('td').find('a.Dialog4').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    textAreaDialogOpen(
+                                        $(this).attr('id'),
+                                        Reference_Nbr,
+                                        Version,
+                                        Assessment_Result_Version,
+                                        Check_Item_Code,
+                                        ReportDate,
+                                        '','');
+                                });
+                            });
+                        });
+                    }
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            @*dialogOpen('@Ref.Action_Type.Edit.ToString()',i);*@
+        }
+        actfun.Dele = function(i)
+        {
+            @*dialogOpen('@Ref.Action_Type.Dele.ToString()',i);*@
+        }
+        actfun.View = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.View.ToString()',i);
+        }
+
+        function dialogOpen(type,rowid)
+        {
+            var data = $("#list1").getRowData(rowid);
+            if(type == '@Ref.Action_Type.View.ToString()')
+            {
+                clearJqgrid("jqgridDiv2");
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        referenceNbr: data.Reference_Nbr,
+                        version: data.Assessment_Result_Version
+                    }),
+                    url: url.D64Data,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $("#" + dialogId2).dialog({
+                            title: "量化評估結果檔",
+                            position: { my: "left+25% top", at: "left+10% top", of: window},
+                            width: 'auto',
+                            autoOpen: false,
+                            resizable: false,
+                            closeText: "取消",
+                            modal: true
+                        });
+                        $("#" + dialogId2).dialog("open");
+                        createJqgrid("jqgridDiv2", "list2", "pager2");
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'w');
+                    }
+                });
+            }
+        }
+        function getPage(jQgridId)
+        {
+            return $('#'+jQgridId).find('.ui-pg-input').val();
+        }
+
+    });
+
+
+</script>

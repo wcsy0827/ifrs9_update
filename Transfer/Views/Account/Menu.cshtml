@@ -1,0 +1,28 @@
+﻿@using Transfer.Controllers
+@model MenuModel
+@{
+    Layout = null;
+}
+@foreach (var item in Model.menu_Main)
+{
+    <li id=@item.Menu_Id data-toggle="collapse" data-target="#@item.Menu" class="collapsed">
+        <a href="#">
+            <i class='fa @item.Class fa-lg'></i>
+            @item.Menu_Detail
+            <span class="arrow"></span>
+        </a>
+    </li>
+    <ul class="sub-menu collapse" id=@item.Menu>
+        @foreach (var sub in Model.menu_Sub.Where(x => x.Menu == item.Menu).OrderBy(x => x.SortNum))
+        {
+            if (sub.Href.Split(',').Length >= 2)
+            {
+                <li id=@sub.Menu_Id>
+                    <i class='fa @sub.Class fa-lg'></i>
+                    <a  class="menu-a" href='@Url.Action(sub.Href.Split(',')[0].Trim(),
+                        sub.Href.Split(',')[1].Trim(), null)'>@sub.Menu_Detail</a>
+                    </li>
+            }
+        }
+    </ul>
+}

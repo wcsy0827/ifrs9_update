@@ -1,0 +1,1527 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D63Sub";
+    ViewBag.Title = "量化評估需求資訊檔";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:185px">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="width:550px;" colspan="2">
+                            <label>選擇動作 : </label>
+                            @Html.DropDownList("action",
+                            (SelectList)ViewBag.action,
+                            new { @class = "form-control", @style = "display:inline-block;" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:550px; padding-top:5px;" class="form-group">
+                            <label>報導日 : </label>&emsp;
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td class="action search" style="width:400px; padding-top:5px;">
+                            <label>評估次分類 : </label>
+                            @Html.DropDownList("assessmentSubKind",
+                            (SelectList)ViewBag.assessmentSubKinds,
+                            new { @class = "form-control", @style = "display:inline-block;" })
+                        </td>
+                    </tr>
+                    <tr class="action search">
+                        <td style="padding-top:5px;">
+                            <label>評估狀態 : </label>
+                            @Html.DropDownList("index",
+                            (SelectList)ViewBag.flag,
+                            new { @class = "form-control", @style = "display:inline-block;" })
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>債券編號 : </label>&emsp;
+                            <input type="text" id="bondNumber" name="bondNumber">
+                        </td>
+                    </tr>
+                    <tr class="action search" >
+                        <td style="padding-top:5px;" colspan="2">
+                            <input type="button" class="btn btn-primary" value="查詢" id="btnD63Search" style="margin-right:10px;margin-left:30px;" />
+                            <input type="button" class="btn btn-primary" value="下載Excel" id="btnD63DlExcel" style="margin-right:10px;margin-left:30px;" />
+                        </td>
+                    </tr>
+                    <tr class="action transfer" style="display:none">
+                        <td style="padding-top:5px;" colspan="2">
+                            <input type="button" class="btn btn-primary" value="執行" id="btnD63Transfer" style="margin-right:10px;" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+擁有評估權限者(呈送複核者),當評估次分類不等於'其他',且未選擇最終版本時才可執行評估!
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="D63Dialog"></div>
+    <div id="D63Dialog2">
+        <div id="jqgridDiv2" class="jqd">
+        </div>
+    </div>
+    <div id="D63Dialog3" style="display:none">
+        <table style="width:100%">
+            <tr class="fileUpLoad">
+                <td style="padding-top:10px">
+                    @using (Ajax.BeginForm("UpLoadQualitativeFile", "D6",
+                    new AjaxOptions { HttpMethod = "POST" },
+                    new { enctype = "multipart/form-data", @id = "D63form0" }))
+                    {
+                        <input type="file" id="D63file" name="D63file" class="filestyle" data-buttonName="btn-primary" data-buttonText="上傳檔案" />
+                    }
+                </td>
+                <td style="padding-top:10px">
+                    <input type="button" class="btn btn-primary" style="margin-right:10px" value="資料上傳" id="fileSubmit" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="jqgridDiv3" class="jqd" style="padding-top:10px;width:100%"></div>
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td colspan="2">
+                    <input type="hidden" id="D63Check_Reference" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="D63Dialog4" style="display:none">
+        <table style="width:100%">
+            <tr>
+                <td colspan="2">
+                    <textarea id="D63TextArea" maxlength="255" style="overflow-y: scroll; white-space:pre-wrap;max-width:100%;width:100%;height:200px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top:10px;">
+                    <input type="button" class="btn btn-primary" value="存檔" id="btnD63TextAreaSave" style="" />
+                </td>
+                <td style="padding-top:10px;float:right;">
+                    <input type="button" class="btn btn-primary" value="取消" id="btnD63TextAreaCancel" style="" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="D63Dialog5">
+        <div id="jqgridDiv4" class="jqd">
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchD63", "D6")';
+        url.save = '@Url.Action("SaveD63", "D6")';
+        url.transfer = '@Url.Action("TransferD63", "D6")';
+        url.getDbData = '@Url.Action("GetCacheData", "D6")';
+        url.getAuditor = '@Url.Action("GetAuditor", "D6")';
+        url.history = '@Url.Action("GetD63History", "D6")';
+        url.D64Data = '@Url.Action("GetD64","D6")';
+        url.getQuantifyFile = '@Url.Action("GetQuantifyFile", "D6")';
+        url.getAssessmentStage = '@Url.Action("getAssessmentStage","D6")';
+        url.getTextArea = '@Url.Action("GetTextArea","D6")';
+        url.saveTextArea = '@Url.Action("SaveTextArea","D6")';
+        url.updateD63 = '@Url.Action("UpdateD63","D6")';
+        url.getD63Excel = '@Url.Action("GetD63Excel", "D6")';
+        url.delQuantifyFile = '@Url.Action("DelFile", "D6")';
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var AssessorFlag = @Html.Raw(Json.Encode(ViewBag.AssessorFlag));
+        var dialogId = 'D63Dialog';
+        var dialogId2 = 'D63Dialog2';
+        var dialogId3 = 'D63Dialog3';
+        var dialogId4 = 'D63Dialog4';
+        var dialogId5 = 'D63Dialog5';
+        var dialogformId = formatId('Form');
+        var AuditorId = formatId('Auditor');
+        var Net_DebtId = formatId('Net_Debt');
+        var Total_AssetId = formatId('Total_Asset');
+        var CFOId = formatId('CFO');
+        var Int_ExpenseId = formatId('Int_Expense');
+        var CET1_Capital_RatioId = formatId('CET1_Capital_Ratio');
+        var Lerverage_RatioId = formatId('Lerverage_Ratio');
+        var Liquiduty_Coverage_RatioId = formatId('Liquiduty_Coverage_Ratio');
+        var Total_EquityId = formatId('Total_Equity');
+        var BS_TOT_ASSETId = formatId('BS_TOT_ASSET');
+        var RBC_RatioId = formatId('RBC_Ratio');
+        var MCCSR_RatioId = formatId('MCCSR_Ratio');
+        var Solvency_II_RatioId = formatId('Solvency_II_Ratio');
+        var SHORT_AND_LONG_TERM_DEBTId = formatId('SHORT_AND_LONG_TERM_DEBT');
+        var Cash_and_Cash_EquivalentsId = formatId('Cash_and_Cash_Equivalents');
+        var Short_Term_DebtId = formatId('Short_Term_Debt');
+        var IGS_INDEXId = formatId('IGS_INDEX');
+        var IGS_INDEX_IncreaseId = formatId('IGS_INDEX_Increase');
+        var External_Debt_RateId = formatId('External_Debt_Rate');
+        var FC_Indexed_Debt_RateId= formatId('FC_Indexed_Debt_Rate');
+        var CEIC_ValueId = formatId('CEIC_Value');
+        var Short_term_Debt_RatioId = formatId('Short_term_Debt_Ratio');
+        var GDP_Yearly_AvgId = formatId('GDP_Yearly_Avg');
+        var Quantitative_CLO_1Id = formatId('Quantitative_CLO_1');
+        var Quantitative_CLO_2Id = formatId('Quantitative_CLO_2');
+        var Quantitative_CLO_2_ThresholdId = formatId('Quantitative_CLO_2_Threshold');
+        var Quantitative_CLO_3Id = formatId('Quantitative_CLO_3');
+        var Quantitative_CLO_3_ThresholdId = formatId('Quantitative_CLO_3_Threshold');
+        var Quantitative_CLO_4Id = formatId('Quantitative_CLO_4');
+        var Quantitative_CLO_4_ThresholdId = formatId('Quantitative_CLO_4_Threshold');
+        var saveId = formatId('btnSave');
+        var deleteId = formatId('btnDelete');
+        var Industrial_Company = '@Ref.AssessmentSubKind_Type.Industrial_Company.ToString()';
+        var Financial_Debts = '@Ref.AssessmentSubKind_Type.Financial_Debts.ToString()';
+        var Financial_Debt_Bond = '@Ref.AssessmentSubKind_Type.Financial_Debt_Bond.ToString()';
+        var Life_Or_Property_Insurance_Company = '@Ref.AssessmentSubKind_Type.Life_Or_Property_Insurance_Company.ToString()';
+        var CLO = '@Ref.AssessmentSubKind_Type.CLO.ToString()';
+        var Sovereign_Government_Debt = '@Ref.AssessmentSubKind_Type.Sovereign_Government_Debt.ToString()';
+        var NotAssessStr = '@Ref.Evaluation_Status_Type.NotAssess.GetDescription()'; //尚未評估
+        var NotReviewStr = '@Ref.Evaluation_Status_Type.NotReview.GetDescription()'; //尚未提交複核(已評估)
+        var ReviewStr = '@Ref.Evaluation_Status_Type.Review.GetDescription()'; //已提交複核(複核者未回覆)
+        var RejectStr = '@Ref.Evaluation_Status_Type.Reject.GetDescription()'; //複核者選擇退回
+        var CompletedStr = '@Ref.Evaluation_Status_Type.ReviewCompleted.GetDescription()'; //複核完成
+        var million = '(百萬元)' ;
+        var deleteFlag = false; //複核完成or複核者選擇退回 為false(不能刪除檔案),其他為true 可以刪除檔案
+        var _referenceNbr = '';
+        var _Assessment_Result_Version = '';
+        //#endregion 共用參數
+
+        //#region 產生 dialog
+        var obj = [
+           { 'name': 'Auditor', 'type': 'selectOption', 'title': '複核者' },
+           { 'name': 'Net_Debt', 'type': 'string', 'title': 'Net_Debt', 'num': 'true' ,'cls':Industrial_Company ,'afterStr':million},
+           { 'name': 'Total_Asset', 'type': 'string', 'title': 'Total_Asset', 'num': 'true','cls':Industrial_Company,'afterStr':million},
+           { 'name': 'CFO', 'type': 'string', 'title': 'CFO', 'num': 'true' , 'cls':Industrial_Company,'afterStr':million },
+           { 'name': 'Int_Expense', 'type': 'string', 'title': 'Int_Expense', 'num': 'true','cls':Industrial_Company ,'afterStr':million},
+           { 'name': 'CET1_Capital_Ratio', 'type': 'string', 'title': '銀行核心一級資本適足率', 'num': 'true','cls':(Financial_Debts+','+Financial_Debt_Bond) },
+           { 'name': 'Lerverage_Ratio', 'type': 'string', 'title': '銀行財務槓桿比率', 'num': 'true', 'cls':(Financial_Debts+','+Financial_Debt_Bond)},
+           { 'name': 'Liquiduty_Coverage_Ratio', 'type': 'string', 'title': '銀行流動性比率', 'num': 'true','cls':(Financial_Debts+','+Financial_Debt_Bond)},
+           { 'name': 'Total_Equity', 'type': 'string', 'title': 'Total_Equity', 'num': 'true' ,'cls':Life_Or_Property_Insurance_Company ,'afterStr':million},
+           { 'name': 'BS_TOT_ASSET', 'type': 'string', 'title': 'BS_TOT_ASSET', 'num': 'true', 'cls':Life_Or_Property_Insurance_Company,'afterStr':million},
+           { 'name': 'RBC_Ratio', 'type': 'string', 'title': '資本水準_美國RBC_Ratio', 'num': 'true' , 'cls':Life_Or_Property_Insurance_Company },
+           { 'name': 'MCCSR_Ratio', 'type': 'string', 'title': '資本水準_加拿大MCCSR_Ratio', 'num': 'true', 'cls':Life_Or_Property_Insurance_Company },
+           { 'name': 'Solvency_II_Ratio', 'type': 'string', 'title': '資本水準_歐洲Solvency_II_Ratio', 'num': 'true' ,'cls':Life_Or_Property_Insurance_Company },
+           { 'name': 'SHORT_AND_LONG_TERM_DEBT', 'type': 'string', 'title': 'SHORT_AND_LONG_TERM_DEBT', 'num': 'true','cls':Life_Or_Property_Insurance_Company,'afterStr':million },
+           { 'name': 'Cash_and_Cash_Equivalents', 'type': 'string', 'title': '流動性緩衝部位', 'num': 'true' ,'cls':Life_Or_Property_Insurance_Company ,'afterStr':million},
+           { 'name': 'Short_Term_Debt', 'type': 'string', 'title': '一年內到期借款', 'num': 'true', 'cls':Life_Or_Property_Insurance_Company ,'afterStr':million},
+           { 'name': 'IGS_INDEX', 'type': 'string', 'title': '政府債務/GDP', 'num': 'true' ,'cls':Sovereign_Government_Debt },
+           { 'name': 'IGS_INDEX_Increase', 'type': 'string', 'title': '過去4年政府債務/GDP增加數', 'num': 'true','cls':Sovereign_Government_Debt},
+           { 'name': 'External_Debt_Rate', 'type': 'string', 'title': '外人持有政府債務/總政府債務', 'num': 'true' ,'cls':Sovereign_Government_Debt },
+           { 'name': 'FC_Indexed_Debt_Rate', 'type': 'string', 'title': '外幣計價政府債務/總政府債務', 'num': 'true','cls':Sovereign_Government_Debt },
+           { 'name': 'CEIC_Value', 'type': 'string', 'title': '(經常帳+FDI淨流入)/GDP', 'num': 'true','cls':Sovereign_Government_Debt},
+           { 'name': 'Short_term_Debt_Ratio', 'type': 'string', 'title': '短期外債/外匯儲備', 'num': 'true' , 'cls':Sovereign_Government_Debt },
+           { 'name': 'GDP_Yearly_Avg', 'type': 'string', 'title': '過去四年平均經濟成長', 'num': 'true', 'cls':Sovereign_Government_Debt },
+           { 'name': 'Quantitative_CLO_1', 'type': 'string', 'title': '加權平均信用評級因子', 'num': 'true' , 'cls':CLO },
+           { 'name': 'Quantitative_CLO_2', 'type': 'string', 'title': '違約資產金額*損失率', 'num': 'true', 'cls':CLO},
+           { 'name': 'Quantitative_CLO_2_Threshold', 'type': 'string', 'title': '較低順位券次(tranche)之本金餘額', 'num': 'true' ,'cls':CLO },
+           { 'name': 'Quantitative_CLO_3', 'type': 'string', 'title': '資產池本金金額+現金', 'num': 'true','cls':CLO },
+           { 'name': 'Quantitative_CLO_3_Threshold', 'type': 'string', 'title': '本身及較高順位券次(tranche)之本金餘額', 'num': 'true' ,'cls':CLO },
+           { 'name': 'Quantitative_CLO_4', 'type': 'string', 'title': '主順位有擔保貸款資產', 'num': 'true','cls':CLO },
+           { 'name': 'Quantitative_CLO_4_Threshold', 'type': 'string', 'title': '資產池80%', 'num': 'true' , 'cls':CLO },
+        ]
+        jqgridCustom.createDialog(dialogId, obj);
+
+        //$('#'+AuditorId).css('width','217px');
+        //#endregion 產生 dialog
+
+        //#region 註冊datepicker
+        //created.createDatepicker('datepicker', false, '',versionFun);
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //verified.number('myForm', 'version');
+        //verified.required("myForm", "version", message.required(message.version));
+        //#endregion 註冊verified
+
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD63Transfer':
+                    $('#' + id).on('click', function () { transfer() });
+                    break;
+                case 'btnD63Search':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+                case 'fileSubmit':
+                    $('#' + id).on('click', function () { fileSubmitFunction() });
+                    break;
+                case 'btnD63DlExcel':
+                    $('#' + id).on('click', function () { D63DlExcel() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        $('#action').on('change', function () {
+            clearJqgrid("jqgridDiv");
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+        });
+
+        function D63DlExcel() {
+            $.ajax({
+                type: "POST",
+                url: url.getD63Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                {
+                    window.location.href = "@Url.RouteUrl(new
+                    { Controller = "D6", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.D63.ToString()';
+                    setTimeout(function () {
+                        window.location.href = "@Url.RouteUrl(new
+                        { Controller = "D6", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.D64.ToString()';
+                    }, 2000);
+                }
+                else
+                customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+        //#region 查詢量化評估需求資訊檔
+        function search()
+        {
+            $('#btnD63DlExcel').prop('disabled',true);
+            clearJqgrid("jqgridDiv");
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        date: $('#datepicker').val(),
+                        assessmentSubKind : $('#assessmentSubKind').val(),
+                        bondNumber : $('#bondNumber').val(),
+                        index : $('#index').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    $('#btnD63DlExcel').prop('disabled',!result.RETURN_FLAG);
+                    if(result.RETURN_FLAG)
+                        createJqgrid("jqgridDiv","list1", "pager1");
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+        //#endregion 查詢量化評估需求資訊檔
+
+        //#region 執行量化評估需求資訊檔轉檔
+        function transfer()
+        {
+            clearJqgrid("jqgridDiv");
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        reportDate: $('#datepicker').val(),
+                    }),
+                    dataType: "json",
+                    url: url.transfer,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    if(result.RETURN_FLAG)
+                    {
+                        createJqgrid("jqgridDiv","list0", "pager0");
+                        customerUtility.alert(result.DESCRIPTION,'s');
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+        //#endregion
+
+        //#region fileSubmit
+        function fileSubmitFunction()
+        {
+            var name = $('#D63file').next().find('input').val();
+
+            if(name == '')
+            {
+                customerUtility.alert('請選擇檔案!','w');
+                return false;
+            }
+
+            var sameFlag = "N";
+            $.each($('#list3').getGridParam('data'),function(i,v){
+                if(name == v.File_Name)
+                    sameFlag = "Y";
+            })
+
+            if(sameFlag == "Y")
+            {
+                if (!confirm("已經有檔名為 "+name+" ,是否取代?"))
+                    return false;
+            }
+
+            var dataString;
+            var fromAction = $("#D63form0").attr("action");
+            if ($("#D63form0").attr("enctype") == "multipart/form-data") {
+                dataString= new FormData();
+                dataString.append("UploadedFile", $("#D63file").get(0).files[0]);
+                dataString.append("Check_Reference",$('#D63Check_Reference').val());
+                dataString.append("sameFlag",sameFlag);
+                dataString.append("type","D64");
+            }
+            $.ajax({
+                type: "POST",
+                url: fromAction,
+                data: dataString,
+                dataType: "json",
+                contentType: false,
+                processData: false,
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                {
+                    resetD64();
+                    customerUtility.alert("檔案上傳成功!",'s');
+                    var data = result.Datas.Data;
+                    clearJqgrid('jqgridDiv3');
+                    createJqgrid2("list3", "pager3",data);
+                }
+                else
+                {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion fileSubmit
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDivId) {
+            $('#'+jqgridDivId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region jagrid 欄位自訂格式化
+        function formatterFileHyperlink(cellvalue, options, rdata)
+        {
+            return "<a href='#' class='openDialog Dialog3' style='text-decoration:underline;' return:false; id='" + options.gid + "File" + options.rowId + "' name='" + cellvalue + "' title='上傳或檢視("+rdata.FileCount+")'>上傳或檢視</a><span>("+rdata.FileCount+")</span>";
+        }
+
+        function D63FormatterAuditor_Reply(cellvalue, options, rdata)
+        {
+            if(rdata.Assessment_Result_Version == "1")
+                return "";
+            return "<a href='#' class='openDialog Dialog4' style='text-decoration:underline;' return:false; id='" + options.gid + "Auditor_Reply" + options.rowId + "' title='檢視'>檢視</a>";
+        }
+
+        function formatterAssessment_Result(cellvalue, options, rdata)
+        {
+            return "<a href='#' class='openDialog Dialog4' style='text-decoration:underline;' return:false; id='" + options.gid + "AR" + options.rowId + "' title='修改或檢視'>修改或檢視</a>";
+        }
+
+        function formatterMemo(cellvalue, options, rdata)
+        {
+            return "<a href='#' class='openDialog Dialog4' style='text-decoration:underline;' return:false; id='" + options.gid + "Memo" + options.rowId + "' title='修改或檢視'>修改或檢視</a>";
+        }
+
+        function formatterDLFileHyperlink(cellvalue, options, rdata)
+        {
+            return "<a href='#' class='openDialog dlfile' style='text-decoration:underline;' return:false; id='" + options.gid + "DLFile" + options.rowId + "' name='" + cellvalue + "' title='"+cellvalue+"'>"+cellvalue+"</a>";
+        }
+
+        function formatterDELFileHyperlink(cellvalue, options, rdata)
+        {
+            let str = '';
+            str += '<div class="btn-group">';
+            str += '<a title="刪除" class="btn actionDeleIcon2" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D64File' + options.gid + 'Dele' + options.rowId + '" return:false;="">';
+            str += '<i class="fa fa-trash fa-lg"></i></a>';
+            str += '</div>';
+            return str;
+        }
+
+        function D63FormatterAssessment_Result_Version(cellvalue, options, rdata)
+        {
+            if(cellvalue == "1")
+                return cellvalue;
+            return "<a href='#' class='openDialog Dialog5' style='text-decoration:underline;' return:false; id='" + options.gid + "ARV" + options.rowId + "' title='"+cellvalue+"'>"+cellvalue+"</a>";
+        }
+        //#endregion jagrid 欄位自訂格式化
+
+        //#region 檔案畫面
+        function fileDialogOpen(checkReference,Reference_Nbr,Assessment_Result_Version)
+        {
+            _referenceNbr = Reference_Nbr;
+            _Assessment_Result_Version = Assessment_Result_Version;
+            if(AssessorFlag && deleteFlag)
+            {
+                $('.fileUpLoad').show();
+            }
+            else
+            {
+                $('.fileUpLoad').hide();
+            }
+
+            //if(!(AssessorFlag) && !deleteFlag)
+            //{
+            //    $('.fileUpLoad').hide();
+            //}
+            //else
+            //{
+            //    $('.fileUpLoad').show();
+            //}
+            clearJqgrid("jqgridDiv3");
+            $('#D63file').next().find('input').val('');
+            $("#" + dialogId3).dialog({
+                title: "檔案上傳案檢視",
+                position:  { my: "left+70% top+10%", at: "left+10% top", of: window},
+                width : 'auto',
+                autoOpen: false,
+                resizable: false,
+                closeText: "取消",
+                modal: true
+            });
+            $('#D63Check_Reference').val('');
+            $('#D63Check_Reference').val(checkReference);
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Check_Reference: checkReference
+                }),
+                dataType: "json",
+                url: url.getQuantifyFile,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                var data = {};
+                if (result.RETURN_FLAG) {
+                    data = result.Datas.Data;
+                }
+                $("#" + dialogId3).dialog("open");
+                createJqgrid2("list3", "pager3",data);
+            });
+        }
+        //#endregion 檔案畫面
+
+        //#region 備註畫面
+        function textAreaDialogOpen(
+            id,
+            Reference_Nbr,
+            Version,
+            Assessment_Result_Version,
+            Check_Item_Code,
+            ReportDate)
+        {
+            let textAreaId = 'D63TextArea';
+            let table = "D64";
+            $('#'+textAreaId).val('');
+            if(AssessorFlag && deleteFlag)
+            {
+                $('#btnD63TextAreaSave').show();
+                $('#'+textAreaId).prop('disabled',false);
+            }
+            else
+            {
+                $('#btnD63TextAreaSave').hide();
+                $('#'+textAreaId).prop('disabled',true);
+            }
+            let title = '';
+            let type = '';
+            if(id.indexOf('AR') > -1)
+            {
+                title = '評估結果說明';
+                type = 'Assessment_Result';
+            }
+            if(id.indexOf('Memo') > -1)
+            {
+                title = '備註';
+                type = 'Memo';
+            }
+            if(id.indexOf("Auditor_Reply") > -1)
+            {
+                title = '複核者之回覆意見';
+                type = 'Auditor_Reply';
+                table = "D63";
+                $('#btnD63TextAreaSave').hide();
+                $('#'+textAreaId).prop('disabled',true);
+            }
+            if(title != '')
+            {
+                $("#" + dialogId4).dialog({
+                    title: title,
+                    position: { my: "top+10%", at: "center top", of: window },
+                    width : '500px',
+                    autoOpen: false,
+                    resizable: false,
+                    closeText: "取消",
+                    modal: true
+                });
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        ReportDate: ReportDate,
+                        Reference_Nbr:Reference_Nbr,
+                        Vresion:Version,
+                        Assessment_Result_Version:Assessment_Result_Version,
+                        Check_Item_Code:Check_Item_Code,
+                        type:type,
+                        table:table
+                    }),
+                    dataType: "json",
+                    url: url.getTextArea,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $('#'+textAreaId).val(result.Datas.Data);
+                    }
+                    $("#" + dialogId4).dialog("open");
+                });
+
+                $('#btnD63TextAreaCancel').off('click');
+                $('#btnD63TextAreaCancel').on('click',function(){
+                    $('#'+textAreaId).val('');
+                    $("#" + dialogId4).dialog("close");
+                });
+
+                $('#btnD63TextAreaSave').off('click');
+                $('#btnD63TextAreaSave').on('click',function(){
+                    let maxValue = 255;
+                    if (typeof ($('#'+textAreaId).attr('maxlength')) != 'undefined') {
+                        maxValue = parseInt($('#'+textAreaId).attr('maxlength'));
+                    }
+                    let nowValue = $('#'+textAreaId).val().Blength();
+                    if(nowValue > maxValue)
+                    {
+                        customerUtility.alert(("內容超過最大限制"+maxValue+",目前為"+nowValue),'w');
+                        return false;
+                    }
+                    else
+                    {
+                        $.ajax({
+                            type: "POST",
+                            data: JSON.stringify({
+                                value: $('#'+textAreaId).val(),
+                                ReportDate: ReportDate,
+                                Reference_Nbr:Reference_Nbr,
+                                Vresion:Version,
+                                Assessment_Result_Version:Assessment_Result_Version,
+                                Check_Item_Code:Check_Item_Code,
+                                type:type,
+                                table:table
+                            }),
+                            dataType: "json",
+                            url: url.saveTextArea,
+                            contentType: 'application/json'
+                        })
+                        .done(function (result) {
+                            var data = {};
+                            if (result.RETURN_FLAG) {
+                                customerUtility.alert(result.DESCRIPTION,'s');
+                                $("#" + dialogId4).dialog("close");
+                            }
+                            else
+                            {
+                                customerUtility.alert(result.DESCRIPTION,'e');
+                            }
+                        });
+
+                    }
+                });
+            }
+        }
+        //#endregion 備註畫面
+
+        //#region
+        function D64DialogOpen(
+            Reference_Nbr,
+            Assessment_Result_Version,
+            Status)
+        {
+            if(Status == '@Ref.Evaluation_Status_Type.ReviewCompleted.GetDescription()' ||
+                Status == '@Ref.Evaluation_Status_Type.Reject.GetDescription()')
+                deleteFlag = false;
+            else
+                deleteFlag = true;
+
+            $("#" + dialogId5).dialog({
+                title: "量化評估結果檔",
+                //position: { my: "top+10%", at: "center top", of: window },
+                position: { my: "left+25% top", at: "left+10% top", of: window},
+                width : 'auto',
+                autoOpen: false,
+                resizable: false,
+                closeText: "取消",
+                modal: true
+            });
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    referenceNbr:Reference_Nbr,
+                    version:Assessment_Result_Version
+                }),
+                dataType: "json",
+                url: url.D64Data,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    clearJqgrid("jqgridDiv4");
+                    $("#" + dialogId5).dialog("open");
+                    createJqgrid("jqgridDiv4","list4", "pager4");
+                }
+            });
+        }
+        //#endregion
+
+        //#region createJqgrid (建立JqGrid套件(localData)) 觀看檔案清單
+
+        function createJqgrid2(listId, pagerId, data) {
+            var colNameArray = [];
+            var colModelArray = [];
+            if(AssessorFlag && deleteFlag)
+            {
+                colNameArray = ["動作","檔名"];
+                colModelArray = [
+                 {name : "Action",index : "Action", sortable: false, editable: false, width : 40,formatter : formatterDELFileHyperlink},
+                 { name: "File_Name", index: "File_Name", align: 'left' , width: 400, formatter: formatterDLFileHyperlink},
+                ];
+            }
+            else
+            {
+                colNameArray = ["檔名"];
+                colModelArray = [
+                 { name: "File_Name", index: "File_Name", align: 'left' , width: 400, formatter: formatterDLFileHyperlink},
+                ];
+            }
+
+            $('#jqgridDiv3').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv3').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: 10, //一頁筆數
+                pager: '#' + pagerId,
+                height: 300,
+                width: 500,
+                sortorder: "desc",
+                caption: "檔案清單", //標題
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true, //顯示總數
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){                        
+                        var fileName = $(this).find($.validator.format('td[aria-describedby$={0}_File_Name]', listId)).text();
+                        $(this).find('td').find('a.dlfile').each(function(){
+                            $(this).off('click');
+                            $(this).on('click',function(){
+                                customerUtility.onbeforeunloadFlag = false;
+                                window.location.href = "@Url.RouteUrl(new
+                                { Controller = "D6", Action = "DLQuantifyFile" })/?Check_Reference="
+                                    +$('#D63Check_Reference').val()
+                                    +"&fileName="+$(this).attr("name");
+                            });
+                        });
+                        $(this).find('td').find('a.actionDeleIcon2').each(function(){
+                            $(this).off('click');
+                            $(this).on('click',function(){
+                                D64FileDele($('#D63Check_Reference').val(),fileName);
+                            });
+                        });
+                    });
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false, search: false, refresh: false });
+        }
+
+        function D64FileDele(Check_Reference,fileName) {
+            if (!confirm("確定把檔案刪除?")) {
+                return false
+            }
+            else {
+                clearJqgrid();
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        type: 'D64',
+                        Check_Reference:Check_Reference,
+                        fileName:fileName
+                    }),
+                    dataType: "json",
+                    url: url.delQuantifyFile,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    var data = {};
+                    if (result.RETURN_FLAG) {
+                        data = result.Datas.Data;
+                        clearJqgrid('jqgridDiv3');
+                        createJqgrid2("list3", "pager3",data);
+                        resetD64();
+                        customerUtility.alert(result.DESCRIPTION,'s');
+                    }
+                    else
+                    {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+
+        function resetD64()
+        {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    referenceNbr:_referenceNbr,
+                    version:_Assessment_Result_Version
+                }),
+                dataType: "json",
+                url: url.D64Data,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    clearJqgrid("jqgridDiv4");
+                    createJqgrid("jqgridDiv4","list4", "pager4");
+                    var page = getPage('jqgridDiv');
+                    clearJqgrid("jqgridDiv");
+                    createJqgrid("jqgridDiv","list1", "pager1",null,page);
+                }
+            });
+        }
+            
+
+        //#region Audit formate button
+        function D63Evaluation_StatusFormatterBtn(cellvalue, options, rdata)
+        {
+            var _Status = rdata.Status; //狀態
+            var _value = ''; //顯示文字
+            var disabledFlag = true; //隱藏Flag
+            if(rdata.Assessment_Result_Version == 1)
+            {
+                _value = '第一版不複核';
+            }
+            else
+            {
+                if(rdata.Auditor_Return == "Y")  //複核者選擇退回
+                {
+                    _value = '該版複核退回';
+                }
+                else if(_Status == NotAssessStr) //尚未評估
+                {
+                    _value = '請先評估';
+                }
+                else if(_Status == CompletedStr) //複核完成
+                {
+                    _value = '複核版本V'+rdata.Result_Version_Confirm;
+                }
+                else if(_Status == ReviewStr) //已提交複核(等待處理中)
+                {
+                    _value = '取消複核';
+                    if(rdata.Send_to_Auditor == "Y") //被選定的版本給'Y' 才可以取消複核
+                    {
+                        disabledFlag = false;
+                    }
+                }
+                else if(_Status == NotReviewStr || _Status == RejectStr) //尚未提交複核(已評估) or 複核者選擇退回
+                {
+                    disabledFlag = false;
+                    _value = '提交複核';
+                }
+                if(!(AssessorFlag))
+                {
+                    disabledFlag = true;
+                }
+            }
+            return '<input type="button" class="btn btn-primary" value="'+_value+ '" id="' + options.gid + "Evaluation" + options.rowId + '" ' +
+                   ' title="'+_value+'" style="width:85px" ' + (disabledFlag ? 'disabled' : '') + '>';
+        }
+        //#endregion
+
+        //#region update D63
+        function D63EvaluationClick(
+            Reference_Nbr,
+            Assessment_Result_Version,
+            Status,
+            Assessment_Sub_Kind)
+        {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Reference_Nbr:Reference_Nbr,
+                    Assessment_Result_Version:Assessment_Result_Version,
+                    action:Status == '@Ref.Evaluation_Status_Type.Reject.GetDescription()' ? '@Ref.Evaluation_Status_Type.NotReview.GetDescription()' : Status
+                }),
+                dataType: "json",
+                url: url.updateD63,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    clearJqgrid("jqgridDiv2");
+                    createJqgrid("jqgridDiv2","list2", "pager2",Assessment_Sub_Kind);
+                    var page = getPage('jqgridDiv');
+                    clearJqgrid("jqgridDiv");
+                    createJqgrid("jqgridDiv","list1", "pager1",null,page);
+                }
+                else
+                {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+
+        //#endregion
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(jqgridDivId,listId, pagerId,flag,page) {
+            page = page || '1';
+            $('#'+jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#'+jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            var title = '';
+            var names = [];
+            var model = [];
+            var table = '';
+            names = @Html.Raw(Json.Encode(ViewBag.jqgridColNames));
+            model = @Html.Raw(Json.Encode(ViewBag.jqgridColModel));
+            if(listId == 'list0')
+            {
+                table = 'D63Transfer';
+                title = '量化評估轉檔資訊';
+                //names = customerUtility.remove(names,"是否通過量化評估");
+                //model.splice(45,1); //remove 是否通過量化評估
+                names = customerUtility.remove(names,"檔案數量");
+                model.splice(5,1); //remove 檔案數量
+                names = customerUtility.remove(names,"執行動作");
+                model.splice(0,1); //remove 執行動作
+            }
+            else if(listId == 'list1')
+            {
+                table ='@Ref.Table_Type.D63.ToString()';
+                title = '量化評估需求資訊檔';
+            }
+            else if(listId == 'list2')
+            {
+                table = 'D63History';
+                title = '評估記錄檔';
+                names = [
+                   "執行動作","評估結果版本","狀態","複核者之回覆意見","是否通過量化評估"
+                   //,"檔案數量"
+                ];
+                model = [
+                    { name: "Action", width: 100, align: "center", sortable: false, editable: false, formatter: D63Evaluation_StatusFormatterBtn },
+                    { name: "Assessment_Result_Version", index: "Assessment_Result_Version", align: 'left' ,formatter: D63FormatterAssessment_Result_Version},
+                    { name: "Status", index: "Status", align: 'left' , width: 170 },
+                    { name: "Auditor_Reply" , index:"Auditor_Reply",formatter: D63FormatterAuditor_Reply},
+                    { name: "Quantitative_Pass_Confirm", index: "Quantitative_Pass_Confirm", align: 'left' },
+                    //{ name :"FilesCount",index : "FilesCount",align:'right', width: 80}
+                ];
+                if(flag == '@Ref.AssessmentSubKind_Type.Industrial_Company.GetDescription()')
+                {
+                    names = names.concat(
+                        ["Net_Debt", "Total_Asset", "CFO", "Int_Expense"]
+                        );
+                    model = model.concat(
+                    [
+                            { name: "Net_Debt", index: "Net_Debt", align: 'left' },
+                            { name: "Total_Asset", index: "Total_Asset", align: 'left' },
+                            { name: "CFO", index: "CFO", align: 'left' },
+                            { name: "Int_Expense", index: "Int_Expense", align: 'left' },
+                    ]);
+                }
+                else if(flag == '@Ref.AssessmentSubKind_Type.Financial_Debts.GetDescription()' ||
+                    flag == '@Ref.AssessmentSubKind_Type.Financial_Debt_Bond.GetDescription()')
+                {
+                    names = names.concat(
+                        ["銀行核心一級資本適足率", "銀行財務槓桿比率", "銀行流動性比率"]
+                        );
+                    model = model.concat(
+                    [
+                            { name: "CET1_Capital_Ratio", index: "CET1_Capital_Ratio", align: 'left', width:300},
+                            { name: "Lerverage_Ratio", index: "Lerverage_Ratio", align: 'left' },
+                            { name: "Liquiduty_Coverage_Ratio", index: "Liquiduty_Coverage_Ratio", align: 'left' },
+                    ]);
+                }
+                else if(flag ==  '@Ref.AssessmentSubKind_Type.Life_Or_Property_Insurance_Company.GetDescription()')
+                {
+                    names = names.concat(
+                        ["Total_Equity", "BS_TOT_ASSET", "資本水準_美國RBC_Ratio",
+                         "資本水準_加拿大MCCSR_Ratio","資本水準_歐洲Solvency_II_Ratio","SHORT_AND_LONG_TERM_DEBT",
+                         "流動性緩衝部位","一年內到期借款"]);
+                    model = model.concat(
+                    [
+                            { name: "Total_Equity", index: "Total_Equity", align: 'left' },
+                            { name: "BS_TOT_ASSET", index: "BS_TOT_ASSET", align: 'left'},
+                            { name: "RBC_Ratio", index: "RBC_Ratio", align: 'left' , width:300},
+                            { name: "MCCSR_Ratio", index: "MCCSR_Ratio", align: 'left' , width:300},
+                            { name: "Solvency_II_Ratio", index: "Solvency_II_Ratio", align: 'left', width:300 },
+                            { name: "SHORT_AND_LONG_TERM_DEBT", index: "SHORT_AND_LONG_TERM_DEBT", align: 'left' , width:300},
+                            { name: "Cash_and_Cash_Equivalents", index: "Cash_and_Cash_Equivalents", align: 'left' },
+                            { name: "Short_Term_Debt", index: "Short_Term_Debt", align: 'left' },
+                    ]);
+                }
+                else if(flag ==  '@Ref.AssessmentSubKind_Type.CLO.GetDescription()')
+                {
+                    names = names.concat(
+                        ["加權平均信用評級因子", "違約資產金額*損失率", "較低順位券次(tranche)之本金餘額", "資產池本金金額+現金",
+                         "本身及較高順位券次(tranche)之本金餘額","主順位有擔保貸款資產","資產池80%"]);
+                    model = model.concat(
+                    [
+                            { name: "Quantitative_CLO_1", index: "Quantitative_CLO_1", align: 'left' , width:300},
+                            { name: "Quantitative_CLO_2", index: "Quantitative_CLO_2", align: 'left', width:300},
+                            { name: "Quantitative_CLO_2_Threshold", index: "Quantitative_CLO_2_Threshold", align: 'left' , width:300},
+                            { name: "Quantitative_CLO_3", index: "Quantitative_CLO_3", align: 'center', width:300 },
+                            { name: "Quantitative_CLO_3_Threshold", index: "Quantitative_CLO_3_Threshold", align: 'left', width:300},
+                            { name: "Quantitative_CLO_4", index: "Quantitative_CLO_4", align: 'left' , width:300},
+                            { name: "Quantitative_CLO_4_Threshold", index: "Quantitative_CLO_4_Threshold", align: 'left'},
+                    ]);
+                }
+                else if(flag ==  '@Ref.AssessmentSubKind_Type.Sovereign_Government_Debt.GetDescription()')
+                {
+                    names = names.concat(
+                        ["政府債務/GDP", "過去4年政府債務/GDP增加數", "外人持有政府債務/總政府債務",
+                         "外幣計價政府債務/總政府債務","(經常帳+FDI淨流入)/GDP","短期外債/外匯儲備","過去四年平均經濟成長"]);
+                    model = model.concat(
+                    [
+                            { name: "IGS_INDEX", index: "IGS_INDEX", align: 'left'},
+                            { name: "IGS_INDEX_Increase", index: "IGS_INDEX_Increase", align: 'left', width:300 },
+                            { name: "External_Debt_Rate", index: "External_Debt_Rate", align: 'left', width:300 },
+                            { name: "FC_Indexed_Debt_Rate", index: "FC_Indexed_Debt_Rate", align: 'left', width:300},
+                            { name: "CEIC_Value", index: "CEIC_Value", align: 'left', width:300 },
+                            { name: "Short_term_Debt_Ratio", index: "Short_term_Debt_Ratio", align: 'left', width:300 },
+                            { name: "GDP_Yearly_Avg", index: "GDP_Yearly_Avg", align: 'left' , width:300},
+                    ]);
+                }
+                else if(flag ==  '@Ref.AssessmentSubKind_Type.Other.GetDescription()')
+                {
+                    //其他 要新增的項目
+                }
+                names = names.concat(["資料處理日期","評估者","評估者名稱","評估日期","複核者","複核者名稱",
+                    "複核日期","帳戶編號","評估次分類","是否提交複核", "資料版本", "評估日","選擇退回","複核後選擇版本"]);
+                model = model.concat([
+                    { name: "Processing_Date", index: "Processing_Date", align: 'center' },
+                    { name: "Assessor", index: "Assessor", align: 'center' },
+                    { name: "Assessor_Name", index: "Assessor_Name", align: 'center' },
+                    { name: "Assessment_date", index: "Assessment_date", align: 'center' },
+                    { name: "Auditor", index: "Auditor", align: 'center' },
+                    { name: "Auditor_Name", index: "Auditor_Name", align: 'center' },
+                    { name: "Audit_date", index: "Audit_date", align: 'center' },
+                    { name: "Reference_Nbr", index: "Reference_Nbr", align: 'center', hidden:true },
+                    { name: "Assessment_Sub_Kind", index: "Assessment_Sub_Kind", align: 'center', hidden:true },
+                    { name: "Send_to_Auditor", index: "Send_to_Auditor", align: 'center', hidden:true },
+                    { name: "Version", index: "Version", hidden: true },
+                    { name: "Report_Date", index: "Report_Date", hidden: true },
+                    { name: "Auditor_Return", index: "Auditor_Return", hidden: true },
+                    { name: "Result_Version_Confirm", index: "Result_Version_Confirm", hidden: true },
+                ]);
+            }
+            else if(listId == "list4")
+            {
+                table = '@Ref.Table_Type.D64.ToString()';
+                title = '評估結果檔';
+                names = ["測試指標編號", "測試指標名稱", "測試指標說明", "指標證明文件存放位址",
+                         "評估結果版本","評估結果說明","量化指標值",
+                         "檢查條件","門檻", "通過給定值", "是否通過量化評估",
+                         "備註","帳戶編號", "資料版本", "評估日", "評估者"];
+                model = [
+                        { name: "Check_Item_Code", index: "Check_Item_Code", align: 'left', width: 140 },
+                        { name: "Check_Item", index: "Check_Item", align: 'left', width: 220, sortable: false  },
+                        { name: "Check_Item_Memo", index: "Check_Item_Memo", align: 'left', width: 220 , sortable: false },
+                        { name: "Check_Reference", index: "Check_Reference", align: 'center' , sortable: false , formatter: formatterFileHyperlink },
+                        { name: "Assessment_Result_Version", index: "Assessment_Result_Version", align: 'right', width: 90 },
+                        { name: "Assessment_Result", index: "Assessment_Result", align: 'center', width: 100,formatter: formatterAssessment_Result, sortable: false},
+                        { name: "Check_Item_Value", index: "Check_Item_Value", align: 'left', width: 140 },
+                        { name: "Check_Symbol", index: "Check_Symbol", align: 'right', width: 70, sortable: false },
+                        { name: "Threshold", index: "Threshold", align: 'right', width: 70, sortable: false },
+                        { name: "Pass_Value", index: "Pass_Value", align: 'right', width: 90 },
+                        { name: "Quantitative_Pass", index: "Quantitative_Pass", align: 'left', width: 125 },
+                        { name: "Memo", index: "Memo", width: 80,formatter:formatterMemo, sortable: false, align: 'center'},
+                        { name: "Reference_Nbr", index: "Reference_Nbr", hidden: true },
+                        { name: "Version", index: "Version", hidden: true },
+                        { name: "Report_Date", index: "Report_Date", hidden: true },
+                        { name: "Assessor", index: "Assessor", align: 'left', width: 150, hidden: true  },
+                ];
+            }
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    table: table,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: names,
+                colModel: model,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                viewrecords: true, //顯示總數
+                sortorder: "desc",
+                caption: title, //標題
+                page : page,
+                resizable: false,
+                shrinkToFit: false,
+                //autoencode: true, //jqgridCustom.randerAction 需拿掉
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    jqgridCustom.updatePagerIcons($(this));
+                    if(page != '1' && $('#'+listId).getRowData().length == 0)
+                    {
+                        $('#'+listId).setGridParam({page:1}).trigger('reloadGrid');
+                    }
+                    if(listId == 'list1')
+                    {
+                        jqgridCustom.randerAction(listId, 'D63',actfun);
+                        $('.actionEditIcon').attr('title','評估');
+                        $('.actionDeleIcon').hide();
+                        if(!(@Html.Raw(Json.Encode(ViewBag.AssessorFlag))))
+                            $('.actionEditIcon').hide();
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function () {
+                            let tr = $(this);
+                            let Result_Version_Confirm_Flag = tr.find($.validator.format('td[aria-describedby$={0}_Result_Version_Confirm_Flag]', listId)).text();
+                            if(Result_Version_Confirm_Flag == 'Y')
+                            {
+                                tr.find('.actionEditIcon').hide();
+                            }
+                        });
+                    }
+                    if(listId == 'list2')
+                    {
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){
+                            let tr = $(this);
+                            let Reference_Nbr = tr.find($.validator.format('td[aria-describedby$={0}_Reference_Nbr]', listId)).text();
+                            let Assessment_Result_Version = tr.find($.validator.format('td[aria-describedby$={0}_Assessment_Result_Version]', listId)).text();
+                            let Status = tr.find($.validator.format('td[aria-describedby$={0}_Status]', listId)).text();
+                            let Assessment_Sub_Kind = tr.find($.validator.format('td[aria-describedby$={0}_Assessment_Sub_Kind]', listId)).text();
+                            let Version = tr.find($.validator.format('td[aria-describedby$={0}_Version]', listId)).text();
+                            let ReportDate = tr.find($.validator.format('td[aria-describedby$={0}_Report_Date]', listId)).text();
+                            tr.find('td').find('a.Dialog4').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    textAreaDialogOpen(
+                                        $(this).attr('id'),
+                                        Reference_Nbr,
+                                        Version,
+                                        Assessment_Result_Version,
+                                        null,
+                                        ReportDate);
+                                }); //註冊複核者之回覆意見
+                            });
+                            tr.find('td').find('a.Dialog5').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    D64DialogOpen(Reference_Nbr,Assessment_Result_Version,Status);
+                                });  //開啟評估結果檔
+                            });
+                            tr.find('input:enabled').each(function(){
+                                if($(this).attr('id').indexOf('Evaluation') > -1)
+                                {
+                                    $(this).off('click');
+                                    $(this).on('click',
+                                        function () { D63EvaluationClick(Reference_Nbr, Assessment_Result_Version,Status,Assessment_Sub_Kind) });
+                                }
+                            });//註冊推送評估
+                        });
+                    }
+                    if(listId == 'list4')
+                    {
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){
+                            let tr = $(this);
+                            let Reference_Nbr = tr.find($.validator.format('td[aria-describedby$={0}_Reference_Nbr]', listId)).text();
+                            let Version = tr.find($.validator.format('td[aria-describedby$={0}_Version]', listId)).text();
+                            let Assessment_Result_Version = tr.find($.validator.format('td[aria-describedby$={0}_Assessment_Result_Version]', listId)).text();
+                            let Check_Item_Code = tr.find($.validator.format('td[aria-describedby$={0}_Check_Item_Code]', listId)).text();
+                            let ReportDate = tr.find($.validator.format('td[aria-describedby$={0}_Report_Date]', listId)).text();
+                            tr.find('td').find('a.Dialog3').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    fileDialogOpen($(this).attr('name'),Reference_Nbr,Assessment_Result_Version);
+                                }); //註冊指標證明文件
+                            });
+                            tr.find('td').find('a.Dialog4').each(function(){
+                                $(this).off('click');
+                                $(this).on('click',function(){
+                                    textAreaDialogOpen(
+                                        $(this).attr('id'),
+                                        Reference_Nbr,
+                                        Version,
+                                        Assessment_Result_Version,
+                                        Check_Item_Code,
+                                        ReportDate);
+                                });//註冊評估結果說明,備註
+                            });
+                        });
+                    }
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Edit.ToString()',i);
+        }
+        actfun.Dele = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Dele.ToString()',i);
+        }
+        actfun.View = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.View.ToString()',i);
+        }
+
+        function dialogOpen(type,rowid)
+        {
+            var title = '';
+            var data = $("#list1").getRowData(rowid);
+            var ASK = data.Assessment_Sub_Kind;
+            $('#'+saveId+',#'+deleteId).hide();
+            $('#'+dialogformId).find('input[type=text]').val('');
+            $('#'+dialogformId).find('tr').not('#customerD63Dialogtr').hide();
+
+            if(type == '@Ref.Action_Type.Edit.ToString()')
+            {
+                if(ASK.trim() == '其他')
+                {
+                    customerUtility.alert('無效的評估次分類!','w');
+                    return false;
+                }
+                $.each(@Html.Raw(Json.Encode(ViewBag.assessmentSubKinds)),function(i,v){
+                    if(ASK == v.Text)
+                    {
+                        $('.'+v.Value).show();
+                    }
+                });
+                $('.actbtn').show();
+                title = ASK+'評估';
+                $('#'+saveId).val('評估');
+                $('#'+saveId).show();
+                $("#" + AuditorId + " option").remove();
+                $('#'+AuditorId+'tr').show();
+                var optionObj = [];
+                optionObj.push({ value: '', text: '' })
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        tableId: '@Ref.Table_Type.D63.ToString()'
+                    }),
+                    dataType: "json",
+                    url: url.getAuditor,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        customerUtility.addoption(AuditorId, result.Datas.Data);
+                    }
+
+                });
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type,rowid);
+                });
+                $("#" + dialogId).dialog({
+                    title: title,
+                    position: { my: "center", at: "center", of: window },
+                });
+                $("#" + dialogId).dialog("open");
+                dialogSetData(data);
+                $('#'+dialogformId).validate().resetForm();
+            }
+            else if(type == '@Ref.Action_Type.View.ToString()')
+            {
+                clearJqgrid("jqgridDiv2");
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        referenceNbr: data.Reference_Nbr,
+                        version : data.Version
+                    }),
+                    url: url.history,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $("#" + dialogId2).dialog({
+                            title: ASK + "評估版本",
+                            position: { my: "left+25% top", at: "left+10% top", of: window},
+                            width :  'auto',
+                            autoOpen: false,
+                            resizable: false,
+                            closeText: "取消",
+                            modal: true
+                        });
+                        $("#" + dialogId2).dialog("open");
+                        createJqgrid("jqgridDiv2","list2", "pager2",ASK);
+                    }
+                    else{
+                        customerUtility.alert(result.DESCRIPTION,'w');
+                    }
+                });
+            }
+        }
+
+        //#region set Data
+        function dialogSetData(data)
+        {
+            let ASK = data.Assessment_Sub_Kind;
+            $('#D63Dialog').find('table tr:visible:gt(0):not(:last)')
+                .each(function()
+                {
+                    let input = $(this).find('td:eq(1)').children();
+                    let id = input.attr('id');
+                    $(input).parent().css('color','red');
+                    if(typeof(id) != 'undefined')
+                    {
+                        let _id = id.replace('D63Dialog','');
+                        $(input).val('');
+                        $(input).val(data[_id]);
+                    }
+                }
+            )
+            $('#customerD63Dialogtr').children().remove();
+            let str = '';
+            let tdStr = '<td colspan="2" style="color:red;text-align:center">';
+            if( ASK == '@Ref.AssessmentSubKind_Type.Financial_Debts.GetDescription()' ||
+                ASK == '@Ref.AssessmentSubKind_Type.Financial_Debt_Bond.GetDescription()' ||
+                ASK == '@Ref.AssessmentSubKind_Type.Sovereign_Government_Debt.GetDescription()' ||
+                ASK == '@Ref.AssessmentSubKind_Type.CLO.GetDescription()')
+            {
+                str = '**請輸入原始數值**</br>(Ex:5% 請輸入 0.05)';
+
+            }
+            if( ASK == '@Ref.AssessmentSubKind_Type.Life_Or_Property_Insurance_Company.GetDescription()')
+            {
+                str = '**資本水準比ㄧ請輸入原始數值**</br>(Ex:5% 請輸入 0.05)';
+            }
+            if(str != '')
+                $('#customerD63Dialogtr').append(tdStr+str+'</td>');
+        }
+        //#endregion set Data
+
+        //#region save
+        function dialogSave(action,rowid)
+        {
+            var flag = true;
+            $('#'+dialogformId).find('input[type=text]:visible').each(function(){
+                if($(this).val().trim() == '-')
+                {
+                    toastr.warning($(this).parent('td:first').prev().text().split(' ')[0] + '格式錯誤!');
+                    flag = false;
+                    return false;
+                }
+            })
+            let _x4flag = 0;
+            if($('#'+RBC_RatioId).val().trim() != '')
+                _x4flag += 1;
+            if($('#'+MCCSR_RatioId).val().trim() != '')
+                _x4flag += 1;
+            if($('#'+Solvency_II_RatioId).val().trim() != '')
+                _x4flag += 1;
+            if(_x4flag > 1)
+            {
+                customerUtility.alert('資本水準僅限單一地區數值','w');
+                flag = false;
+                return false;
+            }
+            if($('#'+AuditorId).val() == '')
+            {
+                customerUtility.alert('請選擇複核者','w');
+                flag = false;
+                return false;
+            }
+            if(flag)
+            {
+                var data = $("#list1").getRowData(rowid);
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        action: action, //action
+                        Auditor: $('#'+AuditorId).val(),
+                        model: D63ViewModel(
+                        data.Reference_Nbr,
+                        data.Report_Date,
+                        data.Version,
+                        $('#'+Net_DebtId).val(),
+                        $('#'+Total_AssetId).val(),
+                        $('#'+CFOId).val(),
+                        $('#'+Int_ExpenseId).val(),
+                        $('#'+CET1_Capital_RatioId).val(),
+                        $('#'+Lerverage_RatioId).val(),
+                        $('#'+Liquiduty_Coverage_RatioId).val(),
+                        $('#'+Total_EquityId).val(),
+                        $('#'+BS_TOT_ASSETId).val(),
+                        $('#'+RBC_RatioId).val(),
+                        $('#'+MCCSR_RatioId).val(),
+                        $('#'+Solvency_II_RatioId).val(),
+                        $('#'+SHORT_AND_LONG_TERM_DEBTId).val(),
+                        $('#'+Cash_and_Cash_EquivalentsId).val(),
+                        $('#'+Short_Term_DebtId).val(),
+                        $('#'+IGS_INDEXId).val(),
+                        $('#'+IGS_INDEX_IncreaseId).val(),
+                        $('#'+External_Debt_RateId).val(),
+                        $('#'+FC_Indexed_Debt_RateId).val(),
+                        $('#'+CEIC_ValueId).val(),
+                        $('#'+Short_term_Debt_RatioId).val(),
+                        $('#'+GDP_Yearly_AvgId).val(),
+                        $('#'+Quantitative_CLO_1Id).val(),
+                        $('#'+Quantitative_CLO_2Id).val(),
+                        $('#'+Quantitative_CLO_2_ThresholdId).val(),
+                        $('#'+Quantitative_CLO_3Id).val(),
+                        $('#'+Quantitative_CLO_3_ThresholdId).val(),
+                        $('#'+Quantitative_CLO_4Id).val(),
+                        $('#'+Quantitative_CLO_4_ThresholdId).val()
+                        ),
+                        assessmentSubKind : $('#assessmentSubKind').val(),
+                        bondNumber : $('#bondNumber').val(),
+                        index : $('#index').val()
+                    }),
+                    dataType: "json",
+                    url: url.save,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        var page = getPage('jqgridDiv');
+                        $("#" + dialogId).dialog("close");
+                        customerUtility.alert(result.DESCRIPTION,'s');
+                        clearJqgrid("jqgridDiv");
+                        createJqgrid("jqgridDiv","list1", "pager1",null,page);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+        //#endregion save
+
+        function D63ViewModel(
+            Reference_Nbr,
+            Report_Date,
+            Version,
+            Net_Debt,
+            Total_Asset,
+            CFO,
+            Int_Expense,
+            CET1_Capital_Ratio,
+            Lerverage_Ratio,
+            Liquiduty_Coverage_Ratio,
+            Total_Equity,
+            BS_TOT_ASSET,
+            RBC_Ratio,
+            MCCSR_Ratio,
+            Solvency_II_Ratio,
+            SHORT_AND_LONG_TERM_DEBT,
+            Cash_and_Cash_Equivalents,
+            Short_Term_Debt,
+            IGS_INDEX,
+            IGS_INDEX_Increase,
+            External_Debt_Rate,
+            FC_Indexed_Debt_Rate,
+            CEIC_Value,
+            Short_term_Debt_Ratio,
+            GDP_Yearly_Avg,
+            Quantitative_CLO_1,
+            Quantitative_CLO_2,
+            Quantitative_CLO_2_Threshold,
+            Quantitative_CLO_3,
+            Quantitative_CLO_3_Threshold,
+            Quantitative_CLO_4,
+            Quantitative_CLO_4_Threshold
+        )
+        {
+            var obj = {};
+            obj['Reference_Nbr'] = Reference_Nbr;
+            obj['Report_Date'] = Report_Date,
+            obj['Version'] = Version,
+            obj['Net_Debt'] = Net_Debt;
+            obj['Total_Asset'] = Total_Asset;
+            obj['CFO'] = CFO;
+            obj['Int_Expense'] = Int_Expense;
+            obj['CET1_Capital_Ratio'] = CET1_Capital_Ratio;
+            obj['Lerverage_Ratio'] = Lerverage_Ratio;
+            obj['Liquiduty_Coverage_Ratio'] = Liquiduty_Coverage_Ratio;
+            obj['Total_Equity'] = Total_Equity;
+            obj['BS_TOT_ASSET'] = BS_TOT_ASSET;
+            obj['RBC_Ratio'] = RBC_Ratio;
+            obj['MCCSR_Ratio'] = MCCSR_Ratio;
+            obj['Solvency_II_Ratio'] = Solvency_II_Ratio;
+            obj['SHORT_AND_LONG_TERM_DEBT'] = SHORT_AND_LONG_TERM_DEBT;
+            obj['Cash_and_Cash_Equivalents'] = Cash_and_Cash_Equivalents;
+            obj['Short_Term_Debt'] = Short_Term_Debt;
+            obj['IGS_INDEX'] = IGS_INDEX;
+            obj['IGS_INDEX_Increase'] = IGS_INDEX_Increase;
+            obj['External_Debt_Rate'] = External_Debt_Rate;
+            obj['FC_Indexed_Debt_Rate'] = FC_Indexed_Debt_Rate;
+            obj['CEIC_Value'] = CEIC_Value;
+            obj['Short_term_Debt_Ratio'] = Short_term_Debt_Ratio;
+            obj['GDP_Yearly_Avg'] = GDP_Yearly_Avg;
+            obj['Quantitative_CLO_1'] = Quantitative_CLO_1;
+            obj['Quantitative_CLO_2'] = Quantitative_CLO_2;
+            obj['Quantitative_CLO_2_Threshold'] = Quantitative_CLO_2_Threshold;
+            obj['Quantitative_CLO_3'] = Quantitative_CLO_3;
+            obj['Quantitative_CLO_3_Threshold'] = Quantitative_CLO_3_Threshold;
+            obj['Quantitative_CLO_4'] = Quantitative_CLO_4;
+            obj['Quantitative_CLO_4_Threshold'] = Quantitative_CLO_4_Threshold;
+            return obj;
+        }
+
+        function formatId(value)
+        {
+            return dialogId+value;
+        }
+
+        function getPage(jQgridId)
+        {
+            return $('#'+jQgridId).find('.ui-pg-input').val();
+        }
+    });
+</script>

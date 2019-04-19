@@ -1,0 +1,401 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D54InsertSub";
+    ViewBag.Title = "執行階段調整確認作業";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    #D54Dialog3 label {
+        font-size:12px;
+    }
+</style>
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:125px">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td colspan="2" class="form-group">
+                            <label>報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                    </tr>
+                    <tr >
+                        <td style="padding-top:10px;" >
+                            <input type="button" class="btn btn-primary" value="查詢預計調整資料" id="btnD54Search" style="margin-right:10px;" />
+                        </td>
+                        <td style="padding-top:10px;">
+                            <input type="button" class="btn btn-primary" value="減損階段確認" id="btnD54Transfer" style="margin-right:10px;" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            @*<i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+只有擁有評估權限,且複核尚未選擇最終版本時才可以評估!
+"></i>*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail" style="padding-bottom:20px;height:160px;">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+            <div class="viewDetail">
+                <div id="jqgridDiv2" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="D54Dialog3" style="display:none">
+        <table style="width:100%">
+            <tr>
+                <td style="width:10%">
+                    <label> 帳戶編號 : </label>
+                </td>
+                <td style="width:38%">
+                    <label id="D54Reference_Nbr"></label>
+                </td>
+                <td style="width:15%">
+                    <label> 調整後減損階段 : </label>
+                </td>
+                <td style="width:37%">
+                    <label id="D54Impairment_Stage"></label>
+                </td>
+            </tr>
+        </table>
+        <table style="width:100%" id="D54Table3">
+
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getChg_In_Spread = '@Url.Action("GetChg_In_Spread","D6")';
+        url.search = '@Url.Action("D54InsertSearch", "D6")';
+        url.transfer = '@Url.Action("TransferD54", "D6")';
+        url.getDbData = '@Url.Action("GetCacheData", "D6")';
+        //#endregion 註冊URL
+
+        //#region 共用參數
+
+        //#endregion 共用參數
+
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //#endregion 註冊verified
+
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD54Search':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+                case 'btnD54Transfer':
+                    $('#' + id).on('click', function () { transfer() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 查詢量化評估需求資訊檔
+        function search()
+        {
+            clearJqgrid("jqgridDiv");
+            clearJqgrid("jqgridDiv2");
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        dt: $('#datepicker').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    if(result.RETURN_FLAG)
+                    {
+                        createJqgrid("jqgridDiv", "list1", "pager1", result.Datas.Data);
+                        createJqgrid("jqgridDiv2", "list2", "pager2");
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                })
+            }
+        }
+        //#endregion 查詢量化評估需求資訊檔
+
+        //#region 執行量化評估需求資訊檔轉檔
+        function transfer()
+        {
+            //clearJqgrid("jqgridDiv");
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        dt: $('#datepicker').val(),
+                    }),
+                    dataType: "json",
+                    url: url.transfer,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    if(result.RETURN_FLAG)
+                    {
+                        customerUtility.alert(result.DESCRIPTION, 's');
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                })
+            }
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDivId) {
+            $('#'+jqgridDivId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        function D54Chg_In_Spread(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog Dialog3' return:false; id='" + options.gid + "Chg_In_Spread" + options.rowId + "' title='檢視'>檢視</a>";
+        }
+
+        //#region 減損計算結果畫面
+        function ELDialogOpen(Reference_Nbr, Impairment_Stage) {
+            var dialogId3 = 'D54Dialog3';
+            $("#" + dialogId3).dialog({
+                title: '減損試算結果',
+                position: { my: "top+10%", at: "center top", of: window },
+                width: '700px',
+                autoOpen: false,
+                resizable: true,
+                closeText: "取消",
+                modal: true
+            });
+            let tableId = "D54Table3";
+            clearJqgrid(tableId);
+            let colNameArray = ["債券幣別", "計算基準", "一年期預期損失", "存續期間預期損失", "一年期預期損失(違約率=100%)"];
+            let colModelArray = [
+                { name: "Currency_Code", index: "Currency_Code", width: 80, sortable: false },
+                { name: "Base", index: "Base", width: 80, sortable: false },
+                { name: "Stage_1", index: "Stage_1", width: 120, sortable: false },
+                { name: "Stage_2", index: "Stage_2", width: 140, sortable: false },
+                { name: "Stage_3", index: "Stage_3", width: 220, sortable: false },
+            ];
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Reference_Nbr: Reference_Nbr
+                }),
+                dataType: "json",
+                url: url.getChg_In_Spread,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    $('#D54Reference_Nbr').text('');
+                    $('#D54Reference_Nbr').text(Reference_Nbr);
+                    $('#D54Impairment_Stage').text('');
+                    $('#D54Impairment_Stage').text(Impairment_Stage);
+                    $.each(result.Datas.Data, function (i, v) {
+                        let jqgridDiv = "jqgridDiv_" + i;
+                        let listId = "list_" + i;
+                        let str = '';
+                        str += '<tr>';
+                        str += '<td style="width:10%">';
+                        str += '<label> 專案名稱 : </label>';
+                        str += '</td>';
+                        str += '<td style="width:38%">';
+                        str += '<label>';
+                        str += v.PRJID;
+                        str += '</label>';
+                        str += '</td>';
+                        str += '<td style="width:10%">';
+                        str += '<label>流程名稱 : </label>';
+                        str += '</td>';
+                        str += '<td style="width:42%">';
+                        str += '<label>';
+                        str += v.FLOWID;
+                        str += '</label>';
+                        str += '</td>';
+                        str += '</tr>';
+                        str += '<tr>';
+                        str += '<td colspan="4">';
+                        str += '<div id="' + jqgridDiv + '" class="jqd" style="padding-top:10px;width:100%"></div>';
+                        str += '</td>';
+                        str += '</tr>';
+                        $('#' + tableId).append(str);
+                        let data = v.ChgInSpread;
+
+                        $('#' + jqgridDiv).append('<table id="' + listId + '"></table>');
+                        $("#" + listId).jqGrid({
+                            data: data,
+                            datatype: "local",
+                            mtype: "POST",
+                            colNames: colNameArray,
+                            colModel: colModelArray,
+                            rowNum: 3, //一頁筆數
+                            height: '90',
+                            width: 'auto',
+                            sortorder: "desc",
+                            caption: "減損試算結果", //標題
+                            resizable: false,
+                            shrinkToFit: false,
+                            //autoencode: true,
+                            viewsortcols: [true, 'vertical', true],
+                            ajaxRowOptions: { contentType: "application/json" },
+                            //serializeRowData: function (data) {
+                            //    return JSON.stringify(data);
+                            //},
+                            loadComplete: function () {
+                                var table = $(this);
+                                jqgridCustom.updatePagerIcons(table);
+                                $("#" + listId).jqGrid('setGroupHeaders', {
+                                    useColSpanStyle: true,
+                                    groupHeaders: [
+                                      { startColumnName: 'Currency_Code', numberOfColumns: 2, titleText: '減損試算結果' },
+                                      { startColumnName: 'Stage_1', numberOfColumns: 1, titleText: 'Stage 1' },
+                                      { startColumnName: 'Stage_2', numberOfColumns: 1, titleText: 'Stage 2' },
+                                      { startColumnName: 'Stage_3', numberOfColumns: 1, titleText: 'Stage 3' }
+                                    ]
+                                });
+                                $(this).find('tr[id=3]').find('td:first').hide();
+                                $(this).find('tr[id=2]').find('td:first').attr('rowspan', '2');
+                            }
+                        });
+                    });
+                    $("#" + dialogId3).dialog("open");
+                }
+                else {
+                    customerUtility.alert('查無資料!', 'w');
+                }
+            });
+        }
+        //#endregion 減損計算結果畫面
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(jqgridDivId,listId, pagerId,data) {
+            $('#'+jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#'+jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            var title = '';
+            var names = [];
+            var model = [];
+            var table = '';
+            if(listId == 'list1')
+            {
+                title = '預計調整總計';
+                names = ["產品別", "Bond_A", "Bond_B", "Bond_P"];
+                model = [
+                        { name: "Product_Code", index: "Product_Code", align: 'left' },
+                        { name: "Bond_A", index: "Bond_A", align: 'right' },
+                        { name: "Bond_B", index: "Bond_B", align: 'right' },
+                        { name: "Bond_P", index: "Bond_P", align: 'right' },
+                ];
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: names,
+                    colModel: model,
+                    rowNum: 2, //一頁筆數
+                    height: 60,
+                    width: jqgridCustom.getwidth(),
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                });
+            }
+            else if(listId == 'list2')
+            {
+                table = 'D54InsertSearchData';
+                title = '預計調整資料';
+                names = ["檢視", "產品別", "帳戶編號", "債券編號", "Lots", "Portfolio英文", "減損階段"];
+                model = [
+                        { name: "Chg_In_Spread", index: "Chg_In_Spread", align: 'center', width: 90, formatter: D54Chg_In_Spread, sortable: false },
+                        { name: "Product_Code", index: "Product_Code", align: 'left' },
+                        { name: "Reference_Nbr", index: "Reference_Nbr", align: 'left' },
+                        { name: "Bond_Number", index: "Bond_Number", align: 'left' },
+                        { name: "Lots", index: "Lots", align: 'center', width: 90 },
+                        { name: "Portfolio_Name", index: "Portfolio_Name", align: 'left' },
+                        { name: "Impairment_Stage", index: "Impairment_Stage", align: 'center' },
+                ];
+                $("#" + listId).jqGrid({
+                    url: url.getDbData,
+                    datatype: "json",
+                    mtype: "POST",
+                    postData:
+                    {
+                        table: table,
+                    },
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: names,
+                    colModel: model,
+                    rowNum: 5, //一頁筆數
+                    rowList: [5, 10, 20], //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: 150,
+                    width: jqgridCustom.getwidth(),
+                    //sortname: 'id',
+                    viewrecords: true, //顯示總數
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        jqgridCustom.updatePagerIcons($(this), 'jqgridDiv2');
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function () {
+                            let tr = $(this);
+                            let Reference_Nbr = tr.find($.validator.format('td[aria-describedby$={0}_Reference_Nbr]', listId)).text();
+                            let Impairment_Stage = tr.find($.validator.format('td[aria-describedby$={0}_Impairment_Stage]', listId)).text();
+                            $(this).find('td').find('a.Dialog3').each(function () {
+                                $(this).off('click');
+                                $(this).on('click', function () {
+                                    ELDialogOpen(Reference_Nbr,Impairment_Stage);
+                                });
+                            });
+                        });
+                    },
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+    });
+</script>

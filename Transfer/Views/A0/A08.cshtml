@@ -1,0 +1,197 @@
+﻿@{
+    ViewBag.Menu = "A0Main";
+    ViewBag.SubMenu = "A08Sub";
+    ViewBag.Title = "A08(房貸其他揭露資訊)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap;text-align:right">
+                            放款編號：
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <input type="text" id="Reference_Nbr" name="Reference_Nbr" maxlength="50">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right;padding-left:50px">
+                            評估基準日/報導日：
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <input type="text" id="Report_Date" name="Report_Date" maxlength="10">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px;">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("QueryA08", "A0")';
+        url.getDbData = '@Url.Action("GetCacheA08Data", "A0")';
+        //#endregion 註冊URL
+
+        //#region 產生datepicker
+        created.createDatepicker('Report_Date', true, '');
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnExportExcel':
+                    $("#" + id).on('click', function () { dlExcel(); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Reference_Nbr').val("");
+            $('#Report_Date').val("");
+        }
+        //#endregion
+
+        var referenceNbr = "";
+        var reportDate = "";
+        //#region SearchData
+        function SearchData() {
+            if (CheckData() == true) {
+                showJqgrid(referenceNbr, reportDate);
+            }
+        }
+        //#endregion
+
+        //#region CheckData
+        function CheckData() {
+            referenceNbr = $('#Reference_Nbr').val().trim();
+            reportDate = $('#Report_Date').val().trim();
+
+            if (referenceNbr == "" && reportDate == "") {
+                toastr.error("請輸入 放款編號 或 基準日");
+                return false;
+            }
+
+            if (reportDate != "") {
+                if (verified.isDate(reportDate, false) == false) {
+                    toastr.error("評估基準日/報導日 格式錯誤(yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        //#endRegion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(referenceNbr, reportDate) {
+            clearJqgrid();
+
+            var title = '@ViewBag.Title'; //標頭
+            var dataString = "";
+            var urlString = "";
+
+            dataString = JSON.stringify({
+                referenceNbr: referenceNbr,
+                reportDate: reportDate
+            });
+
+            urlString = url.getData;
+
+            $.ajax({
+                type: "POST",
+                data: dataString,
+                dataType: "json",
+                url: urlString,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+    });
+</script>

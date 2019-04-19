@@ -1,0 +1,258 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A4Main";
+    ViewBag.SubMenu = "A48Sub";
+    ViewBag.Title = "A48(固收提供的阿布達比資料)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="">
+                            <label>選擇動作 : </label>
+                            @Html.DropDownList("action",
+                           (SelectList)ViewBag.action,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr class="action search">
+                        <td style="padding-top:10px;">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <div class="control-group">
+                                            <div class="checkbox checkbox-info">
+                                                @Html.CheckBox("searchAll",
+                                                 false)
+                                                <label>查詢全部(含失效)</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="button" class="btn btn-primary" value="查詢" id="btnA48Search" style="margin-left:10px;" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table>
+                <tr class="action upload" style="display:none">
+                    <td style="padding-top:10px;">
+                        @using (Ajax.BeginForm("UploadA48", "A4",
+                        new AjaxOptions { HttpMethod = "POST" },
+                        new { enctype = "multipart/form-data", @id = "form0" }))
+                        {
+                            <input type="file" name="file" class="filestyle" data-buttonName="btn-primary" data-buttonText="轉檔檔案" style="margin-right:10px" />
+                        }
+                    </td>
+                    <td style="padding-top:10px;">
+                        <input type="button" class="btn btn-primary" style="margin-right:10px" value="資料上傳" id="fileSubmit" />
+                        <input type="button" class="btn btn-primary" value="轉檔" id="btnTransfer" disabled />
+                    </td>
+                </tr>
+            </table>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+1.勾選查詢全部(含失效),查詢所有資料
+2.查詢未勾選查詢全部(含失效),只查有效資料
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.type = '@Ref.Table_Type.A48.ToString()';
+        url.search = '@Url.Action("GetA48Data", "A4")';
+        url.getDbData = '@Url.Action("GetDefaultCacheData", "A4")';
+        url.transfer = '@Url.Action("TransferA48", "A4")';
+        //#endregion 註冊URL
+
+
+        //#region 刪除verified
+        function removeVerified() {
+            $("#myForm").validate().resetForm();
+        }
+        //#endregion 刪除verified
+
+        $('#action').on('change', function () {
+            clearJqgrid();
+            $('#btnTransfer').prop('disabled', true);
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+        });
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA48Search':
+                    $('#' + id).on('click', function () { A48Search() });
+                    break;
+                case 'fileSubmit':
+                    $('#' + id).click(fileSubmitFunction);
+                    break;
+                case 'btnTransfer':
+                    $('#' + id).click(transfer);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function A48Search(id) {
+            if ($('#myForm').valid()) {
+                clearJqgrid();
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        searchAll: $('#searchAll').prop('checked')
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid(
+                            "list1",
+                            "pager1",
+                            '@Ref.Table_Type.A48.tableNameGetDescription()',
+                            url.type + "Db"
+                            );
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+
+        //#region 資料上傳(Excel 資料寫入 local sql)
+        function transfer() {
+            $.ajax({
+                type: "POST",
+                url: url.transfer,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    customerUtility.alert(result.DESCRIPTION,'s');
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+        //#endregion 資料上傳(Excel 資料寫入 local sql)
+
+        //#region fileSubmitFunction (把檔案上傳到指定資料夾)
+        function fileSubmitFunction() {
+            var dataString;
+            var action = $("#form0").attr("action");
+            if ($("#form0").attr("enctype") == "multipart/form-data") {
+                dataString = new FormData($("#form0").get(0));
+                processData = false;
+            }
+            else {
+                // regular form, do your own thing if you need it
+            }
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                url: action,
+                data: dataString,
+                dataType: "json",
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid(
+                          "list1",
+                          "pager1",
+                          '@Ref.Table_Type.A48.tableNameGetDescription()',
+                          url.type +"Excel"
+                          );
+                        $('#btnTransfer').prop('disabled', false);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'w');
+                    }
+                }
+            });
+        }
+        //#endregion fileSubmitFunction
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //colModelArray
+        //title (標題)
+        //type Db(查詢) Excel(上傳儲存)
+        function createJqgrid(listId, pagerId, title, type) {
+            var colNameArray = @Html.Raw(Json.Encode(ViewBag.jqgridColNames));
+            var colModelArray = @Html.Raw(Json.Encode(ViewBag.jqgridColModel));
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: type,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true, //顯示總數
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+    });
+</script>

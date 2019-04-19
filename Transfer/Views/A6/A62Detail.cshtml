@@ -1,0 +1,190 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A6Main";
+    ViewBag.SubMenu = "A62Sub";
+    ViewBag.Title = "A62 (違約損失資料檔_歷史資料)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td style="white-space:nowrap">
+                        <label>年度： </label>
+                        @Html.DropDownList("Data_Year",
+                           (SelectList)ViewBag.DataYear,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                        &nbsp;&nbsp;
+                        <input type="button" class="btn btn-primary dlexcel" value="匯出Excel" id="btnExportExcel" disabled />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetA62Data", "A6")';
+        url.getExcel = '@Url.Action("GetA62Excel", "A6")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { showJqgrid($('#Data_Year').val()) });
+                    break;
+                case 'btnExportExcel':
+                    $("#" + id).on('click', function () { dlExcel($('#Data_Year').val()); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(dataYear) {
+            if (dataYear == null || dataYear == "") {
+                dataYear = "All";
+            }
+            dataYear = dataYear.split('(')[0];
+            clearJqgrid();
+            var title = '@(Ref.Table_Type.A62.GetDescription())'; //標頭
+            var data; // json Data 由Ajax 拿到
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataYear: dataYear
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    data = result.Datas.Data.Datas;
+                    createJqgrid("list1", "pager1", data, title);
+                    $('#btnExportExcel').prop('disabled', false);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        function createJqgrid(listId, pagerId, data, title) {
+            if (data.length > 0) {
+                var colModelArray = [
+                                        { name: "Data_Year", index: "Data_Year", align: 'left' },
+                                        { name: "Lien_Position", index: "Lien_Position", align: 'left' },
+                                        { name: "Recovery_Rate", index: "Recovery_Rate", align: 'left' },
+                                        { name: "LGD", index: "LGD", align: 'left' },
+                                        { name: "Status_Name", index: "Status", align: 'left' },
+                                        { name: "Auditor_Reply", index: "Auditor_Reply", align: 'left' },
+                                        { name: "Auditor_Name", index: "Auditor", align: 'left' },
+                                        { name: "Audit_date", index: "Audit_date", align: 'left' }
+                ];
+
+                var colNameArray = [
+                                       '年度',
+                                       '擔保順位',
+                                       '回收率',
+                                       '違約損失率',
+                                       '資料狀態',
+                                       '複核者意見',
+                                       '複核者',
+                                       '複核日期'
+                ];
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                    rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    sortorder: "desc",
+                    caption: title, //標題
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+
+        //#region 下載Excel 檔案
+        function dlExcel(dataYear) {
+            if (dataYear == null || dataYear == "") {
+                dataYear = "All";
+            }
+            dataYear = dataYear.split('(')[0];
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataYear: dataYear
+                }),
+                dataType: "json",
+                url: url.getExcel,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    window.location.href = "@Url.RouteUrl(new
+                    {
+                        Controller = "A6", Action = "DownloadExcel"
+                    }
+                                                         )/?type=A62";
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            })
+        }
+        //#endregion 下載Excel 檔案
+
+    });
+</script>

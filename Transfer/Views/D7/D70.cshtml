@@ -1,0 +1,1448 @@
+﻿@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D70Sub";
+    ViewBag.Title = "D70(觀察名單參數檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:180px">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <label>規則編號 :</label>
+                            <input type="text" id="Rule_ID" name="Rule_ID">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <label>處理狀態 :</label>
+                            @Html.DropDownList("Status",
+                             (SelectList)ViewBag.Status,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <label>使用狀態 :</label>
+                            @Html.DropDownList("IsActive",
+                             (SelectList)ViewBag.IsActive,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:10px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        您登入的帳號：<span>@ViewBag.UserAccount</span>
+        <br />
+        是否有呈送複核的權限：<span id="spanIsSender">@ViewBag.IsSender</span>
+        <input type="hidden" id="IsSender" value="@ViewBag.IsSender" />
+        <input type="hidden" id="UserAccount" value="@ViewBag.UserAccount" />
+        <table>
+            <tr>
+                <td style="white-space:nowrap;">
+                    可複核人員：
+                    @Html.DropDownList("Auditor",
+                             (SelectList)ViewBag.Auditor,
+                             new { @class = "form-control", @style = "display:inline-block;width:200px" })
+                </td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnSendToAudit" value="呈送複核" />
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnAudit" value="複核確認" />
+                    &nbsp;&nbsp;
+                    <input type="button" class="btn btn-primary" id="btnReject" value="複核退回" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table border="1">
+            <tr>
+                <td colspan="2" style="white-space:nowrap;text-align:center">
+                    參數設定為-999，代表 <font color="red"><u>規則項目對應資料內容為空值</u></font>
+                </td>
+            </tr>
+        </table>
+        <br />
+        <table style="width:100%">
+            <tr id="trRule_ID">
+                <td style="white-space:nowrap; text-align:right">
+                    規則編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_ID"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    基本要件評估時點：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editBasic_Pass_Check_Point",
+                             (SelectList)ViewBag.BasicPassCheckPoint,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    基本要件是否通過：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editBasic_Pass",
+                             (SelectList)ViewBag.BasicPass,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    信評評估時點：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editRating_Check_Point",
+                             (SelectList)ViewBag.RatingCheckPoint,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right;">
+                    信評主標尺資料年度：
+                </td>
+                <td style="white-space:nowrap;">
+                    <input type="text" id="editData_Year" name="editData_Year" maxlength="4" onblur="getA51(''); getA51('from'); getA51('to');" disabled>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:  #d3a4ff">
+                    報導日信評門檻：
+                </td>
+                <td style="white-space:nowrap; background-color:#d3a4ff">
+                    @Html.DropDownList("editRating_Threshold",
+                                       (SelectList)ViewBag.A52,
+                                       new { @class = "form-control", @style = "display:inline-block", @onchange = "getA52(''); getA51('');" })
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td style="white-space:nowrap; text-align:right; background-color:#d3a4ff">
+                    報導日信評門檻-對應評等主標尺_原始：
+                </td>
+                <td style="white-space:nowrap; background-color:#d3a4ff">
+                    <select id="editRating_Threshold_Map_Grade" onchange="getA51('');">
+                    </select>
+                </td>
+            </tr>
+            <tr style="display:none; background-color:#d3a4ff">
+                <td style="white-space:nowrap; text-align:right; background-color:#d3a4ff">
+                    報導日信評門檻-對應評等主標尺_調整後：
+                </td>
+                <td style="white-space:nowrap; background-color:#d3a4ff">
+                    <select id="editRating_Threshold_Map_Grade_Adjust"></select>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:#d3a4ff">
+                    是否包含：
+                </td>
+                <td style="white-space:nowrap; background-color:#d3a4ff">
+                    @Html.DropDownList("editIncluding_Ind_0",
+                             (SelectList)ViewBag.IncludingInd0,
+                              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:#d3a4ff">
+                    範圍 _以上/以下：
+                </td>
+                <td style="white-space:nowrap; background-color:#d3a4ff">
+                    @Html.DropDownList("editApply_Range_0",
+                             (SelectList)ViewBag.ApplyRange0,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:lightpink">
+                    報導日信評區間_from：
+                </td>
+                <td style="white-space:nowrap; background-color:lightpink">
+                    @Html.DropDownList("editRating_from",
+                                       (SelectList)ViewBag.A52,
+                                       new { @class = "form-control", @style = "display:inline-block", @onchange = "getA52('from'); getA51('from');" })
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td style="white-space:nowrap; text-align:right; background-color:lightpink">
+                    報導日信評區間_from-對應評等主標尺_原始：
+                </td>
+                <td style="white-space:nowrap; background-color:lightpink">
+                    <select id="editRating_from_Map_Grade" onchange="getA51('from');"></select>
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td style="white-space:nowrap; text-align:right; background-color:lightpink">
+                    報導日信評區間_from-對應評等主標尺_調整後：
+                </td>
+                <td style="white-space:nowrap; background-color:lightpink">
+                    <select id="editRating_from_Map_Grade_Adjust"></select>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:lightpink">
+                    報導日信評區間_To：
+                </td>
+                <td style="white-space:nowrap; background-color:lightpink">
+                    @Html.DropDownList("editRating_To",
+                                       (SelectList)ViewBag.A52,
+                                       new { @class = "form-control", @style = "display:inline-block", @onchange = "getA52('to'); getA51('to');" })
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td style="white-space:nowrap; text-align:right; background-color:lightpink">
+                    報導日信評區間_To-對應評等主標尺_原始：
+                </td>
+                <td style="white-space:nowrap; background-color:lightpink">
+                    <select id="editRating_To_Map_Grade" onchange="getA51('to');"></select>
+                </td>
+            </tr>
+            <tr style="display:none">
+                <td style="white-space:nowrap; text-align:right; background-color:lightpink">
+                    報導日信評區間_To-對應評等主標尺_調整後：
+                </td>
+                <td style="white-space:nowrap; background-color:lightpink">
+                    <select id="editRating_To_Map_Grade_Adjust"></select>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:aquamarine">
+                    未實現累計損失月數：
+                </td>
+                <td style="white-space:nowrap; background-color:aquamarine">
+                    <input type="text" id="editValue_Change_Months" name="editValue_Change_Months">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:aquamarine">
+                    是否包含：
+                </td>
+                <td style="white-space:nowrap; background-color:aquamarine">
+                    @Html.DropDownList("editIncluding_Ind_1",
+                             (SelectList)ViewBag.IncludingInd1,
+                              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:aquamarine">
+                    範圍 _以上/以下：
+                </td>
+                <td style="white-space:nowrap; background-color:aquamarine">
+                    @Html.DropDownList("editApply_Range_1",
+                             (SelectList)ViewBag.ApplyRange1,
+                              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:yellow">
+                    信用利差拓寬累積月數：
+                </td>
+                <td style="white-space:nowrap; background-color:yellow">
+                    <input type="text" id="editSpread_Change_Months" name="editSpread_Change_Months">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:yellow">
+                    是否包含：
+                </td>
+                <td style="white-space:nowrap; background-color:yellow">
+                    @Html.DropDownList("editIncluding_Ind_2",
+                             (SelectList)ViewBag.IncludingInd2,
+                              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right; background-color:yellow">
+                    範圍 _以上/以下：
+                </td>
+                <td style="white-space:nowrap; background-color:yellow">
+                    @Html.DropDownList("editApply_Range_2",
+                             (SelectList)ViewBag.ApplyRange2,
+                              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr id="trRule_setter_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    規則設定者：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setter_Name"></span>
+                </td>
+            </tr>
+            <tr id="trRule_setting_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    規則編輯日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setting_Date"></span>
+                </td>
+            </tr>
+            <tr id="trAuditor_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    可複核人員：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAuditor_Name"></span>
+                </td>
+            </tr>
+            <tr id="trAudit_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    複核日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAudit_Date"></span>
+                </td>
+            </tr>
+            <tr id="trStatus">
+                <td style="white-space:nowrap; text-align:right">
+                    處理狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanStatus" style="display:none"></span>
+                    <span id="spanStatus_Name"></span>
+                </td>
+            </tr>
+            <tr id="trRule_desc">
+                <td style="white-space:nowrap; text-align:right">
+                    Rule_desc：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editRule_desc" name="editRule_desc">
+                </td>
+            </tr>
+            <tr id="trIsActive">
+                <td style="white-space:nowrap; text-align:right">
+                    使用狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanIsActive" style="display:none"></span>
+                    <span id="spanIsActive_Name"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="設為失效" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnCancel" value="關閉" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //#region 註冊URL
+    var url = {};
+    url.getAllData = '@Url.Action("GetD70AllData", "D7")';
+    url.getData = '@Url.Action("GetD70Data", "D7")';
+    url.getA52 = '@Url.Action("GetA52Data", "D7")';
+    url.getA51 = '@Url.Action("GetA51Data", "D7")';
+    url.saveData = '@Url.Action("SaveD70", "D7")';
+    url.deleteData = '@Url.Action("DeleteD70", "D7")';
+    url.sendToAudit = '@Url.Action("SendD70ToAudit", "D7")';
+    url.audit = '@Url.Action("D70Audit", "D7")';
+    //#endregion 註冊URL
+
+    $(function () {
+        //#region
+        if ($("#spanIsSender").html() != "Y") {
+            $("#btnAdd").hide();
+        }
+        //#endregion
+
+        //#region SetDefault
+        $("#editRating_Threshold_Map_Grade").append("<option value=' '> </option>");
+        $("#editRating_from_Map_Grade").append("<option value=' '> </option>");
+        $("#editRating_To_Map_Grade").append("<option value=' '> </option>");
+
+        $("#editRating_Threshold_Map_Grade_Adjust").append("<option value=' '> </option>");
+        $("#editRating_from_Map_Grade_Adjust").append("<option value=' '> </option>");
+        $("#editRating_To_Map_Grade_Adjust").append("<option value=' '> </option>");
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnCancel':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnSendToAudit':
+                    $("#" + id).on('click', function () { SendToAudit(); });
+                    break;
+                case 'btnAudit':
+                    $("#" + id).on('click', function () { AuditData("2"); });
+                    break;
+                case 'btnReject':
+                    $("#" + id).on('click', function () { AuditData("3"); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Rule_ID').val("");
+            $('#Status').val("");
+            $('#IsActive').val("");
+        }
+        //#endregion
+
+        var ProgramID = "D70";
+        //#region SearchData
+        function SearchData() {
+            var ruleID = $('#Rule_ID').val().trim();
+            var status = $('#Status').val().trim();
+            var isActive = $('#IsActive').val().trim();
+
+            var obj = {
+                Rule_ID: ruleID,
+                Status: status,
+                IsActive: isActive
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = '@ViewBag.Title'; //標頭
+            var urlString = "";
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: ProgramID,
+                    dataModel:obj
+                }),
+                dataType: "json",
+                url: urlString,
+                contentType: 'application/json',
+                error: function () {
+                    alert("請重新登入!");
+                }
+            })
+            .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        var data = result.Datas.Data;
+
+                        createJqgrid("list1", "pager1", data, title);
+                    }
+                    else {
+                        toastr.error(result.DESCRIPTION);
+                    }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, data, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 70, sortable: false },
+                                    { name: "Rule_ID", index: "Rule_ID", align: 'left', width: 100 },
+                                    { name: "IsActive", index: "IsActive", align: 'left' },
+                                    { name: "IsActive_Name", index: "IsActive_Name", align: 'left', width: 100 },
+                                    { name: "Status", index: "Status", align: 'left' },
+                                    { name: "Status_Name", index: "Status_Name", align: 'left' },
+                                    { name: "Basic_Pass_Check_Point", index: "Basic_Pass_Check_Point", align: 'left' },
+                                    { name: "Basic_Pass_Check_Point_Name", index: "Basic_Pass_Check_Point_Name", align: 'left' },
+                                    { name: "Basic_Pass", index: "Basic_Pass", align: 'left' },
+                                    { name: "Rating_Check_Point", index: "Rating_Check_Point", align: 'left' },
+                                    { name: "Rating_Check_Point_Name", index: "Rating_Check_Point_Name", align: 'left' },
+                                    { name: "Rating_Threshold", index: "Rating_Threshold", align: 'left' },
+                                    { name: "Data_Year", index: "Data_Year", align: 'left' },
+                                    { name: "Rating_Threshold_Map_Grade", index: "Rating_Threshold_Map_Grade", align: 'left', width: 160 },
+                                    { name: "Rating_Threshold_Map_Grade_Adjust", index: "Rating_Threshold_Map_Grade_Adjust", align: 'left', width: 170 },
+                                    { name: "Including_Ind_0", index: "Including_Ind_0", align: 'left', width: 180 },
+                                    { name: "Apply_Range_0", index: "Apply_Range_0", align: 'left', width: 230 },
+                                    { name: "Apply_Range_0_Name", index: "Apply_Range_0_Name", align: 'left', width: 230 },
+                                    { name: "Rating_from", index: "Rating_from", align: 'left', width: 170 },
+                                    { name: "Rating_from_Map_Grade", index: "Rating_from_Map_Grade", align: 'left' },
+                                    { name: "Rating_from_Map_Grade_Adjust", index: "Rating_from_Map_Grade_Adjust", align: 'left', width: 170 },
+                                    { name: "Rating_To", index: "Rating_To", align: 'left' },
+                                    { name: "Rating_To_Map_Grade", index: "Rating_To_Map_Grade", align: 'left' },
+                                    { name: "Rating_To_Map_Grade_Adjust", index: "Rating_To_Map_Grade_Adjust", align: 'left', width: 180 },
+                                    { name: "Value_Change_Months", index: "Value_Change_Months", align: 'left' },
+                                    { name: "Including_Ind_1", index: "Including_Ind_1", align: 'left', width: 220 },
+                                    { name: "Apply_Range_1", index: "Apply_Range_1", align: 'left', width: 270 },
+                                    { name: "Apply_Range_1_Name", index: "Apply_Range_1_Name", align: 'left', width: 270 },
+		                            { name: "Spread_Change_Months", index: "Spread_Change_Months", align: 'left', width: 160 },
+                                    { name: "Including_Ind_2", index: "Including_Ind_2", align: 'left', width: 230 },
+                                    { name: "Apply_Range_2", index: "Apply_Range_2", align: 'left', width: 270 },
+                                    { name: "Apply_Range_2_Name", index: "Apply_Range_2_Name", align: 'left', width: 270 },
+                                    { name: "Rule_setter", index: "Rule_setter", align: 'left', width: 100 },
+                                    { name: "Rule_setter_Name", index: "Rule_setter_Name", align: 'left', width: 100 },
+                                    { name: "Rule_setting_Date", index: "Rule_setting_Date", align: 'left', width: 120 },
+                                    { name: "Auditor", index: "Auditor", align: 'left' },
+                                    { name: "Auditor_Name", index: "Auditor_Name", align: 'left', width: 100 },
+                                    { name: "Audit_Date", index: "Audit_Date", align: 'left', width: 120 },
+                                    { name: "Rule_desc", index: "Rule_desc", align: 'left', width: 200 }
+                               ];
+
+            var colNameArray = [
+                                    'Actions',
+                                    '規則編號',
+                                    '使用狀態(代碼)',
+                                    '使用狀態',
+                                    '處理狀態(代碼)',
+                                    '處理狀態',
+                                    '基本要件評估時點(代碼)',
+                                    '基本要件評估時點',
+                                    '基本要件是否通過',
+                                    '信評評估時點(代碼)',
+                                    '信評評估時點',
+                                    '報導日信評門檻',
+                                    '信評主標尺資料年度',
+                                    '報導日信評門檻<br/>對應評等主標尺_原始',
+                                    '報導日信評門檻<br/>對應評等主標尺_調整後',
+                                    '是否包含(報導日信評門檻)',
+                                    '範圍 _以上/以下(報導日信評門檻)(代碼)',
+                                    '範圍 _以上/以下(報導日信評門檻)',
+                                    '報導日信評區間_from',
+                                    '報導日信評區間_from<br/>對應評等主標尺_原始',
+                                    '報導日信評區間_from<br/>對應評等主標尺_調整後',
+                                    '報導日信評區間_To',
+                                    '報導日信評區間_To<br/>對應評等主標尺_原始',
+                                    '報導日信評區間_To<br/>對應評等主標尺_調整後',
+                                    '未實現累計損失月數',
+                                    '是否包含(未實現累計損失月數)',
+                                    '範圍 _以上/以下(未實現累計損失月數)(代碼)',
+                                    '範圍 _以上/以下(未實現累計損失月數)',
+                                    '信用利差拓寬累積月數',
+                                    '是否包含(信用利差拓寬累積月數)',
+                                    '範圍 _以上/以下(信用利差拓寬累積月數)(代碼)',
+                                    '範圍 _以上/以下(信用利差拓寬累積月數)',
+                                    '規則設定者(帳號)',
+                                    '規則設定者',
+                                    '規則編輯日期',
+                                    '可複核人員帳號',
+                                    '可複核人員',
+                                    '複核日期',
+                                    'Rule_desc'
+                                ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                multiselect: true,
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData');
+                    $(".actionEditIcon").hide();
+
+                    if ($("#spanIsSender").html() != "Y") {
+                        $(".actionDeleIcon").hide();
+                    }
+                }
+            });
+
+            $("#" + listId).jqGrid('hideCol', [
+                                               "Basic_Pass_Check_Point", "Rating_Check_Point",
+                                               "Apply_Range_0",
+                                               "Rating_Threshold_Map_Grade", "Rating_Threshold_Map_Grade_Adjust",
+                                               "Rating_from_Map_Grade", "Rating_from_Map_Grade_Adjust",
+                                               "Rating_To_Map_Grade", "Rating_To_Map_Grade_Adjust",
+                                               "Apply_Range_1",
+                                               "Apply_Range_2",
+                                               "Rule_setter",
+                                               "Auditor",
+                                               "Status", "IsActive"
+                                              ]);
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+            var ruleID = $('#spanRule_ID').html().trim();
+            var basicPassCheckPoint = $('#editBasic_Pass_Check_Point').val().trim();
+            var basicPass = $('#editBasic_Pass').val().trim();
+            var ratingCheckPoint = $('#editRating_Check_Point').val().trim();
+            var ratingThreshold = $('#editRating_Threshold').val().trim();
+            var dataYear = $('#editData_Year').val().trim();
+            var ratingThresholdMapGrade = "";
+            if ($('#editRating_Threshold_Map_Grade').val() != null) {
+                ratingThresholdMapGrade = $('#editRating_Threshold_Map_Grade').val().trim();
+            }
+
+            var ratingThresholdMapGradeAdjust = "";
+            if ($('#editRating_Threshold_Map_Grade_Adjust').val() != null) {
+                ratingThresholdMapGradeAdjust = $('#editRating_Threshold_Map_Grade_Adjust').val().trim();
+            }
+
+            var includingInd0 = $('#editIncluding_Ind_0').val().trim();
+            var applyRange0 = $('#editApply_Range_0').val().trim();
+            var ratingfrom = $('#editRating_from').val().trim();
+            var ratingfromMapGrade = "";
+            if ($('#editRating_from_Map_Grade').val() != null) {
+                ratingfromMapGrade = $('#editRating_from_Map_Grade').val().trim();
+            }
+
+            var ratingfromMapGradeAdjust = "";
+            if ($('#editRating_from_Map_Grade_Adjust').val() != null) {
+                ratingfromMapGradeAdjust = $('#editRating_from_Map_Grade_Adjust').val().trim();
+            }
+
+            var ratingTo = $('#editRating_To').val().trim();
+            var ratingToMapGrade = "";
+            if ($('#editRating_To_Map_Grade').val() != null) {
+                ratingToMapGrade = $('#editRating_To_Map_Grade').val().trim();
+            }
+
+            var ratingToMapGradeAdjust = "";
+            if ($('#editRating_To_Map_Grade_Adjust').val() != null) {
+                ratingToMapGradeAdjust = $('#editRating_To_Map_Grade_Adjust').val().trim();
+            }
+
+            var valueChangeMonths = $('#editValue_Change_Months').val().trim();
+            var includingInd1 = $('#editIncluding_Ind_1').val().trim();
+            var applyRange1 = $('#editApply_Range_1').val().trim();
+
+            var spreadChangeMonths = $('#editSpread_Change_Months').val().trim();
+            var includingInd2 = $('#editIncluding_Ind_2').val().trim();
+            var applyRange2 = $('#editApply_Range_2').val().trim();
+
+            var ruleDesc = $('#editRule_desc').val().trim();
+
+            if (basicPassCheckPoint == "") {
+                alert("基本要件評估時點 必填");
+                return false;
+            }
+
+            if (basicPass == "") {
+                alert("基本要件是否通過 必填");
+                return false;
+            }
+
+            if (ratingThreshold != "" || ratingfrom != "") {
+                if (ratingCheckPoint == "") {
+                    alert("信評門檻、信評區間 如有設定，則 信評評估時點 必填");
+                    return false;
+                }
+            }
+
+            if (ratingCheckPoint != "") {
+                if (ratingThreshold == "" && ratingfrom == "") {
+                    alert("信評評估時點 如有設定，則 信評門檻 或 信評區間 必填");
+                    return false;
+                }
+            }
+
+            if (dataYear != "") {
+                if (ratingThreshold == "" && ratingfrom == "") {
+                    alert("信評主標尺資料年度 如有設定，則 信評門檻 或 信評區間 必填");
+                    return false;
+                }
+
+                if (ratingThreshold == "-999" || ratingfrom == "-999") {
+                    alert("信評主標尺資料年度 如有設定，則 信評門檻 或 信評區間 不可為-999");
+                    return false;
+                }
+            }
+
+            if ((ratingThreshold != "" && ratingThreshold != "-999") || (ratingfrom != "" && ratingfrom != "-999")) {
+                if (dataYear == "") {
+                    alert("信評門檻、信評區間 如有設定，則 信評主標尺資料年度 必填");
+                    return false;
+                }
+            }
+
+            if (ratingThreshold != "" && ratingThreshold != "-999") {
+                if (ratingThresholdMapGrade == "") {
+                    alert("您設定的 報導日信評門檻，在 A52 找不到對應的 評等主標尺_原始");
+                    return false;
+                }
+
+                if (ratingThresholdMapGradeAdjust == "") {
+                    alert("您設定的 信評主標尺資料年度、報導日信評門檻，在 A51 找不到對應的 評等主標尺_調整後");
+                    return false;
+                }
+
+                if (includingInd0 == "") {
+                    alert("報導日信評門檻 如有填，則 是否包含(報導日信評門檻) 必填");
+                    return false;
+                }
+
+                if (applyRange0 == "") {
+                    alert("報導日信評門檻 如有填，則 範圍 _以上/以下(報導日信評門檻) 必填");
+                    return false;
+                }
+            }
+
+            if (ratingfrom != "") {
+                if (ratingTo == "") {
+                    alert("報導日信評區間_from 有設定的話，報導日信評區間_To 也要設定");
+                    return false;
+                }
+
+                if (ratingfrom != "-999") {
+                    if (ratingfromMapGrade == "") {
+                        alert("您設定的 報導日信評區間_from，在 A52 找不到對應的 評等主標尺_原始");
+                        return false;
+                    }
+
+                    if (ratingfromMapGradeAdjust == "") {
+                        alert("您設定的 信評主標尺資料年度、報導日信評區間_from，在 A51 找不到對應的 評等主標尺_調整後");
+                        return false;
+                    }
+                }
+            }
+
+            if (ratingTo != "") {
+                if (ratingfrom == "") {
+                    alert("報導日信評區間_To 有設定的話，報導日信評區間_from 也要設定");
+                    return false;
+                }
+
+                if (ratingTo != "-999") {
+                    if (ratingToMapGrade == "") {
+                        alert("您設定的 報導日信評區間_To，在 A52 找不到對應的 評等主標尺_原始");
+                        return false;
+                    }
+
+                    if (ratingToMapGradeAdjust == "") {
+                        alert("您設定的 信評主標尺資料年度、報導日信評區間_To，在 A51 找不到對應的 評等主標尺_調整後");
+                        return false;
+                    }
+                }
+            }
+
+            if (valueChangeMonths != "" & valueChangeMonths != "-999") {
+                if (isNaN(valueChangeMonths)) {
+                    alert("未實現累計損失月數 必須為數字");
+                    return false;
+                }
+
+                if (includingInd1 == "") {
+                    alert("未實現累計損失月數 如有填，則 是否包含(未實現累計損失月數) 必填");
+                    return false;
+                }
+
+                if (applyRange1 == "") {
+                    alert("未實現累計損失月數 如有填，則 範圍 _以上/以下(未實現累計損失月數) 必填");
+                    return false;
+                }
+            }
+
+            if (spreadChangeMonths != "" & spreadChangeMonths != "-999") {
+                if (isNaN(spreadChangeMonths)) {
+                    alert("信用利差拓寬累積月數 必須為數字");
+                    return false;
+                }
+
+                if (includingInd2 == "") {
+                    alert("信用利差拓寬累積月數 如有填寫，則 是否包含(信用利差拓寬累積月數) 必填");
+                    return false;
+                }
+
+                if (applyRange2 == "") {
+                    alert("信用利差拓寬累積月數 如有填寫，則 範圍 _以上/以下(信用利差拓寬累積月數) 必填");
+                    return false;
+                }
+            }
+
+            if ((ratingfrom == "-999" || ratingTo == "-999")
+                && valueChangeMonths == "-999" && spreadChangeMonths == "-999")
+            {
+                alert("報導日信評區間、未實現累計損失月數、信用利差拓寬累積月數， 不可同時設定為 -999");
+                return false;
+            }
+
+            var obj = {
+                Rule_ID: ruleID,
+                Basic_Pass_Check_Point: basicPassCheckPoint,
+                Basic_Pass: basicPass,
+                Rating_Check_Point: ratingCheckPoint,
+                Rating_Threshold: ratingThreshold,
+                Data_Year: dataYear,
+                Rating_Threshold_Map_Grade: ratingThresholdMapGrade,
+                Rating_Threshold_Map_Grade_Adjust: ratingThresholdMapGradeAdjust,
+                Including_Ind_0: includingInd0,
+                Apply_Range_0: applyRange0,
+                Rating_from: ratingfrom,
+                Rating_from_Map_Grade: ratingfromMapGrade,
+                Rating_from_Map_Grade_Adjust: ratingfromMapGradeAdjust,
+                Rating_To: ratingTo,
+                Rating_To_Map_Grade: ratingToMapGrade,
+                Rating_To_Map_Grade_Adjust: ratingToMapGradeAdjust,
+                Value_Change_Months: valueChangeMonths,
+                Including_Ind_1: includingInd1,
+                Apply_Range_1: applyRange1,
+                Spread_Change_Months: spreadChangeMonths,
+                Including_Ind_2: includingInd2,
+                Apply_Range_2: applyRange2,
+                Rule_setter: "",
+                Rule_setting_Date: "",
+                Auditor: "",
+                Audit_Date: "",
+                Status: "",
+                Rule_desc: ruleDesc
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: ProgramID,
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    toastr.success(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = {
+                Rule_ID: "",
+                Status: "",
+                IsActive: ""
+            };
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定設為失效？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        type: ProgramID,
+                        ruleID: $('#spanRule_ID').html()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        toastr.success(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        toastr.error(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+
+        //#region SendToAudit
+        function SendToAudit() {
+            if ($("#IsSender").val() != "Y") {
+                alert("您沒有呈送複核的權限");
+                return false;
+            }
+
+            var auditor = $("#Auditor").val().trim();
+
+            if (auditor == "") {
+                alert("請選擇可複核人員");
+                return false;
+            }
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var ruleID = "";
+
+            if (!rowKey){
+                alert("請勾選要呈送複核的資料");
+                return false;
+            }
+            else if (confirm("確定呈送複核？")) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，已複核完成，不可呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Rule_setter") == auditor) {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，規則設定者 和 您選擇的可複核人員 不可相同");
+                        return false;
+                    }
+
+                    ruleID += grid.getCell(selectedIDs[i], "Rule_ID") + ",";
+                }
+
+                ruleID = ruleID.substr(0, ruleID.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: ProgramID,
+                    ruleID: ruleID,
+                    auditor: auditor
+                }),
+                dataType: "json",
+                url: url.sendToAudit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    toastr.success(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region AuditData
+        function AuditData(status) {
+            var userAccount = $("#UserAccount").val().trim();
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var ruleID = "";
+
+            var confirmWord = "";
+            if (status == "2") {
+                confirmWord = "確定複核？";
+            }
+            else if (status == "3") {
+                confirmWord = "確定退回？";
+            }
+
+            if (!rowKey) {
+                alert("請勾選要複核的資料");
+                return false;
+            }
+            else if (confirm(confirmWord)) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "0") {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，尚未呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        if (status == "2") {
+                            alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，已複核完成，不可再做 複核確認");
+                            return false;
+                        }
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Status") != "1") {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，非呈送複核狀態，不可執行複核確認");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Auditor").trim() != userAccount) {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，您不是此筆資料的可複核人員");
+                        return false;
+                    }
+
+                    ruleID += grid.getCell(selectedIDs[i], "Rule_ID") + ",";
+                }
+
+                ruleID = ruleID.substr(0, ruleID.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: ProgramID,
+                    ruleID: ruleID,
+                    status: status
+                }),
+                dataType: "json",
+                url: url.audit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    toastr.success(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+    });
+
+    //#region SetAction
+    function SetAction(actionType, id, dialogTitle) {
+        $("#actionType").val(actionType);
+
+        //if (actionType == "Modify" || actionType == "Delete") {
+        //    if ($("#list1").getCell(id, "Status") == "1" || $("#list1").getCell(id, "Status") == "2") {
+        //        alert("待複核 或 複核完成 的資料，請先做 複核退回，才可 " + dialogTitle);
+        //        return false;
+        //    }
+        //}
+
+        if (actionType == "Modify") {
+            if ($("#list1").getCell(id, "Status") == "1" || $("#list1").getCell(id, "Status") == "2") {
+                alert("待複核 或 複核完成 的資料，請先做 複核退回，才可 " + dialogTitle);
+                return false;
+            }
+        }
+
+        $("#dialogEdit").dialog({
+            title: dialogTitle,
+            position: { my: "center", at: "center", of: window },
+        });
+
+        if (actionType == "Add") {
+            $('#spanRule_ID').html("");
+            $('#editBasic_Pass_Check_Point').val("");
+            $('#editBasic_Pass').val("");
+            $('#editRating_Check_Point').val("");
+            $('#editRating_Threshold').val("");
+            $('#editData_Year').val('@ViewBag.A51Year');
+            $('#editRating_Threshold_Map_Grade').val("");
+            $('#editRating_Threshold_Map_Grade_Adjust').val("");
+            $('#editIncluding_Ind_0').val("");
+            $('#editApply_Range_0').val("");
+            $('#editRating_from').val("");
+            $('#editRating_from_Map_Grade').val("");
+            $('#editRating_from_Map_Grade_Adjust').val("");
+            $('#editRating_To').val("");
+            $('#editRating_To_Map_Grade').val("");
+            $('#editRating_To_Map_Grade_Adjust').val("");
+            $('#editValue_Change_Months').val("");
+            $('#editIncluding_Ind_1').val("");
+            $('#editApply_Range_1').val("");
+            $('#editSpread_Change_Months').val("");
+            $('#editIncluding_Ind_2').val("");
+            $('#editApply_Range_2').val("");
+            $('#spanRule_setter_Name').html("");
+            $('#spanRule_setting_Date').html("");
+            $('#spanAuditor_Name').html("");
+            $('#spanAudit_Date').html("");
+            $('#spanStatus').html("");
+            $('#spanStatus_Name').html("");
+            $('#editRule_desc').val("");
+            $('#spanIsActive').html("");
+            $('#spanIsActive_Name').html("");
+
+            $('#trRule_ID').hide();
+            $('#trRule_setter_Name').hide();
+            $('#trRule_setting_Date').hide();
+            $('#trAuditor_Name').hide();
+            $('#trAudit_Date').hide();
+            $('#trStatus').hide();
+            $('#trIsActive').hide();
+        }
+        else {
+            if (id == null) {
+                alert("請選取要" + dialogTitle + "的資料行");
+                return false;
+            }
+
+            $('#spanRule_ID').html($("#list1").getCell(id, "Rule_ID"));
+            $('#editBasic_Pass_Check_Point').val($("#list1").getCell(id, "Basic_Pass_Check_Point"));
+            $('#editBasic_Pass').val($("#list1").getCell(id, "Basic_Pass"));
+            $('#editRating_Check_Point').val($("#list1").getCell(id, "Rating_Check_Point"));
+            $('#editRating_Threshold').val($("#list1").getCell(id, "Rating_Threshold"));
+            getA52("");
+            $('#editData_Year').val($("#list1").getCell(id, "Data_Year"));
+            $('#editRating_Threshold_Map_Grade').val($("#list1").getCell(id, "Rating_Threshold_Map_Grade"));
+            getA51("");
+            $('#editRating_Threshold_Map_Grade_Adjust').val($("#list1").getCell(id, "Rating_Threshold_Map_Grade_Adjust"));
+            $('#editIncluding_Ind_0').val($("#list1").getCell(id, "Including_Ind_0"));
+            $('#editApply_Range_0').val($("#list1").getCell(id, "Apply_Range_0"));
+            $('#editRating_from').val($("#list1").getCell(id, "Rating_from"));
+            getA52("from");
+            $('#editRating_from_Map_Grade').val($("#list1").getCell(id, "Rating_from_Map_Grade"));
+            getA51("from");
+            $('#editRating_from_Map_Grade_Adjust').val($("#list1").getCell(id, "Rating_from_Map_Grade_Adjust"));
+            $('#editRating_To').val($("#list1").getCell(id, "Rating_To"));
+            getA52("to");
+            $('#editRating_To_Map_Grade').val($("#list1").getCell(id, "Rating_To_Map_Grade"));
+            getA51("to");
+            $('#editRating_To_Map_Grade_Adjust').val($("#list1").getCell(id, "Rating_To_Map_Grade_Adjust"));
+            $('#editValue_Change_Months').val($("#list1").getCell(id, "Value_Change_Months"));
+            $('#editIncluding_Ind_1').val($("#list1").getCell(id, "Including_Ind_1"));
+            $('#editApply_Range_1').val($("#list1").getCell(id, "Apply_Range_1"));
+            $('#editSpread_Change_Months').val($("#list1").getCell(id, "Spread_Change_Months"));
+            $('#editIncluding_Ind_2').val($("#list1").getCell(id, "Including_Ind_2"));
+            $('#editApply_Range_2').val($("#list1").getCell(id, "Apply_Range_2"));
+            $('#spanRule_setter_Name').html($("#list1").getCell(id, "Rule_setter_Name"));
+            $('#spanRule_setting_Date').html($("#list1").getCell(id, "Rule_setting_Date"));
+            $('#spanAuditor_Name').html($("#list1").getCell(id, "Auditor_Name"));
+            $('#spanAudit_Date').html($("#list1").getCell(id, "Audit_Date"));
+            $('#spanStatus').html($("#list1").getCell(id, "Status"));
+            $('#spanStatus_Name').html($("#list1").getCell(id, "Status_Name"));
+            $('#editRule_desc').val($("#list1").getCell(id, "Rule_desc"));
+            $('#spanIsActive').html($("#list1").getCell(id, "IsActive"));
+            $('#spanIsActive_Name').html($("#list1").getCell(id, "IsActive_Name"));
+
+            $('#trRule_ID').show();
+            $('#trRule_setter_Name').show();
+            $('#trRule_setting_Date').show();
+            $('#trAuditor_Name').show();
+            $('#trAudit_Date').show();
+            $('#trStatus').show();
+            $('#trRule_desc').show();
+            $('#trIsActive').show();
+        }
+
+        $('#editBasic_Pass_Check_Point').prop('disabled', true);
+        $('#editBasic_Pass').prop('disabled', true);
+        $('#editRating_Check_Point').prop('disabled', true);
+        $('#editRating_Threshold').prop('disabled', true);
+        $('#editData_Year').prop('disabled', true);
+        $('#editRating_Threshold_Map_Grade').prop('disabled', true);
+        $('#editRating_Threshold_Map_Grade_Adjust').prop('disabled', true);
+        $('#editIncluding_Ind_0').prop('disabled', true);
+        $('#editApply_Range_0').prop('disabled', true);
+        $('#editRating_from').prop('disabled', true);
+        $('#editRating_from_Map_Grade').prop('disabled', true);
+        $('#editRating_from_Map_Grade_Adjust').prop('disabled', true);
+        $('#editRating_To').prop('disabled', true);
+        $('#editRating_To_Map_Grade').prop('disabled', true);
+        $('#editRating_To_Map_Grade_Adjust').prop('disabled', true);
+        $('#editValue_Change_Months').prop('disabled', true);
+        $('#editIncluding_Ind_1').prop('disabled', true);
+        $('#editApply_Range_1').prop('disabled', true);
+        $('#editSpread_Change_Months').prop('disabled', true);
+        $('#editIncluding_Ind_2').prop('disabled', true);
+        $('#editApply_Range_2').prop('disabled', true);
+        $('#editRule_desc').prop('disabled', true);
+
+        switch (actionType) {
+            case "Add":
+            case "Modify":
+                $('#editBasic_Pass_Check_Point').prop('disabled', false);
+                $('#editBasic_Pass').prop('disabled', false);
+                $('#editRating_Check_Point').prop('disabled', false);
+                $('#editRating_Threshold').prop('disabled', false);
+                //$('#editData_Year').prop('disabled', false);
+                $('#editRating_Threshold_Map_Grade').prop('disabled', false);
+                $('#editRating_Threshold_Map_Grade_Adjust').prop('disabled', false);
+                $('#editIncluding_Ind_0').prop('disabled', false);
+                $('#editApply_Range_0').prop('disabled', false);
+                $('#editRating_from').prop('disabled', false);
+                $('#editRating_from_Map_Grade').prop('disabled', false);
+                $('#editRating_from_Map_Grade_Adjust').prop('disabled', false);
+                $('#editRating_To').prop('disabled', false);
+                $('#editRating_To_Map_Grade').prop('disabled', false);
+                $('#editRating_To_Map_Grade_Adjust').prop('disabled', false);
+                $('#editValue_Change_Months').prop('disabled', false);
+                $('#editIncluding_Ind_1').prop('disabled', false);
+                $('#editApply_Range_1').prop('disabled', false);
+                $('#editSpread_Change_Months').prop('disabled', false);
+                $('#editIncluding_Ind_2').prop('disabled', false);
+                $('#editApply_Range_2').prop('disabled', false);
+                $('#editRule_desc').prop('disabled', false);
+
+                $('#btnSave').show();
+                $('#btnDelete').hide();
+
+                break;
+            case "View":
+                $('#btnSave').hide();
+                $('#btnDelete').hide();
+
+                break;
+            case "Delete":
+                $('#btnSave').hide();
+                $('#btnDelete').show();
+
+                break;
+        }
+
+        $("#dialogEdit").dialog("open");
+    }
+    //#endregion
+
+    //#region getA52
+    function getA52(ratingType) {
+        var rating = "";
+        var ratingName = "";
+        var selectName = "";
+
+        switch (ratingType)
+        {
+            case "":
+                ratingName = "editRating_Threshold";
+                selectName = "editRating_Threshold_Map_Grade";
+                break;
+            case "from":
+                ratingName = "editRating_from";
+                selectName = "editRating_from_Map_Grade";
+                break;
+            case "to":
+                ratingName = "editRating_To";
+                selectName = "editRating_To_Map_Grade";
+                break;
+        }
+
+        if ($("#" + ratingName).val() != null) {
+            rating = $("#" + ratingName).val().trim();
+        }
+
+        $("#" + selectName + " option").remove();
+        $("#" + selectName).append("<option value=' '> </option>");
+
+        if (rating != "") {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    ratingOrg: "SP",
+                    pdGrade: "",
+                    rating: rating
+                }),
+                dataType: "json",
+                async: false,
+                url: url.getA52,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+                    for (var i = 0; i < data.length; i++) {
+                        $("#" + selectName).append("<option value='" + data[i].PD_Grade + "'>" + data[i].PD_Grade + "</option>");
+                    }
+
+                    if (data.length > 0) {
+                        $("#" + selectName).prop('selectedIndex', 1);
+                    }
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+    }
+    //#endregion
+
+    //#region getA51
+    function getA51(ratingType) {
+        var dataYear = $("#editData_Year").val().trim();
+        var ratingThresholdMapGrade = "";
+        var ratingName = "";
+        var selectName = "";
+
+        switch (ratingType) {
+            case "":
+                ratingName = "editRating_Threshold_Map_Grade";
+                selectName = "editRating_Threshold_Map_Grade_Adjust";
+                break;
+            case "from":
+                ratingName = "editRating_from_Map_Grade";
+                selectName = "editRating_from_Map_Grade_Adjust";
+                break;
+            case "to":
+                ratingName = "editRating_To_Map_Grade";
+                selectName = "editRating_To_Map_Grade_Adjust";
+                break;
+        }
+
+        if ($("#" + ratingName).val() != null) {
+            ratingThresholdMapGrade = $("#" + ratingName).val().trim();
+        }
+
+        $("#" + selectName + " option").remove();
+        $("#" + selectName).append("<option value=' '> </option>");
+
+        if ((dataYear != "") && (ratingThresholdMapGrade != "")) {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataYear: dataYear,
+                    rating: "",
+                    pdGrade: ratingThresholdMapGrade,
+                    ratingAdjust: "",
+                    gradeAdjust: "",
+                    moodysPD: ""
+                }),
+                dataType: "json",
+                async: false,
+                url: url.getA51,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+                    for (var i = 0; i < data.length; i++) {
+                        $("#" + selectName).append("<option value='" + data[i].Grade_Adjust + "'>" + data[i].Grade_Adjust + "</option>");
+                    }
+
+                    if (data.length > 0) {
+                        $("#" + selectName).prop('selectedIndex', 1);
+                    }
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+    }
+    //#endregion
+
+    //#region Edit
+    function GridDatalist1Edit(id) {
+        //SetAction("Modify", id, "修改");
+    }
+    //#endregion
+
+    //#region View
+    function GridDatalist1View(id) {
+        SetAction("View", id, "檢視");
+    }
+    //#endregion
+
+    //#region DeleteData
+    function GridDatalist1Dele(id) {
+        SetAction("Delete", id, "刪除");
+    }
+    //#endregion
+</script>

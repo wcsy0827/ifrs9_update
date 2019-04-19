@@ -1,0 +1,319 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Title = "信評主標尺對應檔查詢(A51)";
+    ViewBag.Menu = "A7Main";
+    ViewBag.SubMenu = "A74Sub";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <div>
+                <table>
+                    <tr>
+                        <td style="padding-right:20px">
+                            <label>搜尋年分 : </label>
+                            @Html.DropDownList("searchYear",
+                        (SelectList)ViewBag.year,
+                        new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td>
+                            <input type="button" class="btn btn-primary" value="信評主標尺對應檔查詢" id="btnA51Search" />
+                        </td>
+                    </tr>
+                </table>             
+            </div>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+查詢前請至A7上傳Moody Exhibit 29資料。(每年4月更新)"></i>
+        </div>
+    </div>
+    <div>
+    您登入的帳號：<span>@ViewBag.UserAccount</span>
+    <br />
+    此功能相關的權限 : <span>@ViewBag.Authority</span>
+    <table>
+        <tr id="">
+            <td style="white-space:nowrap;padding-right:15px;display:none;" class="Presentedtr">
+                可複核人員：
+                @Html.DropDownList("Auditor",
+                             (SelectList)ViewBag.Auditor,
+                             new { @class = "form-control Presented", @style = "display:inline-block;width:200px;", @disabled = "disabled" })
+            </td>
+            <td style="white-space:nowrap;" >
+                <input type="button" style="display:none;" class="btn btn-primary Presented Presentedtr" id="btnSendToAudit" value="呈送複核" disabled />
+            </td>
+            <td style="white-space:nowrap;display:none;" class="Auditortr">
+                複核狀態&emsp; :&ensp;
+                @Html.DropDownList("Status",
+                             (SelectList)ViewBag.Status,
+                             new { @class = "form-control Auditor", @style = "display:inline-block;width:200px;", @disabled = "disabled" })
+
+            </td>
+            <td>
+                複核意見 : 
+            </td>
+            <td style="white-space:nowrap;" >                
+                <textarea id="A74Auditor_Reply" class="Auditor" maxlength="255" style="overflow-y: scroll; white-space:pre-wrap;max-width:450px;width:450px;" disabled></textarea>
+                <input type="button" style="display:none;" class="btn btn-primary Auditor Auditortr" id="btnAudit" value="複核確認" disabled />
+            </td>
+        </tr>
+    </table>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetData", "A7")';
+        url.Audit = '@Url.Action("A51Audit", "A7")';
+        url.getA51Year = '@Url.Action("GetA51Year", "A7")'
+        url.SendToAudit = '@Url.Action("A51SendToAudit", "A7")';
+        //#endregion 註冊URL
+
+        var clsPresentedtr = 'Presentedtr';
+        var clsPresented = 'Presented';
+        var clsAuditortr = 'Auditortr';
+        var clsAuditor = 'Auditor';
+
+        var _Authority = '@ViewBag.Authority';
+
+        if (_Authority == '@Ref.Authority_Type.Presented.GetDescription()')
+        {
+            $('.' + clsPresentedtr).show();
+        }
+        if (_Authority == '@Ref.Authority_Type.Auditor.GetDescription()')
+        {
+            $('.' + clsAuditortr).show();
+        }
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA51Search':
+                    $("#" + id).on('click', function () { showJqgrid('@Ref.Table_Type.A51.ToString()') });
+                    break;
+                case 'btnAudit':
+                    $('#' + id).on('click', function () { Audit(); });
+                    break;
+                case 'btnSendToAudit':
+                    $('#' + id).on('click', function () { SendToAudit(); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function resetYear()
+        {
+            let selectId = 'searchYear';
+            $("#" + selectId + " option").remove();
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url.getA51Year,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    customerUtility.addoption(selectId, result.Datas.Data);
+                }
+            });           
+        }
+
+        function Audit() {
+            var _stauts = $('#Status').val();
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: _stauts,
+                    year: $('#searchYear').val(),
+                    Auditor_Reply: $('#A74Auditor_Reply').val()
+                }),
+                dataType: "json",
+                url: url.Audit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    clearJqgrid();
+                    resetYear();
+                    customerUtility.alert(result.DESCRIPTION, 's');
+                    var data = result.Datas.Data;
+                    createJqgrid("list1", "pager1", data);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION, 'e');
+                }
+            });
+        }
+
+        function SendToAudit()
+        {
+            var _Audit = $('#Auditor').val();
+            if (_Audit.trim() == '') {
+                customerUtility.alert('無設定複核人員', 'w');
+                return false;
+            }
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    year: $('#searchYear').val(),
+                    Auditor: _Audit
+                }),
+                dataType: "json",
+                url: url.SendToAudit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    clearJqgrid();
+                    customerUtility.alert(result.DESCRIPTION, 's');
+                    var data = result.Datas.Data;
+                    createJqgrid("list1", "pager1", data);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION, 'e');
+                }
+            });
+        }
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type) {
+            $('#A74Auditor_Reply').val('');
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: type,
+                    year: $('#searchYear').val()
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+                    createJqgrid("list1", "pager1", data);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, data) {
+            $('.' + clsPresented).prop('disabled', true);
+            $('.' + clsAuditor).prop('disabled', true);
+            var colNameArray = ['Data_Year', 'Rating',
+            'PD_Grade', 'Rating_Adjust',
+            'Grade_Adjust', 'Moodys_PD',
+            'Status', 'Auditor_Reply',
+            'Auditor', 'Audit_date'
+            ]; //每個欄位名稱要對應傳入資料屬性
+            var colModelArray = [];
+            //var jagridLWidth = 210;
+            var jagridMWidth = 100;
+            if (colNameArray.length > 0) {
+                for (let i = 0; i < colNameArray.length; i++) {
+                    if (colNameArray[i] == 'Auditor_Reply') {
+                        var obj = {
+                            name: colNameArray[i],
+                            index: colNameArray[i],
+                            width: jagridMWidth,
+                            hidden: true
+                        }
+                        colModelArray.push(obj);
+                    }
+                    else {
+                        var obj = {
+                            name: colNameArray[i],
+                            index: colNameArray[i],
+                            width: jagridMWidth
+                        }
+                        colModelArray.push(obj);
+                    }
+                }
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    //sortname: 'id',
+                    viewrecords: true,
+                    sortorder: "desc",
+                    caption: '@Ref.Table_Type.A51.tableNameGetDescription()', //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function (result) {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        if (result.rows.length > 0)
+                        {
+                            let first = result.rows[0];
+
+                            if (first.Auditor == null)
+                            {
+                                $('.' + clsPresented).prop('disabled', false);
+                            }                           
+                            if (first.Auditor != null &&
+                                first.Auditor.split('(')[0] == '@ViewBag.UserAccount' &&
+                                (first.Status == '@Ref.Audit_Type.None.GetDescription()' ||
+                                first.Status == '@Ref.Audit_Type.TempDisabled.GetDescription()'))
+                            {
+                                $('.' + clsAuditor).prop('disabled', false);
+                            }
+                            if(first.Auditor_Reply != null)
+                            {
+                                $('#A74Auditor_Reply').val(first.Auditor_Reply);
+                            }
+                        }
+                        //debugger
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+    });
+</script>

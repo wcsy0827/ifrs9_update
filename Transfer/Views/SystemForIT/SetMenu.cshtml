@@ -1,0 +1,129 @@
+﻿@using Transfer.Utility
+@{
+    ViewBag.Menu = "SystemMain";
+    ViewBag.SubMenu = "SystemMenuSub";
+    ViewBag.Title = "設定權限";
+    Layout = "~/Views/Shared/_LayoutForIT.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td width="450px">
+                        <label>帳號設定 : </label>
+                        @Html.DropDownList("setUser",
+        (SelectList)ViewBag.users,
+         new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="儲存設定" id="btnMenuSave" disabled />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding-top:10px">
+                        <input type="button" class="btn btn-primary" value="選擇全部" id="btnAllSelect" />
+                        <input type="button" class="btn btn-primary" value="清除全部" id="btnAllClear" style="margin-left:10px" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12" style="height:100%">
+            <div id="menuCheckbox" style="height:calc(100% - 20px); overflow:auto;">
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.user = '@Url.Action("GetUser", "SystemForIT")';
+        url.saveMenu = '@Url.Action("SaveMenu", "SystemForIT")';
+        //#endregion 註冊URL
+
+        $('#btnAllSelect').on('click', function () {
+            $('#menuCheckbox').find('.styled').prop('checked', true);
+        });
+
+        $('#btnAllClear').on('click', function () {
+            $('#menuCheckbox').find('.styled').prop('checked', false);
+        });
+
+        //#region user change 事件
+        $('#setUser').on('change', function (date) {
+            var selectValue = $('#setUser').val().trim();
+            $('#btnMenuSave').prop('disabled', selectValue.length === 0)
+            if (selectValue.length > 0) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        name: selectValue
+                    }),
+                    dataType: "json",
+                    url: url.user,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $("#menuCheckbox").children().remove();
+                        $('#menuCheckbox').append(
+                            '<fieldset  style="position:sticky;" class="scheduler-border">' +
+                                '<legend class="scheduler-border">Menu</legend>' +
+                                '<div class="control-group">' +
+                                result.Datas.Data +
+                                '</div>' +
+                            '</fieldset>'
+                        );
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+            else
+                $("#menuCheckbox").children().remove();
+        })
+        //#endregion
+
+        //#region save Menu
+        $('#btnMenuSave').on('click', function () {
+            if ($('#setUser').val().trim().length > 0) {
+                var data = [];
+                $('input[name="menuSet"]').each(function (i, v) {
+                    data.push(CheckBoxListInfo(v.value, v.checked))
+                });
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        data: data,
+                        userName: $('#setUser').val().trim()
+                    }),
+                    dataType: "json",
+                    url: url.saveMenu,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG)
+                        customerUtility.alert(result.DESCRIPTION,'s');
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                });
+            }
+        });
+        //#endregion save Menu
+
+        function CheckBoxListInfo(
+                Value,
+                IsChecked
+        ) {
+            var obj = {};
+            obj['Value'] = Value;
+            obj['IsChecked'] = IsChecked;
+            obj['DisplayText'] = null;
+            return obj;
+        }
+    });
+</script>

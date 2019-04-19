@@ -1,0 +1,275 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A6Main";
+    ViewBag.SubMenu = "A62AuditSub";
+    ViewBag.Title = "A62Audit(違約損失資料率複核)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td style="white-space:nowrap">
+                        <label>資料狀態： </label>
+                        @Html.DropDownList("Status",
+                           (SelectList)ViewBag.Status,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap">
+                        <label>年度： </label>
+                        @Html.DropDownList("Data_Year",
+                           (SelectList)ViewBag.DataYear,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div>
+        <table id="Audit" style="display:none">
+            <tr>
+                <td>
+                    複核結果：
+                </td>
+                <td>
+                    @Html.DropDownList("editStatus",
+                           (SelectList)ViewBag.AuditStatus,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+                <td>
+                    複核意見：
+                </td>
+                <td>
+                    <textarea id="editAuditor_Reply" name="editAuditor_Reply" style="width:200px;height:100px"></textarea>
+                </td>
+                <td>
+                    <input type="button" class="btn btn-primary" value="確認" id="btnAudit" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetA62Data", "A6")';
+        url.audit = '@Url.Action("A62Audit", "A6")';
+        url.getYear = '@Url.Action("A62YearByStatus","A6")';
+        //#endregion 註冊URL
+
+        if(@Html.Raw(Json.Encode(ViewBag.AssessorFlag)) == true)
+        {
+            $('#Audit').show();
+        }
+
+        function setYear(status)
+        {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    Status: status ,
+                }),
+                dataType: "json",
+                url: url.getYear,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                var selectID = 'Data_Year';
+                $("#" + selectID + " option").remove();
+                customerUtility.addoption(selectID, result);
+            });
+        }
+
+        $('#Status').on('change', function () {
+            setYear($(this).val());
+        });
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { showJqgrid($('#Data_Year').val()) });
+                    break;
+                case 'btnAudit':
+                    $("#" + id).on('click', function () { AuditData(); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(dataYear) {
+            if (dataYear == null || dataYear == "") {
+                alert("請選擇年度");
+                return false;
+            }
+
+            clearJqgrid();
+            var title = '@(Ref.Table_Type.A62.GetDescription())'; //標頭
+            var data; // json Data 由Ajax 拿到
+            dataYear = dataYear.split('(')[0];
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataYear: dataYear
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    data = result.Datas.Data.Datas;
+                    createJqgrid("list1", "pager1", data, title);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        function createJqgrid(listId, pagerId, data, title) {
+            if (data.length > 0) {
+                var colModelArray = [
+                                        { name: "Data_Year", index: "Data_Year", align: 'left' },
+                                        { name: "Lien_Position", index: "Lien_Position", align: 'left' },
+                                        { name: "Recovery_Rate", index: "Recovery_Rate", align: 'left' },
+                                        { name: "LGD", index: "LGD", align: 'left' },
+                                        { name: "Status_Name", index: "Status", align: 'left'},
+                                        { name: "Auditor_Reply", index: "Auditor_Reply", align: 'left' },
+                                        { name: "Auditor_Name", index: "Auditor", align: 'left' },
+                                        { name: "Audit_date", index: "Audit_date", align: 'left' }
+                ];
+
+                var colNameArray = [
+                                       '年度',
+                                       '擔保順位',
+                                       '回收率',
+                                       '違約損失率',
+                                       '資料狀態',
+                                       '複核者意見',
+                                       '複核者',
+                                       '複核日期'
+                ];
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                    rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    sortorder: "desc",
+                    caption: title, //標題
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+
+        //#region AuditData
+        function AuditData() {
+            var status = $("#editStatus").val().trim();
+            var auditorReply = $("#editAuditor_Reply").val().trim();
+
+            var grid = $("#list1");
+            var rowNum = parseInt(grid.getGridParam("records"), 10);
+
+            if (isNaN(rowNum) || rowNum <= 0) {
+                alert("請查詢要複核的資料");
+                return false;
+            }
+
+            if (status == "") {
+                alert("請選擇複核結果");
+                return false;
+            }
+
+            var dataModel = [];
+            var Data_Year = grid.getCell(1, "Data_Year");
+
+            if (confirm("確定複核 " + Data_Year + " ？")) {
+                for (var i = 1; i <= rowNum; i++) {
+                    var obj = {};
+                    obj['Data_Year'] = grid.getCell(i, "Data_Year");
+                    obj['Lien_Position'] = grid.getCell(i, "Lien_Position");
+                    obj['Status'] = status;
+                    obj['Auditor_Reply'] = auditorReply;
+
+                    dataModel.push(obj)
+                }
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    dataModel: dataModel
+                }),
+                dataType: "json",
+                url: url.audit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $('#Status').val("All");
+                    setYear('All');
+                    $('#Data_Year').val(Data_Year);
+                    showJqgrid(Data_Year);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+    });
+</script>

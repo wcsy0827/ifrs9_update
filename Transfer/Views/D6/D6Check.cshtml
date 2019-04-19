@@ -1,0 +1,221 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D6CheckSub";
+    ViewBag.Title = "減損作業狀態查詢";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="padding-top:5px;" class="form-group">
+                            <label>評估基準日/報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                    </tr>
+                    <tr class="action search">
+                        <td style="padding-top:5px;">
+                            <label>作業狀態查詢 : </label>&emsp;&emsp;&nbsp;
+                            @Html.DropDownList("Impairment",
+                            (SelectList)ViewBag.Impairment,
+                            new { @class = "form-control", @style = "display:inline-block;" })
+                        </td>
+                    </tr>
+                    <tr >
+                        <td style="padding-top:10px;" >
+                            <input type="button" class="btn btn-primary" value="查詢" id="btnD6CheckSearch" style="margin-right:10px;" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            @*<i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+只有擁有評估權限,且複核尚未選擇最終版本時才可以評估!
+"></i>*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="">
+                </div>
+                <div id="jqgridDiv2" class="" style="padding-top:10px">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetD6Check", "D6")';
+        @*url.getDbData = '@Url.Action("GetCacheData", "D6")';*@
+        //#endregion 註冊URL
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //#endregion 註冊verified
+
+        $("#Impairment").val("All");
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD6CheckSearch':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 查詢量化評估需求資訊檔
+        function search()
+        {
+            clearJqgrid("jqgridDiv");
+            clearJqgrid("jqgridDiv2");
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        reportdate: $('#datepicker').val(),
+                        Impairment: $('#Impairment :selected').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    if(result.RETURN_FLAG)
+                        createJqgrid("jqgridDiv", "list1", "pager1", result.Datas.Data);
+                    else
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                })
+            }
+        }
+        //#endregion 查詢量化評估需求資訊檔
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDivId) {
+            $('#'+jqgridDivId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region Audit formate button
+        function ActionFormatter(cellvalue, options, rdata) {
+            let str = '';
+            if (rdata.Status == '@Ref.Stage_Type.completed.GetDescription()')
+            {
+                str += '<div class="btn-group">';
+                str += '<a title="檢視" class="btn actionViewIcon" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D6Check' + options.gid + 'Action' + options.rowId + '" return:false;="">';
+                str += '<i class="fa fa-search fa-lg"></i></a>';
+                str += '</div>';
+            }
+            return str;
+        }
+        //#endregion
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(jqgridDivId, listId, pagerId, data) {            
+            $('#'+jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#' + jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            let colNameArray = [];
+            let colModelArray = [];
+            let title = '';
+            let height = 0;
+            let _rowNum = 0;
+            if (listId == 'list1')
+            {
+                title = '減損作業狀態';
+                height = 200;
+                _rowNum = 7;
+                colNameArray = ["作業細項", "狀態", "詳細內容資料", "詳細內容查看"];
+                colModelArray = [
+                   { name: "Job_Details", index: "Job_Details", width: 150, sortable: false },
+                   { name: "Status", index: "Status", width: 100, sortable: false },
+                   { name: "Details", index: "Details", width: 80, sortable: false, hidden: true },
+                   { name: "Action", index: "Action", width: 200, sortable: false, formatter: ActionFormatter },
+                ];
+            }
+            if (listId == 'list2')
+            {
+                title = '詳細資料';
+                height = 80;
+                _rowNum = 5;
+                colNameArray = ["作業細項", "狀態", "詳細內容資料"];
+                colModelArray = [
+                   { name: "Job_Details", index: "Job_Details", width: 150, sortable: false },
+                   { name: "Status", index: "Status", width: 100, sortable: false },
+                   { name: "Details", index: "Details", width: 750, sortable: false},
+                ];
+            }
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: _rowNum, //一頁筆數
+                //rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                //pager: '#' + pagerId,
+                height: 'auto',
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                viewrecords: true, //顯示總數
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                shrinkToFit: false,
+                //autoencode: true, //jqgridCustom.randerAction 需拿掉
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    //jqgridCustom.updatePagerIcons($(this));
+                    if (listId == 'list1')
+                    {
+                        $('#' + listId + ' > tbody > tr:gt(0) > td[aria-describedby$=' + listId + '_Action]').each(function () {
+                            //#region 設定Action功能
+                            let tr = $(this).parents('tr:first');
+                            let Job_Details = tr.find($.validator.format('td[aria-describedby$={0}_Job_Details]', listId)).text();
+                            let Status = tr.find($.validator.format('td[aria-describedby$={0}_Status]', listId)).text();
+                            let Details = tr.find($.validator.format('td[aria-describedby$={0}_Details]', listId)).text();
+                            $(this).find('.actionViewIcon').off('click');
+                            $(this).find('.actionViewIcon').on('click', function () {
+                                //alert(Job_Details);
+                                //alert(Status);
+                                //alert(Details);
+                                clearJqgrid("jqgridDiv2");
+                                var obj = [{ 'Job_Details': Job_Details, 'Status': Status, 'Details': Details }];
+                                createJqgrid("jqgridDiv2", "list2", "pager2", obj);
+                            });
+                            //#endregion 設定Action功能
+                        });
+                    }
+                }
+            });
+            //$("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+    });
+</script>

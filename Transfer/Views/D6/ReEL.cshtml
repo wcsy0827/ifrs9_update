@@ -1,0 +1,273 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "ReELSub";
+    ViewBag.Title = "減損報表資料刪除作業(複核者使用)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap" colspan="3">
+                            <label>選擇動作 : </label>
+                            @Html.DropDownList("action",
+                           (SelectList)ViewBag.action,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr >
+                        <td style="width:560px; " class="form-group">
+                            <label>報導日&emsp; : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td class="action reSet" style="display:none">
+                            <label>流程名稱 : </label>
+                            <select id="FLOW_ID_Select" class="form-control" style="display:inline-block;width:350px;max-width:350px;"></select>
+                        </td>
+                        <td class="action search">
+                            <label>產品群組 : </label>
+                            @Html.DropDownList("Group_Product_Code",
+                             (SelectList)ViewBag.GroupProduct,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td  class="action search">
+                            <input type="button" class="btn btn-primary" style="margin-right:13px;margin-top:5px;" value="查詢" id="btnReELSearch" />
+                        </td>
+                        <td  class="action reSet" style="display:none" colspan="2">
+                            <input type="button" class="btn btn-primary" style="margin-right:13px;margin-top:5px;" value="執行刪除作業" id="btnELReSet" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            @*<i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+
+"></i>*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div id="msgDiv" class="action reSet" style="display:none">
+                <label>執行原因: (最多兩百個字)</label>
+                <textarea id="msg" maxlength="200" style="max-width:100%;width:100%;height:100px;"></textarea>
+            </div>
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetReEL", "D6")';
+        url.getflowIdDataVersion = '@Url.Action("GetFlowId", "D6")';
+        url.reSet = '@Url.Action("ReSetEL", "D6")';
+        url.getDbData = '@Url.Action("GetCacheData", "D6")';
+        //#endregion 註冊URL
+
+        var selectId = 'FLOW_ID_Select';
+        var datepickerId = 'datepicker';
+
+        //#region
+        $('#action').on('change', function () {
+            $('.action').hide();
+            $('#datepicker').val('');
+            $('#Group_Product_Code').val('');
+            $("#" + selectId + " option").remove();
+            var optionObj = [];
+            optionObj.push({ value: "", text: "" });
+            customerUtility.addoption(selectId, optionObj);
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+            clearJqgrid();
+        });
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReELSearch':
+                    $('#' + id).on('click', function () {
+                        search() ;
+                    });
+                    break;
+                case 'btnELReSet':
+                    $('#' + id).on('click', function() {
+                        resetEL();
+                    });
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 選擇reportDate 後要觸發的動作
+
+        var flowIdFun = {};
+        flowIdFun.fail = function () {
+            $("#" + selectId + " option").remove();
+            var optionObj = [];
+            optionObj.push({ value: "", text: "" });
+            customerUtility.addoption(selectId, optionObj);
+        }
+        flowIdFun.success = function checkReportDate() {
+            if (verified.isDate($('#datepicker').val(), false) && $('#action').val() == 'reSet') {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        date: $('#' + datepickerId).val(),
+                    }),
+                    dataType: "json",
+                    url: url.getflowIdDataVersion,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    $("#" + selectId + " option").remove();
+                    if (result.RETURN_FLAG) {
+                        var optionObj = [];
+                        optionObj.push({ value: "", text: "" })
+                        $.each(result.Datas.Data, function (key, value) {
+                            optionObj.push({ value: value, text: value })
+                        })
+                        customerUtility.addoption(selectId, optionObj);
+                    }
+                    else {
+                        flowIdFun.fail();
+                    }
+                });
+            }
+        }
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 產生datepicker
+        created.createDatepicker('datepicker', true, '', flowIdFun);
+        //#endregion
+
+        function resetEL()
+        {
+            if(!verified.isDate($('#datepicker').val(), true))
+            {
+                toastr.warning('請選擇報導日!');
+                return false;
+            }
+            if($('#FLOW_ID_Select').val() == null || $('#FLOW_ID_Select').val().trim() == '')
+            {
+                toastr.warning("需有群組編號!");
+                return false;
+            }
+            if($('#msg').val().trim() == '')
+            {
+                toastr.warning("需有執行原因!");
+                return false;
+            }
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    reportDate: $('#datepicker').val(),
+                    flowId : $('#FLOW_ID_Select').val(),
+                    msg : $('#msg').val()
+                }),
+                dataType: "json",
+                url: url.reSet,
+                contentType: 'application/json',
+            })
+            .done(function(result){
+                if (result.RETURN_FLAG) {
+                    toastr.success(result.DESCRIPTION);
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            })
+        }
+
+        //#region 查詢
+        function search()
+        {
+            clearJqgrid();
+            if($('#datepicker').val().trim() != '' && !verified.isDate($('#datepicker').val()))
+            {
+                toastr.warning('請輸入正確日期格式!');
+                return false;
+            }
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    reportDate: $('#datepicker').val(),
+                    Group_Product_Code : $('#Group_Product_Code').val()
+                }),
+                dataType: "json",
+                url: url.search,
+                contentType: 'application/json',
+            })
+            .done(function(result){
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1");
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            })
+        }
+        //#endregion 查詢
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        function createJqgrid(listId, pagerId) {
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    table: "ReEL",
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                width: jqgridCustom.getwidth(),
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                sortorder: "desc",
+                caption: "減損報表資料刪除作業記錄檔", //標題
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+    });
+</script>

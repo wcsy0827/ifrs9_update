@@ -1,0 +1,3245 @@
+2019-03-21 16:31:01.9937 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:03.8619 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE @p__linq__0 = [Extent1].[User_Account] 
+
+2019-03-21 16:31:03.8619 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:03.8799 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:03.8799 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:03 +08:00
+ 執行 
+
+2019-03-21 16:31:03.9899 | INFO | Transfer.Utility.Extension | -- 於 87 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:04.0239 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:04.1379 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:04 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:04.3309 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:04 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:04.3839 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:04 +08:00
+ 開始交易 
+
+2019-03-21 16:31:04.5319 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_User_Log]([User_Account], [Login_Time], [Login_Date], [Logout_Time], [Login_IP])
+VALUES (@0, @1, @2, NULL, @3)
+ 
+
+2019-03-21 16:31:04.5319 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:31:04.5509 | INFO | Transfer.Utility.Extension | -- @1: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:04.5609 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 上午 12:00:00' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:04.5609 | INFO | Transfer.Utility.Extension | -- @3: '::1' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:31:04.5879 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:04 +08:00
+ 執行 
+
+2019-03-21 16:31:04.6269 | INFO | Transfer.Utility.Extension | -- 於 19 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:31:04.6389 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:04.6689 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:04 +08:00
+ 認可交易 
+
+2019-03-21 16:31:04.6770 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:04 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:10.2105 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:10.2405 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:31:10.2405 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.2685 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:10.2825 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:10 +08:00
+ 執行 
+
+2019-03-21 16:31:10.3205 | INFO | Transfer.Utility.Extension | -- 於 22 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:10.3205 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.3425 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:10.3585 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:10.5425 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:31:10.5425 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.5595 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:10.5685 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:10 +08:00
+ 執行 
+
+2019-03-21 16:31:10.6165 | INFO | Transfer.Utility.Extension | -- 於 39 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:10.6165 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.6375 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:10.6485 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:10.7016 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:31:10.7096 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.7096 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:10 +08:00
+ 執行 
+
+2019-03-21 16:31:10.7456 | INFO | Transfer.Utility.Extension | -- 於 18 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:10.7456 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.7646 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:10.7976 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:10.8336 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:31:10.8336 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.8516 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:10.8516 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:10 +08:00
+ 執行 
+
+2019-03-21 16:31:10.9516 | INFO | Transfer.Utility.Extension | -- 於 82 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:10.9596 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:10.9596 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:10 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:16.2111 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:16.3101 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Href] AS [Href], 
+    [Extent1].[SortNum] AS [SortNum], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Sub] AS [Extent1]
+    WHERE ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1)))) = @p__linq__2) OR ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1))) IS NULL) AND (@p__linq__2 IS NULL)) 
+
+2019-03-21 16:31:16.3101 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.3281 | INFO | Transfer.Utility.Extension | -- p__linq__0: '
+' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:16.3281 | INFO | Transfer.Utility.Extension | -- p__linq__1: '' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:16.3461 | INFO | Transfer.Utility.Extension | -- p__linq__2: 'TaskSchedule,Schedule' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:16.3611 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:16 +08:00
+ 執行 
+
+2019-03-21 16:31:16.3981 | INFO | Transfer.Utility.Extension | -- 於 21 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:16.4101 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.4241 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:16.4331 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:16.4671 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time], 
+    [Extent1].[Effective] AS [Effective]
+    FROM [dbo].[IFRS9_Menu_Set] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Menu_Id] = @p__linq__1) AND ('Y' = [Extent1].[Effective]) 
+
+2019-03-21 16:31:16.4671 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.4851 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:16.4981 | INFO | Transfer.Utility.Extension | -- p__linq__1: 'ScheduleSub' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:16.4981 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:16 +08:00
+ 執行 
+
+2019-03-21 16:31:16.5291 | INFO | Transfer.Utility.Extension | -- 於 11 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:16.5291 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.5581 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:16.5741 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:16.6061 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Login_Time] AS [Login_Time], 
+    [Extent1].[Login_Date] AS [Login_Date], 
+    [Extent1].[Logout_Time] AS [Logout_Time], 
+    [Extent1].[Login_IP] AS [Login_IP]
+    FROM [dbo].[IFRS9_User_Log] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Login_Date] = @p__linq__1) 
+
+2019-03-21 16:31:16.6061 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.6251 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:16.6251 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/21 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:31:16.6441 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:16 +08:00
+ 執行 
+
+2019-03-21 16:31:16.6711 | INFO | Transfer.Utility.Extension | -- 於 18 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:16.6711 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.6912 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:16.7072 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:16.7822 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 開始交易 
+
+2019-03-21 16:31:16.7922 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_Browse_Log]([User_Account], [Menu_Id], [Login_Time], [Browse_Time])
+VALUES (@0, @1, @2, @3)
+ 
+
+2019-03-21 16:31:16.7922 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:31:16.8082 | INFO | Transfer.Utility.Extension | -- @1: 'ScheduleSub' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:31:16.8082 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:16.8252 | INFO | Transfer.Utility.Extension | -- @3: '2019/3/21 下午 04:31:16' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:16.8252 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:16 +08:00
+ 執行 
+
+2019-03-21 16:31:16.8552 | INFO | Transfer.Utility.Extension | -- 於 12 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:31:16.8552 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:16.8872 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 認可交易 
+
+2019-03-21 16:31:16.8872 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:16 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:18.2713 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:18.2813 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:31:18.2913 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.2913 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:18.3143 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:18 +08:00
+ 執行 
+
+2019-03-21 16:31:18.3453 | INFO | Transfer.Utility.Extension | -- 於 22 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:18.3543 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.3543 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:18.3763 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:18.3883 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:31:18.3883 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.4073 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:18.4163 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:18 +08:00
+ 執行 
+
+2019-03-21 16:31:18.4723 | INFO | Transfer.Utility.Extension | -- 於 46 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:18.4823 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.4953 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:18.4953 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:18.5153 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:31:18.5333 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.5453 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:18 +08:00
+ 執行 
+
+2019-03-21 16:31:18.5683 | INFO | Transfer.Utility.Extension | -- 於 11 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:18.5763 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.5763 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:18.6023 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:18.6023 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:31:18.6173 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.6173 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:18.6173 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:18 +08:00
+ 執行 
+
+2019-03-21 16:31:18.6804 | INFO | Transfer.Utility.Extension | -- 於 40 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:18.6964 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:18.6964 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:18.9574 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:19.1524 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project2].[C1] AS [C1], 
+    [Project2].[File_Name] AS [File_Name], 
+    [Project2].[C2] AS [C2], 
+    [Project2].[Id] AS [Id], 
+    [Project2].[File_Name1] AS [File_Name1], 
+    [Project2].[ReportDate] AS [ReportDate], 
+    [Project2].[Version] AS [Version], 
+    [Project2].[TransferType] AS [TransferType], 
+    [Project2].[Create_date] AS [Create_date], 
+    [Project2].[Create_time] AS [Create_time], 
+    [Project2].[End_date] AS [End_date], 
+    [Project2].[End_time] AS [End_time], 
+    [Project2].[Process] AS [Process], 
+    [Project2].[Error_Msg] AS [Error_Msg]
+    FROM ( SELECT 
+        [Distinct1].[File_Name] AS [File_Name], 
+        1 AS [C1], 
+        [Extent2].[Id] AS [Id], 
+        [Extent2].[File_Name] AS [File_Name1], 
+        [Extent2].[ReportDate] AS [ReportDate], 
+        [Extent2].[Version] AS [Version], 
+        [Extent2].[TransferType] AS [TransferType], 
+        [Extent2].[Create_date] AS [Create_date], 
+        [Extent2].[Create_time] AS [Create_time], 
+        [Extent2].[End_date] AS [End_date], 
+        [Extent2].[End_time] AS [End_time], 
+        [Extent2].[Process] AS [Process], 
+        [Extent2].[Error_Msg] AS [Error_Msg], 
+        CASE WHEN ([Extent2].[Id] IS NULL) THEN CAST(NULL AS int) ELSE 1 END AS [C2]
+        FROM   (SELECT DISTINCT 
+            [Extent1].[File_Name] AS [File_Name]
+            FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+            WHERE ([Extent1].[Create_date] IS NOT NULL) AND ([Extent1].[Create_time] IS NOT NULL) AND ('Plan' = [Extent1].[Process]) AND ([Extent1].[File_Name] IN ('A07', 'A53', 'A84', 'A91', 'A92', 'A93', 'A961', 'A962', 'C03', 'C04', 'IFRS9Log')) ) AS [Distinct1]
+        LEFT OUTER JOIN [dbo].[Transfer_CheckTable] AS [Extent2] ON ([Extent2].[Create_date] IS NOT NULL) AND ([Extent2].[Create_time] IS NOT NULL) AND ('Plan' = [Extent2].[Process]) AND ([Extent2].[File_Name] IN ('A07', 'A53', 'A84', 'A91', 'A92', 'A93', 'A961', 'A962', 'C03', 'C04', 'IFRS9Log')) AND ([Distinct1].[File_Name] = [Extent2].[File_Name])
+    )  AS [Project2]
+    ORDER BY [Project2].[File_Name] ASC, [Project2].[C2] ASC 
+
+2019-03-21 16:31:19.1524 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:19.1664 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:19 +08:00
+ 執行 
+
+2019-03-21 16:31:19.2174 | INFO | Transfer.Utility.Extension | -- 於 43 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:19.2174 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:19.2474 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:19 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:30.6555 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:30 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:30.6645 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:30.6645 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:30.6846 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:30.6966 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:30 +08:00
+ 執行 
+
+2019-03-21 16:31:30.7356 | INFO | Transfer.Utility.Extension | -- 於 22 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:30.7486 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:30.7656 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:30 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:30.7906 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:30 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:30.7906 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Href] AS [Href], 
+    [Extent1].[SortNum] AS [SortNum], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Sub] AS [Extent1]
+    WHERE ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1)))) = @p__linq__2) OR ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1))) IS NULL) AND (@p__linq__2 IS NULL)) 
+
+2019-03-21 16:31:30.8106 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:30.8206 | INFO | Transfer.Utility.Extension | -- p__linq__0: '
+' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:30.8336 | INFO | Transfer.Utility.Extension | -- p__linq__1: '' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:30.8336 | INFO | Transfer.Utility.Extension | -- p__linq__2: 'A57Detail,A5' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:30.8566 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:30 +08:00
+ 執行 
+
+2019-03-21 16:31:30.8926 | INFO | Transfer.Utility.Extension | -- 於 26 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:30.9026 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:30.9136 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:30 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:30.9136 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:30 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:30.9336 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time], 
+    [Extent1].[Effective] AS [Effective]
+    FROM [dbo].[IFRS9_Menu_Set] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Menu_Id] = @p__linq__1) AND ('Y' = [Extent1].[Effective]) 
+
+2019-03-21 16:31:30.9336 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:30.9526 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:30.9666 | INFO | Transfer.Utility.Extension | -- p__linq__1: 'A57Sub' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:30.9776 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:30 +08:00
+ 執行 
+
+2019-03-21 16:31:31.0016 | INFO | Transfer.Utility.Extension | -- 於 13 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:31.0126 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.0226 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:31.0226 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:31.0416 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Login_Time] AS [Login_Time], 
+    [Extent1].[Login_Date] AS [Login_Date], 
+    [Extent1].[Logout_Time] AS [Logout_Time], 
+    [Extent1].[Login_IP] AS [Login_IP]
+    FROM [dbo].[IFRS9_User_Log] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Login_Date] = @p__linq__1) 
+
+2019-03-21 16:31:31.0416 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.0586 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:31.0676 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/21 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:31:31.0676 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:31 +08:00
+ 執行 
+
+2019-03-21 16:31:31.0956 | INFO | Transfer.Utility.Extension | -- 於 10 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:31.1046 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.1046 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:31.1216 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:31.1376 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開始交易 
+
+2019-03-21 16:31:31.1476 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_Browse_Log]([User_Account], [Menu_Id], [Login_Time], [Browse_Time])
+VALUES (@0, @1, @2, @3)
+ 
+
+2019-03-21 16:31:31.1476 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:31:31.1676 | INFO | Transfer.Utility.Extension | -- @1: 'A57Sub' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:31:31.1676 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:31.2016 | INFO | Transfer.Utility.Extension | -- @3: '2019/3/21 下午 04:31:31' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:31.2116 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:31 +08:00
+ 執行 
+
+2019-03-21 16:31:31.2286 | INFO | Transfer.Utility.Extension | -- 於 7 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:31:31.2286 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.2556 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 認可交易 
+
+2019-03-21 16:31:31.2556 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:31.2846 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:31.3216 | INFO | Transfer.Utility.Extension | SELECT 
+    CASE WHEN ( EXISTS (SELECT 
+        1 AS [C1]
+        FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+        WHERE [Extent1].[File_Name] IN ('A41')
+    )) THEN cast(1 as bit) ELSE cast(0 as bit) END AS [C1]
+    FROM  ( SELECT 1 AS X ) AS [SingleRowTable1] 
+
+2019-03-21 16:31:31.3216 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.3376 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:31 +08:00
+ 執行 
+
+2019-03-21 16:31:31.3616 | INFO | Transfer.Utility.Extension | -- 於 15 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:31.3736 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.3886 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:31.4026 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:31.4216 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE [Extent1].[File_Name] IN ('A41')
+    ORDER BY [Extent1].[Create_date] DESC, [Extent1].[Create_time] DESC 
+
+2019-03-21 16:31:31.4306 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.4306 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:31 +08:00
+ 執行 
+
+2019-03-21 16:31:31.4696 | INFO | Transfer.Utility.Extension | -- 於 21 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:31.4776 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.5056 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:31.5256 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:31.5356 | INFO | Transfer.Utility.Extension | SELECT 
+    CASE WHEN ( EXISTS (SELECT 
+        1 AS [C1]
+        FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+        WHERE [Extent1].[File_Name] IN ('A53', 'A57', 'A58', 'A59', 'A59Apex', 'A59Trans')
+    )) THEN cast(1 as bit) ELSE cast(0 as bit) END AS [C1]
+    FROM  ( SELECT 1 AS X ) AS [SingleRowTable1] 
+
+2019-03-21 16:31:31.5356 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.5546 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:31 +08:00
+ 執行 
+
+2019-03-21 16:31:31.5866 | INFO | Transfer.Utility.Extension | -- 於 24 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:31.5866 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.6076 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:31.6186 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:31.6306 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE [Extent1].[File_Name] IN ('A53', 'A57', 'A58', 'A59', 'A59Apex', 'A59Trans')
+    ORDER BY [Extent1].[Create_date] DESC, [Extent1].[Create_time] DESC 
+
+2019-03-21 16:31:31.6306 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.6496 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:31 +08:00
+ 執行 
+
+2019-03-21 16:31:31.7587 | INFO | Transfer.Utility.Extension | -- 於 99 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:31.7587 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:31.8857 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:31 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:35.7931 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:35 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:35.8021 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:31:35.8121 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:35.8261 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:35.8261 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:35 +08:00
+ 執行 
+
+2019-03-21 16:31:35.8601 | INFO | Transfer.Utility.Extension | -- 於 11 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:35.8601 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:35.8791 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:35 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:35.8901 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:35 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:35.8901 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:31:35.9081 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:35.9081 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:35.9251 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:35 +08:00
+ 執行 
+
+2019-03-21 16:31:35.9441 | INFO | Transfer.Utility.Extension | -- 於 11 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:35.9511 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:35.9511 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:35 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:35.9691 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:35 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:35.9831 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:31:35.9831 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.0031 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:36 +08:00
+ 執行 
+
+2019-03-21 16:31:36.0231 | INFO | Transfer.Utility.Extension | -- 於 7 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:36.0361 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.0461 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:36.0461 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:36.0661 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:31:36.0771 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.0771 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:36.0951 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:36 +08:00
+ 執行 
+
+2019-03-21 16:31:36.1151 | INFO | Transfer.Utility.Extension | -- 於 9 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:36.1241 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.1241 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:36.3421 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:36.3421 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:36.3611 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.3611 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:36.3801 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:36 +08:00
+ 執行 
+
+2019-03-21 16:31:36.4751 | INFO | Transfer.Utility.Extension | -- 於 82 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:36.5041 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.5231 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:36.5861 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:36.6051 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE ([Extent1].[File_Name] = @p__linq__0) AND ('Y' = [Extent1].[TransferType]) AND ([Extent1].[ReportDate] = @p__linq__1) 
+
+2019-03-21 16:31:36.6171 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.6321 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'A41' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:36.6441 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/31 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:31:36.6561 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:36 +08:00
+ 執行 
+
+2019-03-21 16:31:36.6691 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:36.6691 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.6872 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:36.8962 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:36.9042 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:36.9042 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.9242 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:36.9242 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:36 +08:00
+ 執行 
+
+2019-03-21 16:31:36.9602 | INFO | Transfer.Utility.Extension | -- 於 18 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:36.9702 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:36.9702 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:36 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:37.4752 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:37 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:37.4832 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:37.4832 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:37.5002 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:37.5002 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:37 +08:00
+ 執行 
+
+2019-03-21 16:31:37.5322 | INFO | Transfer.Utility.Extension | -- 於 16 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:37.5322 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:37.5492 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:37 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:49.0124 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:49.0124 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:49.0324 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.0444 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:49.0444 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:49 +08:00
+ 執行 
+
+2019-03-21 16:31:49.0854 | INFO | Transfer.Utility.Extension | -- 於 16 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:49.0964 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.1114 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:49.1254 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:49.1374 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Href] AS [Href], 
+    [Extent1].[SortNum] AS [SortNum], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Sub] AS [Extent1]
+    WHERE ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1)))) = @p__linq__2) OR ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1))) IS NULL) AND (@p__linq__2 IS NULL)) 
+
+2019-03-21 16:31:49.1374 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.1604 | INFO | Transfer.Utility.Extension | -- p__linq__0: '
+' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:49.1704 | INFO | Transfer.Utility.Extension | -- p__linq__1: '' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:49.1814 | INFO | Transfer.Utility.Extension | -- p__linq__2: 'A59Detail,A5' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:31:49.1814 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:49 +08:00
+ 執行 
+
+2019-03-21 16:31:49.2324 | INFO | Transfer.Utility.Extension | -- 於 22 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:49.2324 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.2534 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:49.2644 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:49.2754 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time], 
+    [Extent1].[Effective] AS [Effective]
+    FROM [dbo].[IFRS9_Menu_Set] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Menu_Id] = @p__linq__1) AND ('Y' = [Extent1].[Effective]) 
+
+2019-03-21 16:31:49.2754 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.2944 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:49.2944 | INFO | Transfer.Utility.Extension | -- p__linq__1: 'A59Sub' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:49.3154 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:49 +08:00
+ 執行 
+
+2019-03-21 16:31:49.3424 | INFO | Transfer.Utility.Extension | -- 於 14 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:49.3534 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.3534 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:49.3754 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:49.3884 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Login_Time] AS [Login_Time], 
+    [Extent1].[Login_Date] AS [Login_Date], 
+    [Extent1].[Logout_Time] AS [Logout_Time], 
+    [Extent1].[Login_IP] AS [Login_IP]
+    FROM [dbo].[IFRS9_User_Log] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Login_Date] = @p__linq__1) 
+
+2019-03-21 16:31:49.4024 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.4234 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:49.4384 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/21 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:31:49.4504 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:49 +08:00
+ 執行 
+
+2019-03-21 16:31:49.4674 | INFO | Transfer.Utility.Extension | -- 於 5 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:49.4774 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:49.4774 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:49.4954 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:49 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:50.0095 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 開始交易 
+
+2019-03-21 16:31:50.0295 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_Browse_Log]([User_Account], [Menu_Id], [Login_Time], [Browse_Time])
+VALUES (@0, @1, @2, @3)
+ 
+
+2019-03-21 16:31:50.0425 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:31:50.0625 | INFO | Transfer.Utility.Extension | -- @1: 'A59Sub' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:31:50.0765 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:50.0895 | INFO | Transfer.Utility.Extension | -- @3: '2019/3/21 下午 04:31:49' (Type = DateTime2)
+ 
+
+2019-03-21 16:31:50.1015 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:50 +08:00
+ 執行 
+
+2019-03-21 16:31:50.1195 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:31:50.1335 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.1545 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 認可交易 
+
+2019-03-21 16:31:50.1665 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:50.1825 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:50.1825 | INFO | Transfer.Utility.Extension | SELECT 
+    CASE WHEN ( EXISTS (SELECT 
+        1 AS [C1]
+        FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+        WHERE [Extent1].[File_Name] IN ('A41')
+    )) THEN cast(1 as bit) ELSE cast(0 as bit) END AS [C1]
+    FROM  ( SELECT 1 AS X ) AS [SingleRowTable1] 
+
+2019-03-21 16:31:50.2015 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.2015 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:50 +08:00
+ 執行 
+
+2019-03-21 16:31:50.2225 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:50.2335 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.2475 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:50.2575 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:50.2575 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE [Extent1].[File_Name] IN ('A41')
+    ORDER BY [Extent1].[Create_date] DESC, [Extent1].[Create_time] DESC 
+
+2019-03-21 16:31:50.2795 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.2895 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:50 +08:00
+ 執行 
+
+2019-03-21 16:31:50.5335 | INFO | Transfer.Utility.Extension | -- 於 235 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:50.5445 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.5725 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:50.5895 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:50.5895 | INFO | Transfer.Utility.Extension | SELECT 
+    CASE WHEN ( EXISTS (SELECT 
+        1 AS [C1]
+        FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+        WHERE [Extent1].[File_Name] IN ('A53', 'A57', 'A58', 'A59', 'A59Apex', 'A59Trans')
+    )) THEN cast(1 as bit) ELSE cast(0 as bit) END AS [C1]
+    FROM  ( SELECT 1 AS X ) AS [SingleRowTable1] 
+
+2019-03-21 16:31:50.6085 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.6175 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:50 +08:00
+ 執行 
+
+2019-03-21 16:31:50.6175 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:50.6435 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.6505 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:50.6505 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:50.6695 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE [Extent1].[File_Name] IN ('A53', 'A57', 'A58', 'A59', 'A59Apex', 'A59Trans')
+    ORDER BY [Extent1].[Create_date] DESC, [Extent1].[Create_time] DESC 
+
+2019-03-21 16:31:50.6695 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.6886 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:50 +08:00
+ 執行 
+
+2019-03-21 16:31:50.7406 | INFO | Transfer.Utility.Extension | -- 於 44 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:50.7626 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.8706 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:50.9106 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:50.9186 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:31:50.9186 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.9336 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:50.9336 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:50 +08:00
+ 執行 
+
+2019-03-21 16:31:50.9756 | INFO | Transfer.Utility.Extension | -- 於 22 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:50.9756 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:50.9966 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:50 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:51.0086 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:51.0086 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:31:51.0256 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.0256 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:51.0606 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:51 +08:00
+ 執行 
+
+2019-03-21 16:31:51.1216 | INFO | Transfer.Utility.Extension | -- 於 52 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:51.1216 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.1416 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:51.1536 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:51.1646 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:31:51.1646 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.1826 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:51 +08:00
+ 執行 
+
+2019-03-21 16:31:51.2226 | INFO | Transfer.Utility.Extension | -- 於 20 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:51.2336 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.2426 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:51.2426 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:51.2626 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:31:51.2716 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.2716 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:51.2876 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:51 +08:00
+ 執行 
+
+2019-03-21 16:31:51.3156 | INFO | Transfer.Utility.Extension | -- 於 19 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:51.3236 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.3236 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:51.5406 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:51.5406 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:51.5606 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.5686 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:51.5686 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:51 +08:00
+ 執行 
+
+2019-03-21 16:31:51.5996 | INFO | Transfer.Utility.Extension | -- 於 14 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:51.5996 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.6156 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:51.6156 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:51.6416 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE ([Extent1].[File_Name] = @p__linq__0) AND ('Y' = [Extent1].[TransferType]) AND ([Extent1].[ReportDate] = @p__linq__1) 
+
+2019-03-21 16:31:51.6566 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.6646 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'A41' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:31:51.6646 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/31 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:31:51.6927 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:51 +08:00
+ 執行 
+
+2019-03-21 16:31:51.7107 | INFO | Transfer.Utility.Extension | -- 於 8 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:51.7107 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:51.7327 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:51 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:52.1007 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:52 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:52.1007 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:52.1197 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:52.1307 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:52.1307 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:52 +08:00
+ 執行 
+
+2019-03-21 16:31:52.1657 | INFO | Transfer.Utility.Extension | -- 於 15 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:52.1657 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:52.1857 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:52 +08:00
+ 關閉連接 
+
+2019-03-21 16:31:52.6187 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:52 +08:00
+ 開啟連接 
+
+2019-03-21 16:31:52.6187 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:31:52.6387 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:52.6487 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:31:52.6848 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:31:52 +08:00
+ 執行 
+
+2019-03-21 16:31:52.7228 | INFO | Transfer.Utility.Extension | -- 於 23 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:31:52.7228 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:31:52.7548 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:31:52 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:00.4045 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:00.4145 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:32:00.4145 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.4375 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:32:00.4495 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:00 +08:00
+ 執行 
+
+2019-03-21 16:32:00.4855 | INFO | Transfer.Utility.Extension | -- 於 21 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:00.4995 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.5165 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:00.5295 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:00.5435 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Href] AS [Href], 
+    [Extent1].[SortNum] AS [SortNum], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Sub] AS [Extent1]
+    WHERE ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1)))) = @p__linq__2) OR ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1))) IS NULL) AND (@p__linq__2 IS NULL)) 
+
+2019-03-21 16:32:00.5545 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.5545 | INFO | Transfer.Utility.Extension | -- p__linq__0: '
+' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:00.5745 | INFO | Transfer.Utility.Extension | -- p__linq__1: '' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:00.5865 | INFO | Transfer.Utility.Extension | -- p__linq__2: 'A57Detail,A5' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:00.5865 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:00 +08:00
+ 執行 
+
+2019-03-21 16:32:00.6155 | INFO | Transfer.Utility.Extension | -- 於 5 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:00.6255 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.6345 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:00.6345 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:00.6535 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time], 
+    [Extent1].[Effective] AS [Effective]
+    FROM [dbo].[IFRS9_Menu_Set] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Menu_Id] = @p__linq__1) AND ('Y' = [Extent1].[Effective]) 
+
+2019-03-21 16:32:00.6645 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.6645 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:00.6836 | INFO | Transfer.Utility.Extension | -- p__linq__1: 'A57Sub' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:00.6836 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:00 +08:00
+ 執行 
+
+2019-03-21 16:32:00.7186 | INFO | Transfer.Utility.Extension | -- 於 14 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:00.7276 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.7276 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:00.7496 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:00.7616 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Login_Time] AS [Login_Time], 
+    [Extent1].[Login_Date] AS [Login_Date], 
+    [Extent1].[Logout_Time] AS [Logout_Time], 
+    [Extent1].[Login_IP] AS [Login_IP]
+    FROM [dbo].[IFRS9_User_Log] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Login_Date] = @p__linq__1) 
+
+2019-03-21 16:32:00.7616 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.7806 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:00.7896 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/21 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:32:00.7896 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:00 +08:00
+ 執行 
+
+2019-03-21 16:32:00.8286 | INFO | Transfer.Utility.Extension | -- 於 16 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:00.8366 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.8366 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:00.8546 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:00.8726 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開始交易 
+
+2019-03-21 16:32:00.8726 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_Browse_Log]([User_Account], [Menu_Id], [Login_Time], [Browse_Time])
+VALUES (@0, @1, @2, @3)
+ 
+
+2019-03-21 16:32:00.8886 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:32:00.8996 | INFO | Transfer.Utility.Extension | -- @1: 'A57Sub' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:32:00.8996 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:32:00.9186 | INFO | Transfer.Utility.Extension | -- @3: '2019/3/21 下午 04:32:00' (Type = DateTime2)
+ 
+
+2019-03-21 16:32:00.9186 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:00 +08:00
+ 執行 
+
+2019-03-21 16:32:00.9496 | INFO | Transfer.Utility.Extension | -- 於 13 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:32:00.9496 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:00.9736 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 認可交易 
+
+2019-03-21 16:32:00.9846 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:00.9976 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:00 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.0106 | INFO | Transfer.Utility.Extension | SELECT 
+    CASE WHEN ( EXISTS (SELECT 
+        1 AS [C1]
+        FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+        WHERE [Extent1].[File_Name] IN ('A41')
+    )) THEN cast(1 as bit) ELSE cast(0 as bit) END AS [C1]
+    FROM  ( SELECT 1 AS X ) AS [SingleRowTable1] 
+
+2019-03-21 16:32:01.0106 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.0276 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.0526 | INFO | Transfer.Utility.Extension | -- 於 16 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.0616 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.0716 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.0716 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.0916 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE [Extent1].[File_Name] IN ('A41')
+    ORDER BY [Extent1].[Create_date] DESC, [Extent1].[Create_time] DESC 
+
+2019-03-21 16:32:01.1046 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.1046 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.1396 | INFO | Transfer.Utility.Extension | -- 於 13 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.1486 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.1866 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.2106 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.2266 | INFO | Transfer.Utility.Extension | SELECT 
+    CASE WHEN ( EXISTS (SELECT 
+        1 AS [C1]
+        FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+        WHERE [Extent1].[File_Name] IN ('A53', 'A57', 'A58', 'A59', 'A59Apex', 'A59Trans')
+    )) THEN cast(1 as bit) ELSE cast(0 as bit) END AS [C1]
+    FROM  ( SELECT 1 AS X ) AS [SingleRowTable1] 
+
+2019-03-21 16:32:01.2266 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.2456 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.2636 | INFO | Transfer.Utility.Extension | -- 於 7 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.2726 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.2726 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.2926 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.3036 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE [Extent1].[File_Name] IN ('A53', 'A57', 'A58', 'A59', 'A59Apex', 'A59Trans')
+    ORDER BY [Extent1].[Create_date] DESC, [Extent1].[Create_time] DESC 
+
+2019-03-21 16:32:01.3036 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.3226 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.3726 | INFO | Transfer.Utility.Extension | -- 於 41 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.3826 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.5166 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.5286 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.5406 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:32:01.5406 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.5606 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:01.5706 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.6156 | INFO | Transfer.Utility.Extension | -- 於 36 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.6156 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.6366 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.6496 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.6496 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:32:01.6706 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.6796 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:01.6796 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.7417 | INFO | Transfer.Utility.Extension | -- 於 39 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.7417 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.7607 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.7607 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.7787 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:32:01.7877 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.7877 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.8427 | INFO | Transfer.Utility.Extension | -- 於 33 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.8527 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.8527 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:01.8757 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:01.8857 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:32:01.8967 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.8967 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:01.9167 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:01 +08:00
+ 執行 
+
+2019-03-21 16:32:01.9327 | INFO | Transfer.Utility.Extension | -- 於 8 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:01.9327 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:01.9507 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:01 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:02.1917 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:02 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:02.2077 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:32:02.2207 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:02.2317 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:32:02.2437 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:02 +08:00
+ 執行 
+
+2019-03-21 16:32:02.2707 | INFO | Transfer.Utility.Extension | -- 於 16 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:02.2787 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:02.2887 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:02 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:02.3037 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:02 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:02.3177 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE ([Extent1].[File_Name] = @p__linq__0) AND ('Y' = [Extent1].[TransferType]) AND ([Extent1].[ReportDate] = @p__linq__1) 
+
+2019-03-21 16:32:02.3177 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:02.3437 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'A41' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:02.3527 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/31 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:32:02.3687 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:02 +08:00
+ 執行 
+
+2019-03-21 16:32:02.3837 | INFO | Transfer.Utility.Extension | -- 於 5 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:02.3967 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:02.4117 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:02 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:02.7588 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:02 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:02.7838 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:32:02.8068 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:02.8388 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:32:02.8538 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:02 +08:00
+ 執行 
+
+2019-03-21 16:32:02.8778 | INFO | Transfer.Utility.Extension | -- 於 14 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:02.8868 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:02.8868 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:02 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:03.3028 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:03 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:03.3028 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:32:03.3188 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:03.3188 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:32:03.3358 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:03 +08:00
+ 執行 
+
+2019-03-21 16:32:03.3638 | INFO | Transfer.Utility.Extension | -- 於 20 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:03.3638 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:03.3808 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:03 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:17.6542 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:17 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:17.6542 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:32:17.6722 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:17.6722 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:32:17.6953 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:17 +08:00
+ 執行 
+
+2019-03-21 16:32:17.7243 | INFO | Transfer.Utility.Extension | -- 於 15 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:17.7333 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:17.7503 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:17 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:17.7693 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:17 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:17.7873 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Href] AS [Href], 
+    [Extent1].[SortNum] AS [SortNum], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Sub] AS [Extent1]
+    WHERE ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1)))) = @p__linq__2) OR ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1))) IS NULL) AND (@p__linq__2 IS NULL)) 
+
+2019-03-21 16:32:17.7993 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:17.8113 | INFO | Transfer.Utility.Extension | -- p__linq__0: '
+' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:17.8113 | INFO | Transfer.Utility.Extension | -- p__linq__1: '' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:17.8403 | INFO | Transfer.Utility.Extension | -- p__linq__2: 'A58Detail,A5' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:17.8573 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:17 +08:00
+ 執行 
+
+2019-03-21 16:32:17.8753 | INFO | Transfer.Utility.Extension | -- 於 5 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:17.8753 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:17.9013 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:17 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:17.9123 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:17 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:17.9263 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time], 
+    [Extent1].[Effective] AS [Effective]
+    FROM [dbo].[IFRS9_Menu_Set] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Menu_Id] = @p__linq__1) AND ('Y' = [Extent1].[Effective]) 
+
+2019-03-21 16:32:17.9363 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:17.9573 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:17.9693 | INFO | Transfer.Utility.Extension | -- p__linq__1: 'A58Sub' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:17.9853 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:17 +08:00
+ 執行 
+
+2019-03-21 16:32:18.0133 | INFO | Transfer.Utility.Extension | -- 於 15 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:18.0333 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.0533 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:18.0673 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:18.0833 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Login_Time] AS [Login_Time], 
+    [Extent1].[Login_Date] AS [Login_Date], 
+    [Extent1].[Logout_Time] AS [Logout_Time], 
+    [Extent1].[Login_IP] AS [Login_IP]
+    FROM [dbo].[IFRS9_User_Log] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Login_Date] = @p__linq__1) 
+
+2019-03-21 16:32:18.0963 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.1083 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:18.1083 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/21 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:32:18.1303 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:18 +08:00
+ 執行 
+
+2019-03-21 16:32:18.1463 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:18.1563 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.1693 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:18.1693 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:18.2463 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開始交易 
+
+2019-03-21 16:32:18.2593 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_Browse_Log]([User_Account], [Menu_Id], [Login_Time], [Browse_Time])
+VALUES (@0, @1, @2, @3)
+ 
+
+2019-03-21 16:32:18.2683 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:32:18.2813 | INFO | Transfer.Utility.Extension | -- @1: 'A58Sub' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:32:18.2813 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:32:18.3033 | INFO | Transfer.Utility.Extension | -- @3: '2019/3/21 下午 04:32:18' (Type = DateTime2)
+ 
+
+2019-03-21 16:32:18.3153 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:18 +08:00
+ 執行 
+
+2019-03-21 16:32:18.3353 | INFO | Transfer.Utility.Extension | -- 於 8 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:32:18.3473 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.3653 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 認可交易 
+
+2019-03-21 16:32:18.3763 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:18.4563 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:18.4693 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:32:18.4823 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.4823 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:18.5063 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:18 +08:00
+ 執行 
+
+2019-03-21 16:32:18.5223 | INFO | Transfer.Utility.Extension | -- 於 5 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:18.5343 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.5463 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:18.5463 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:18.5673 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:32:18.5803 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.5923 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:18.5923 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:18 +08:00
+ 執行 
+
+2019-03-21 16:32:18.6273 | INFO | Transfer.Utility.Extension | -- 於 11 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:18.6473 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.6663 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:18.6813 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:18.6954 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:32:18.7194 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.7314 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:18 +08:00
+ 執行 
+
+2019-03-21 16:32:18.7654 | INFO | Transfer.Utility.Extension | -- 於 9 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:18.7864 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.7984 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:18.8164 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:18.8284 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:32:18.8284 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.8504 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:18.8604 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:18 +08:00
+ 執行 
+
+2019-03-21 16:32:18.8774 | INFO | Transfer.Utility.Extension | -- 於 6 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:18.8874 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:18.8874 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:18 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:19.1614 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:19 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:19.1794 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[Effective] = @p__linq__0 
+
+2019-03-21 16:32:19.1934 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:19.2054 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'True' (Type = Boolean, IsNullable = false)
+ 
+
+2019-03-21 16:32:19.2304 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:19 +08:00
+ 執行 
+
+2019-03-21 16:32:19.2664 | INFO | Transfer.Utility.Extension | -- 於 20 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:19.2834 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:19.2974 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:19 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:23.8669 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:23 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:23.8669 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Href] AS [Href], 
+    [Extent1].[SortNum] AS [SortNum], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Sub] AS [Extent1]
+    WHERE ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1)))) = @p__linq__2) OR ((LTRIM(RTRIM(REPLACE([Extent1].[Href], @p__linq__0, @p__linq__1))) IS NULL) AND (@p__linq__2 IS NULL)) 
+
+2019-03-21 16:32:23.8889 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:23.8999 | INFO | Transfer.Utility.Extension | -- p__linq__0: '
+' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:23.8999 | INFO | Transfer.Utility.Extension | -- p__linq__1: '' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:23.9219 | INFO | Transfer.Utility.Extension | -- p__linq__2: 'A41Detail,A4' (Type = String, Size = 4000)
+ 
+
+2019-03-21 16:32:23.9329 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:23 +08:00
+ 執行 
+
+2019-03-21 16:32:23.9579 | INFO | Transfer.Utility.Extension | -- 於 14 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:23.9579 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:23.9789 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:23 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:23.9889 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:23 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:23.9889 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time], 
+    [Extent1].[Effective] AS [Effective]
+    FROM [dbo].[IFRS9_Menu_Set] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Menu_Id] = @p__linq__1) AND ('Y' = [Extent1].[Effective]) 
+
+2019-03-21 16:32:24.0089 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:24.0089 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:24.0299 | INFO | Transfer.Utility.Extension | -- p__linq__1: 'A41Sub' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:24.0459 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:24 +08:00
+ 執行 
+
+2019-03-21 16:32:24.0669 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:24.0669 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:24.0969 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:24.1089 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:24.1249 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[Login_Time] AS [Login_Time], 
+    [Extent1].[Login_Date] AS [Login_Date], 
+    [Extent1].[Logout_Time] AS [Logout_Time], 
+    [Extent1].[Login_IP] AS [Login_IP]
+    FROM [dbo].[IFRS9_User_Log] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Login_Date] = @p__linq__1) 
+
+2019-03-21 16:32:24.1449 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:24.1449 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:24.1719 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/21 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:32:24.1859 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:24 +08:00
+ 執行 
+
+2019-03-21 16:32:24.2199 | INFO | Transfer.Utility.Extension | -- 於 13 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:24.2319 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:24.2439 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:24.2599 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:24.2819 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 開始交易 
+
+2019-03-21 16:32:24.2949 | INFO | Transfer.Utility.Extension | INSERT [dbo].[IFRS9_Browse_Log]([User_Account], [Menu_Id], [Login_Time], [Browse_Time])
+VALUES (@0, @1, @2, @3)
+ 
+
+2019-03-21 16:32:24.3089 | INFO | Transfer.Utility.Extension | -- @0: 'test1' (Type = AnsiString, Size = 50)
+ 
+
+2019-03-21 16:32:24.3189 | INFO | Transfer.Utility.Extension | -- @1: 'A41Sub' (Type = AnsiString, Size = 30)
+ 
+
+2019-03-21 16:32:24.3359 | INFO | Transfer.Utility.Extension | -- @2: '2019/3/21 下午 04:30:59' (Type = DateTime2)
+ 
+
+2019-03-21 16:32:24.3539 | INFO | Transfer.Utility.Extension | -- @3: '2019/3/21 下午 04:32:24' (Type = DateTime2)
+ 
+
+2019-03-21 16:32:24.3679 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:24 +08:00
+ 執行 
+
+2019-03-21 16:32:24.3849 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: 1
+ 
+
+2019-03-21 16:32:24.3969 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:24.4199 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 認可交易 
+
+2019-03-21 16:32:24.4299 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:24 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:28.6834 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:28 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:28.6994 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE ([Extent1].[User_Account] = @p__linq__0) AND ([Extent1].[Effective] = 1) 
+
+2019-03-21 16:32:28.7214 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:28.7324 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:28.7594 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:28 +08:00
+ 執行 
+
+2019-03-21 16:32:28.7874 | INFO | Transfer.Utility.Extension | -- 於 4 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:28.8104 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:28.8334 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:28 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:28.8434 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:28 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:28.8434 | INFO | Transfer.Utility.Extension | SELECT 
+    [Project1].[Menu] AS [Menu], 
+    [Project1].[Menu_Id] AS [Menu_Id], 
+    [Project1].[Menu_Detail] AS [Menu_Detail], 
+    [Project1].[Class] AS [Class], 
+    [Project1].[Href] AS [Href], 
+    [Project1].[SortNum] AS [SortNum], 
+    [Project1].[DebtType] AS [DebtType], 
+    [Project1].[Create_User] AS [Create_User], 
+    [Project1].[Create_Date] AS [Create_Date], 
+    [Project1].[Create_Time] AS [Create_Time], 
+    [Project1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Project1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Project1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM ( SELECT 
+        [Extent2].[Menu] AS [Menu], 
+        [Extent2].[Menu_Id] AS [Menu_Id], 
+        [Extent2].[Menu_Detail] AS [Menu_Detail], 
+        [Extent2].[Class] AS [Class], 
+        [Extent2].[Href] AS [Href], 
+        [Extent2].[SortNum] AS [SortNum], 
+        [Extent2].[DebtType] AS [DebtType], 
+        [Extent2].[Create_User] AS [Create_User], 
+        [Extent2].[Create_Date] AS [Create_Date], 
+        [Extent2].[Create_Time] AS [Create_Time], 
+        [Extent2].[LastUpdate_User] AS [LastUpdate_User], 
+        [Extent2].[LastUpdate_Date] AS [LastUpdate_Date], 
+        [Extent2].[LastUpdate_Time] AS [LastUpdate_Time]
+        FROM  [dbo].[IFRS9_Menu_Set] AS [Extent1]
+        INNER JOIN [dbo].[IFRS9_Menu_Sub] AS [Extent2] ON [Extent1].[Menu_Id] = [Extent2].[Menu_Id]
+        WHERE ([Extent1].[User_Account] = @p__linq__0) AND ('Y' = [Extent1].[Effective])
+    )  AS [Project1]
+    ORDER BY [Project1].[Menu_Id] ASC 
+
+2019-03-21 16:32:28.8644 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:28.8724 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:28.8724 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:28 +08:00
+ 執行 
+
+2019-03-21 16:32:28.9104 | INFO | Transfer.Utility.Extension | -- 於 18 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:28.9194 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:28.9194 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:28 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:28.9434 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:28 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:28.9614 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Menu] AS [Menu], 
+    [Extent1].[Menu_Id] AS [Menu_Id], 
+    [Extent1].[Menu_Detail] AS [Menu_Detail], 
+    [Extent1].[Class] AS [Class], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_Menu_Main] AS [Extent1]
+    WHERE [Extent1].[Menu] IN ('A0', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'D6', 'Report', 'C0', 'C1', 'D0', 'KRisk', 'Schedule')
+    ORDER BY [Extent1].[Menu] ASC 
+
+2019-03-21 16:32:28.9724 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:28.9854 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:28 +08:00
+ 執行 
+
+2019-03-21 16:32:28.9994 | INFO | Transfer.Utility.Extension | -- 於 3 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:28.9994 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:29.0204 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:29 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:29.0334 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:29 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:29.0434 | INFO | Transfer.Utility.Extension | SELECT TOP (1) 
+    [Extent1].[User_Account] AS [User_Account], 
+    [Extent1].[User_Name] AS [User_Name], 
+    [Extent1].[User_Password] AS [User_Password], 
+    [Extent1].[AdminFlag] AS [AdminFlag], 
+    [Extent1].[Effective] AS [Effective], 
+    [Extent1].[LoginFlag] AS [LoginFlag], 
+    [Extent1].[DebtType] AS [DebtType], 
+    [Extent1].[Create_User] AS [Create_User], 
+    [Extent1].[Create_Date] AS [Create_Date], 
+    [Extent1].[Create_Time] AS [Create_Time], 
+    [Extent1].[LastUpdate_User] AS [LastUpdate_User], 
+    [Extent1].[LastUpdate_Date] AS [LastUpdate_Date], 
+    [Extent1].[LastUpdate_Time] AS [LastUpdate_Time]
+    FROM [dbo].[IFRS9_User] AS [Extent1]
+    WHERE [Extent1].[User_Account] = @p__linq__0 
+
+2019-03-21 16:32:29.0434 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:29.0654 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'test1' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:29.0744 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:29 +08:00
+ 執行 
+
+2019-03-21 16:32:29.0944 | INFO | Transfer.Utility.Extension | -- 於 9 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:29.0944 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:29.1124 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:29 +08:00
+ 關閉連接 
+
+2019-03-21 16:32:29.3254 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:29 +08:00
+ 開啟連接 
+
+2019-03-21 16:32:29.3254 | INFO | Transfer.Utility.Extension | SELECT 
+    [Extent1].[Id] AS [Id], 
+    [Extent1].[File_Name] AS [File_Name], 
+    [Extent1].[ReportDate] AS [ReportDate], 
+    [Extent1].[Version] AS [Version], 
+    [Extent1].[TransferType] AS [TransferType], 
+    [Extent1].[Create_date] AS [Create_date], 
+    [Extent1].[Create_time] AS [Create_time], 
+    [Extent1].[End_date] AS [End_date], 
+    [Extent1].[End_time] AS [End_time], 
+    [Extent1].[Process] AS [Process], 
+    [Extent1].[Error_Msg] AS [Error_Msg]
+    FROM [dbo].[Transfer_CheckTable] AS [Extent1]
+    WHERE ([Extent1].[File_Name] = @p__linq__0) AND ('Y' = [Extent1].[TransferType]) AND ([Extent1].[ReportDate] = @p__linq__1) 
+
+2019-03-21 16:32:29.3494 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:29.3624 | INFO | Transfer.Utility.Extension | -- p__linq__0: 'A41' (Type = AnsiString, Size = 8000)
+ 
+
+2019-03-21 16:32:29.3754 | INFO | Transfer.Utility.Extension | -- p__linq__1: '2019/3/31 上午 12:00:00' (Type = DateTime2, IsNullable = false)
+ 
+
+2019-03-21 16:32:29.3864 | INFO | Transfer.Utility.Extension | -- 於 2019/3/21 下午 04:32:29 +08:00
+ 執行 
+
+2019-03-21 16:32:29.4104 | INFO | Transfer.Utility.Extension | -- 於 8 毫秒後完成，結果: SqlDataReader
+ 
+
+2019-03-21 16:32:29.4244 | INFO | Transfer.Utility.Extension | 
+ 
+
+2019-03-21 16:32:29.4344 | INFO | Transfer.Utility.Extension | 於 2019/3/21 下午 04:32:29 +08:00
+ 關閉連接 
+

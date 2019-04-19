@@ -1,0 +1,364 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A5Main";
+    ViewBag.SubMenu = "A57SearchSub";
+    ViewBag.Title = "查詢債券信評檔";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:220px">
+            <form id="myForm">
+                <table>
+                    <tr >
+                        <td style="width:560px; " class="form-group">
+                            <label>報導日&emsp; : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="width:160px;padding-top:5px;">
+                            <label>資料版本 : </label>
+                        </td>
+                        <td style="width:300px;padding-top:5px;">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version" id="version" value=""/>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr  >
+                        <td style="width:560px; ">
+                            <label>購入日期 : </label>
+                            <input type="text" id="from" name="from">
+                            <label> ~&ensp;</label>
+                            <input type="text" id="to" name="to">
+                        </td>
+                        <td style="width:160px;padding-top:5px;">
+                            <label>債券產品別(揭露使用) : </label>
+                        </td>
+                        <td style="width:300px; padding-top:5px;">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <div class="select-editable" >
+                                            <select id="SMFSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="SMF" id="SMF" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr >
+                        <td style="width:560px;padding-top:5px;">
+                            <label>信評狀況 : </label>
+                            @Html.DropDownList("statusOption",
+                           (SelectList)ViewBag.statusOption,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="width:160px;padding-top:5px;">
+                            <label>債券編號 : </label>
+                        </td>
+                        <td style="width:300px;padding-top:5px;">
+                            <input type="text" id="bondNumber" name="bondNumber">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:560px; padding-top:5px;">
+                            <label>評等種類 : </label>
+                            @Html.DropDownList("sType",
+                           (SelectList)ViewBag.sType,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="width:160px;padding-top:5px;">
+                            <label>發行人 : </label>
+                        </td>
+                        <td style="width:300px;padding-top:5px;">
+                            <input type="text" id="issuer" name="issuer">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <input type="button" class="btn btn-primary" style="margin-right:13px;margin-left:30px;margin-top:5px;" value="查詢" id="btnA57Search" />
+                            <input type="button" class="btn btn-primary dlexcel" style="margin-top:5px;" value="下載A57Excel" id="btnA57Dl" disabled />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchA57", "A5")';
+        url.getDbData = '@Url.Action("GetCacheData", "A5")';
+        url.getA57Excel = '@Url.Action("GetA57Excel","A5")';
+        url.getReportDataVersion = '@Url.Action("GetVersion", "A5")';
+        url.getSMF = '@Url.Action("GetSMF","A5")';
+        //#endregion 註冊URL
+
+        //#region 選擇reportDate 後要觸發的動作
+        let selectId = 'versionSelect';
+        let datepickerId = 'datepicker';
+        let tableName = '@Ref.Transfer_Table_Type.A41.ToString()';
+        var versionFun = {};
+        versionFun.tableName = tableName;
+        versionFun.fail = function () {
+            $("#" + selectId + " option").remove();
+            var optionObj = [];
+            optionObj.push({ value: "", text: "" });
+            customerUtility.addoption(selectId, optionObj);
+        }
+        versionFun.success = function checkReportDate() {
+            if (verified.isDate($('#datepicker').val(),false))
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        date: $('#' + datepickerId).val(),
+                        tableName: tableName
+                    }),
+                    dataType: "json",
+                    url: url.getReportDataVersion,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    $("#" + selectId + " option").remove();
+                    if (result.RETURN_FLAG) {
+                        var optionObj = [];
+                        optionObj.push({ value: "", text: "" })
+                        $.each(result.Datas.Data, function (key, value) {
+                            optionObj.push({ value: value, text: value })
+                        })
+                        customerUtility.addoption(selectId, optionObj);
+                    }
+                    else {
+                        versionFun.fail();
+                    }
+                });
+            }
+        }
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 選擇version 後要觸發的動作
+
+
+        var versionchange = 
+            function () {      
+                let selectId = "SMFSelect";
+                let flag = false;
+                if (verified.isDate($('#datepicker').val(),false) && $('#version').val() != '')
+                {
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            date: $('#datepicker').val(),
+                            version: $('#version').val()
+                        }),
+                        dataType: "json",
+                        url: url.getSMF,
+                        contentType: 'application/json',
+                    })
+                    .done(function (result) {
+                        $("#" + selectId + " option").remove();
+                        if (result.RETURN_FLAG) {
+                            //var optionObj = [];
+                            //optionObj.push({ value: "", text: "" });
+                            //$.each(result.Datas.Data, function (key, value) {
+                            //    optionObj.push({ value: value, text: value })
+                            //})
+                            customerUtility.addoption(selectId, result.Datas.Data);
+                            flag = true;
+                        }
+                    });
+                }
+                if (!flag)
+                {
+                    $("#" + selectId + " option").remove();
+                    var optionObj = [];
+                    optionObj.push({ value: "", text: "" });
+                    customerUtility.addoption(selectId, optionObj);
+                }
+            }
+
+        $('#version').on('change', function(){ versionchange()});
+        $('#versionSelect').on('change', function(){ versionchange()});
+
+        //#endregion 選擇version 後要觸發的動作
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, null, versionFun); //id,是不是reportDate,初始參數
+        created.createDatepickerRange('from', 'to', false); //startid,endid,是不是reportDate
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        function setVerified() {
+            verified.datepicker("myForm", "datepicker", true);
+            //verified.datepicker("myForm", "from", false);
+            //verified.datepicker("myForm", "to", false);
+            verified.required("myForm", "version", message.required(message.version));
+            verified.number('myForm', 'version');
+        }
+        //#endregion 註冊verified
+
+        //#region 刪除verified
+        function removeVerified() {
+            $("#myForm").validate().resetForm();
+            created.clearDatepickerRangeValue("from", "to");
+        }
+        //#endregion 刪除verified
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA57Search':
+                    $('#' + id).on('click', function () { A57Search() });
+                    break;
+                case 'btnA57Dl':
+                    $('#' + id).click(A57DlExcel);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function A57Search() {
+            setVerified();
+            clearJqgrid();
+            $('#btnA57Dl').prop('disabled', true);
+            if($('#from').val() != '' || $('#to').val() != '')
+            {
+                if($('#from').val() != '' && !verified.isDate($('#from').val(),false))
+                {
+                    customerUtility.alert("購入開始日期格式不正確!",'w');
+                    return false;
+                }
+                if($('#to').val() != '' && !verified.isDate($('#to').val(),false))
+                {
+                    customerUtility.alert("購入結束日期格式不正確!",'w');
+                    return false;
+                }
+            }
+            if ($('#myForm').valid()) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        datepicker: $('#datepicker').val(),
+                        version: $('#version').val(),
+                        from: $('#from').val(),
+                        to: $('#to').val(),
+                        SMF: $('#SMF').val(),
+                        sType: $('#sType').val(),
+                        bondNumber: $('#bondNumber').val(),
+                        issuer: $('#issuer').val(),
+                        status: $('#statusOption').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid(
+                            "list1",
+                            "pager1");
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+
+        function A57DlExcel() {
+            $.ajax({
+                type: "POST",
+                url: url.getA57Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                    { Controller = "A5", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.A57.ToString()';
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(listId, pagerId) {
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    url: url.getDbData,
+                    datatype: "json",
+                    mtype: "POST",
+                    postData:
+                    {
+                        type: '@Ref.Table_Type.A57.ToString()',
+                    },
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                    colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    sortorder: "desc",
+                    caption: '@Ref.Table_Type.A57.GetDescription()', //標題
+                    viewrecords: true,
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        $('#btnA57Dl').prop('disabled', false);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+
+        }
+        //#endregion createJqgrid
+    });
+</script>

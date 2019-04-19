@@ -1,0 +1,424 @@
+﻿@{
+    ViewBag.Menu = "C1Main";
+    ViewBag.SubMenu = "C23MortgageSub";
+    ViewBag.Title = "C23前瞻性篩選變數落後期數資料";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td style="white-space:nowrap;text-align:right">
+                        選擇動作：
+                    </td>
+                    <td style="white-space:nowrap;" colspan="3">
+                        @Html.DropDownList("action",
+                           (SelectList)ViewBag.action,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;text-align:right">
+                        資料表選擇：
+                    </td>
+                    <td style="white-space:nowrap;">
+                        @Html.DropDownList("searchTableName",
+                                           (SelectList)ViewBag.tableName,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                    <td style="white-space:nowrap;text-align:right;padding-left:20px">
+                        執行轉換年度：
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <input type="text" id="searchTransferYear" name="searchTransferYear" maxlength="4">
+                    </td>
+                </tr>
+                <tr class="action search">
+                    <td style="white-space:nowrap;padding-top:20px" colspan="6">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                        &nbsp;&nbsp;
+                        <input type="button" class="btn btn-primary dlexcel" value="匯出Excel" id="btnExportExcel" disabled />
+                    </td>
+                </tr>
+            </table>
+            <table class="action transfer" style="display:none">
+                <tr>
+                    <td style="white-space:nowrap;text-align:right">
+                        資料表選擇：
+                    </td>
+                    <td style="white-space:nowrap;">
+                        @Html.DropDownList("TableName",
+                                           (SelectList)ViewBag.tableName,
+                                           new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align:bottom;padding-top:20px" colspan="2">
+                        <input type="button" class="btn btn-primary" value="資料表欄位" id="btnQueryColumn" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <table class="action transfer" style="display:none">
+            <tr>
+                <td>
+                    落後期數設定：<input type="text" id="LagNumber" name="LagNumber" style="width:100px">
+                    <input type="button" class="btn btn-primary" value="執行轉換" id="btnTransfer" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetC23Data", "C2")';
+        url.getDbData = "";
+        url.getExcel = '@Url.Action("GetC23Excel", "C2")';
+        url.getC23Column = '@Url.Action("GetC23Column", "C2")';
+        url.transfer = '@Url.Action("SaveC23", "C2")';
+        //#endregion 註冊URL
+
+        //#region
+        $('#action').on('change', function () {
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+
+            $('#btnExportExcel').prop('disabled', true);
+            clearJqgrid();
+        });
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnSearch':
+                    $("#" + id).click(searchData);
+                    break;
+                case 'btnExportExcel':
+                    $("#" + id).on('click', function () { dlExcel(); });
+                    break;
+                case 'btnQueryColumn':
+                    $("#" + id).click(queryColumn);
+                    break;
+                case 'btnTransfer':
+                    $("#" + id).click(transfer);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        var searchTableName = "";
+        var searchTransferYear = "";
+        //#region searchData
+        function searchData() {
+            if (CheckData() == true){
+                queryData();
+            }
+        }
+        //#endregion
+
+        //#region CheckData
+        function CheckData() {
+            searchTableName = $('#searchTableName').val().trim();
+            searchTransferYear = $('#searchTransferYear').val().trim();
+
+            if (searchTableName == "") {
+                alert("請選擇資料表");
+                return false;
+            }
+
+            if (searchTransferYear == "") {
+                alert("請輸入 執行轉換年度");
+                return false;
+            }
+
+            return true;
+        }
+        //#endregion
+
+        //#region queryData
+        function queryData() {
+            clearJqgrid();
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    tableName: searchTableName,
+                    transferYear: searchTransferYear
+                }),
+                dataType: "json",
+                url: url.search,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", result);
+                    $('#btnExportExcel').prop('disabled', false);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        function createJqgrid(listId, pagerId, result) {
+            var colModelArray = result.colModel.Data;
+            var colNameArray = result.colNames.Data;
+
+            switch (searchTableName) {
+                case "C13":
+                    url.getDbData = '@Url.Action("GetCacheC13Data", "C2")';
+                    break;
+                case "C03":
+                    url.getDbData = '@Url.Action("GetCacheC03Data", "C2")';
+                    break;
+                case "C04":
+                    url.getDbData = '@Url.Action("GetCacheC04Data", "C2")';
+                    break;
+            }
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: 200, //一頁筆數
+                rowList: [200, 400, 600], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: '@ViewBag.Title', //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region 下載Excel 檔案
+        function dlExcel() {
+            if (CheckData() == true){
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        tableName: searchTableName,
+                        transferYear: searchTransferYear
+                    }),
+                    dataType: "json",
+                    url: url.getExcel,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        window.location.href = "@Url.RouteUrl(new
+                        {
+                            Controller = "C2", Action = "DownloadExcel"})/?type=" + searchTableName;
+                        }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                })
+            }
+        }
+        //#endregion 下載Excel 檔案
+
+        //#region 查詢欄位
+        function queryColumn() {
+            var tableName = $('#TableName').val().trim();
+
+            if (tableName == "") {
+                alert("請選擇資料表");
+                return false;
+            }
+
+            showC23Jqgrid(tableName);
+        }
+        //#endregion
+
+        //#region
+        function showC23Jqgrid(tableName) {
+            clearJqgrid();
+
+            var title = tableName;
+            var urlString = url.getC23Column;
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    tableName: tableName
+                }),
+                url: urlString,
+                dataType: "json",
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+
+                    createJqgrid2("list1", "pager1", data, title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region createJqgrid2
+        function createJqgrid2(listId, pagerId, data, title) {
+            var colModelArray = [
+                                    { name: "Column_Name", index: "Column_Name", align: 'left', width: 200, sortable: false },
+                                    { name: "Var_Name", index: "Var_Name", align: 'left', width: 700, sortable: false }
+                                ];
+
+            var colNameArray = ['欄位名稱', '風險因子'];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colModel: colModelArray,
+                colNames: colNameArray,
+                rowNum: 200, //一頁筆數
+                rowList: [200, 400, 600], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                multiselect: true,
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                },
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion
+
+        //#region 執行評估
+        function transfer() {
+            var lagNumber = $('#LagNumber').val().trim();
+            var tableName = $("#list1").jqGrid("getGridParam", "caption");
+            var dataModel = [];
+
+            if (lagNumber == "") {
+                alert("請設定 落後期數");
+                return false;
+            }
+            else {
+                if ((/^(\+|-)?\d+$/.test(lagNumber)) && lagNumber > 0) {
+
+                } else {
+                    alert("落後期數必須是大於0的正整數");
+                    return false;
+                }
+            }
+
+            if (tableName == "" || tableName == undefined) {
+                alert("請先帶出資料表欄位");
+                return false;
+            }
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            if (!rowKey) {
+                alert("請勾選要輸出落後期數的欄位");
+                return false;
+            }
+            else if (confirm("確定執行轉換？")) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    var obj = {};
+                    obj['Column_Name'] = grid.getCell(selectedIDs[i], "Column_Name") + "_L" + lagNumber;
+                    obj['Var_Name'] = grid.getCell(selectedIDs[i], "Var_Name") + "_落後" + lagNumber + "期";
+
+                    dataModel.push(obj)
+                }
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    lagNumber: lagNumber,
+                    tableName: tableName,
+                    dataModel: dataModel
+                }),
+                dataType: "json",
+                url: url.transfer,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            })
+        }
+        //#endregion
+
+    });
+</script>

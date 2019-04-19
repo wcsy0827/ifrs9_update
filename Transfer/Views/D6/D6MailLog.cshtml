@@ -1,0 +1,73 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D6MailLogSub";
+    ViewBag.Title = "寄信通知查詢";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="">
+            <form id="myForm">
+                <table>
+                    <tr >
+                        <td style="padding-top:10px;" >
+                            <input type="button" class="btn btn-primary" value="更新" id="btnD6MailMsgSearch" style="margin-right:10px;" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            @*<i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+
+"></i>*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <textarea id="D6mailTextArea" style="max-width:100%;width:100%;height:80%" disabled></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetD6MailMsg", "D6")';
+        //#endregion 註冊URL
+
+        search();
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD6MailMsgSearch':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 查詢
+        function search()
+        {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url.search,
+                contentType: 'application/json',
+            })
+            .done(function(result){
+                $('#D6mailTextArea').val(result);
+            })        
+        }
+        //#endregion 查詢
+
+    });
+</script>

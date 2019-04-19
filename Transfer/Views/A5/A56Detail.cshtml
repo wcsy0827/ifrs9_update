@@ -1,0 +1,362 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A5Main";
+    ViewBag.SubMenu = "A56Sub";
+    ViewBag.Title = "信評特殊值補正";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table width="100%">
+                    <tr>
+                        <td style="width:580px" class="form-group">
+                            <label>是否生效 : </label>
+                            @Html.DropDownList("IsActive",
+                           (SelectList)ViewBag.IsActive,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="width:450px; padding-top:8px">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>特殊字元 : </label>
+                                    </td>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="replaceObjectSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="replaceObject" id="replaceObject" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:5px">
+                <tr>
+                    <td style="">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnA56Search" style="margin-right:10px"/>
+                        <input type="button" class="btn btn-primary" value="新增" id="btnA56Insert" style="margin-right:10px" />
+                        <input type="button" class="btn btn-primary dlexcel" value="匯出" id="btnA56DlExcel" style="margin-right:10px" disabled />
+                    </td>
+                </tr>
+            </table>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+1.無輸入參數為全部查詢
+2.特殊字元選單為目前生效中的特殊字元
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="A56Dialog1" title=""></div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getReplaceObject = '@Url.Action("SearchA56ReplaceObject", "A5")';
+        url.getData = '@Url.Action("SearchA56", "A5")';
+        url.getDbData = '@Url.Action("GetDefaultCacheData", "A5")';
+        url.saveData = '@Url.Action("SaveA56", "A5")';
+        url.getA56Excel = '@Url.Action("GetA56Excel", "A5")';
+        //#endregion 註冊URL
+        //#region 參數
+        var Update_Methods = @Html.Raw(Json.Encode(ViewBag.Update_Method));
+        var dialogId = 'A56Dialog1';
+        var dialogformId = dialogId + 'Form';
+        var Replace_ObjectId = dialogId + 'Replace_Object';
+        var Update_MethodId = dialogId + 'Update_Method';
+        var Method_MEMOId = dialogId + 'Method_MEMO';
+        var Replace_WordId = dialogId + 'Replace_Word';
+        var saveId = dialogId + 'btnSave';
+        var deleteId = dialogId + 'btnDelete';
+        //#endregion 參數
+        ReplaceObject();
+
+        //#region 產生 dialog
+        var obj = [
+           { 'name': 'Replace_Object', 'type': 'string', 'title': '特殊字元', 'max': '50', 'req': 'true' },
+           { 'name': 'Update_Method', 'type': 'selectOption', 'title': '補正方式代碼' },
+           { 'name': 'Method_MEMO', 'type':'string', 'title': '補正方式說明' ,'dis':'true'},
+           { 'name': 'Replace_Word', 'type': 'string', 'title': '新取代字元', 'max': '100' ,'dis':'true', 'req': 'true'},
+        ]
+        jqgridCustom.createDialog(dialogId, obj);
+
+        $('#'+Update_MethodId).off('change');
+        $('#'+Update_MethodId).on('change',function(){
+            $('#'+Replace_WordId).val('');
+            $('#'+Method_MEMOId).val($('#'+Update_MethodId+' :selected').text().split(':')[1]);
+            $('#'+Replace_WordId).attr('disabled', !($(this).val() == '02'));
+        });
+        //#endregion 產生 dialog
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA56Search':
+                    $("#" + id).on('click', function () { search() });
+                    break;
+                case 'btnA56Insert':
+                    $("#" + id).on('click', function () { Insert() });
+                    break;
+                case 'btnA56DlExcel':
+                    $('#'+ id).on('click', function () { DlExcel() });
+            }
+        })
+        //#endregion 註冊click事件
+
+
+        //#region 查詢條件
+
+        function search()
+        {
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    IsActive : $('#IsActive').val(),
+                    ReplaceObject : $('#replaceObject').val(),
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                $('#btnA56DlExcel').attr('disabled',!result.RETURN_FLAG);
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", '@Ref.Table_Type.A56.tableNameGetDescription()');
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+
+        //#endregion 查詢條件
+
+        function DlExcel()
+        {
+            $.ajax({
+                type: "POST",
+                url: url.getA56Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                { Controller = "A5", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.A56.ToString()';
+                else
+                customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+        function Insert()
+        {
+            $('#'+deleteId).hide();
+            $('#'+Replace_ObjectId).val('');
+            $("#"+Update_MethodId+" option").remove();
+            customerUtility.addoption(Update_MethodId,Update_Methods);
+            $('#'+Update_MethodId).val($('#'+Update_MethodId).val()).change();
+            $("#" + dialogId).dialog({
+                title: "新增",
+                position: { my: "center", at: "center", of: window },
+            });
+            $("#" + dialogId).dialog("open");
+            $('#'+dialogformId).validate().resetForm();
+            $('#'+saveId).off('click');
+            $('#'+saveId).on('click',function(){
+                dialogSave('insert',null);
+            });
+        }
+
+        function dialogSave(type,id)
+        {
+            let _saveFlag = false;
+            let _IsActive = true;
+            if(type == 'insert')
+                if($('#'+dialogformId).valid() && $.trim($('#'+Replace_ObjectId).val()) != '')
+                {
+                    _saveFlag = true;
+                    _IsActive = true;
+                }
+            if(type == 'del')
+            {
+                if(!confirm("確定調整為失效?"))
+                {
+                    return false
+                }
+                else
+                {
+                    _saveFlag = true;
+                    _IsActive = false;
+                }
+            }
+            if(_saveFlag)
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        model :
+                        A56ViewModel(
+                        id,
+                        $('#'+Replace_ObjectId).val(),
+                        $('#'+Update_MethodId).val(),
+                        $('#'+Method_MEMOId).val(),
+                        $('#'+Replace_WordId).val()
+                        ),
+                        IsActive : _IsActive,
+                        IsActiveStr : $('#IsActive').val(),
+                        ReplaceObject : $('#replaceObject').val(),
+                    }),
+                    dataType: "json",
+                    url: url.saveData,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    $('#btnA56DlExcel').attr('disabled',!result.RETURN_FLAG);
+                    if (result.RETURN_FLAG) {
+                        if(_IsActive)
+                            $("#" + dialogId).dialog("close");
+                        clearJqgrid();
+                        createJqgrid("list1", "pager1", '@Ref.Table_Type.A56.tableNameGetDescription()');
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+
+        function ReplaceObject()
+        {
+            $('#replaceObjectSelect option').remove();
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url.getReplaceObject,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                var optionObj = [];
+                $.each(result, function (key, value) {
+                    optionObj.push({ value: value, text: value })
+                });
+                customerUtility.addoption('replaceObjectSelect',optionObj);
+            });
+        }
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region Audit formate button
+        function ActionFormatterBtn(cellvalue, options, rdata)
+        {
+            return '<input type="button" class="btn btn-primary" value="失效" id="' + options.gid + "Action" + options.rowId + '" ' +
+                   ' title=" " style="width:80px;height:23px;" ' + ((rdata.IsActive == 'Y') ? '' : 'disabled') + '>';
+        }
+        //#endregion
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colNames = ['Action','編號','是否生效','特殊字元','補正方式','補正字元','新取代字元','編輯者','資料處理日期'];
+            var colModels =[
+                { name: "Action", width: 70, align: "center", sortable: false, editable: false, formatter: ActionFormatterBtn },
+                { name: "ID", index: "ID", align: 'right', width: 55 },
+                { name: "IsActive", index: "IsActive", align: 'center', width: 65 },
+                { name: "Replace_Object", index: "Replace_Object", align: 'left', width: 180 },
+                { name: "Update_Method", index: "Update_Method", align: 'center', width: 70 },
+                { name: "Method_MEMO", index: "Method_MEMO", align: 'left', width: 150 },
+                { name: "Replace_Word", index: "Replace_Word", align: 'left', width: 150 },
+                { name: "LastUpdate_User", index: "LastUpdate_User", align: 'left', width: 100 },
+                { name: "LastUpdate_DateTime", index: "LastUpdate_DateTime", align: 'center', width: 160 },
+            ];
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: "A56Db",
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNames,
+                colModel: colModels,
+                //rownumbers: true, //每列編號
+                //rownumWidth: 40,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                caption: title, //標題
+                shrinkToFit: false,
+                contentType: "application/json",
+                viewrecords: true, //顯示總數
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){
+                        //#region 設定失效功能
+                        $(this).find('td').find('input').each(function () {
+                            let tr = $(this).parents('tr:first');
+                            let ID = tr.find($.validator.format('td[aria-describedby$={0}_ID]', listId)).text();
+                            if ($(this).attr('id').indexOf('Action') > -1) {
+                                $(this).off('click');
+                                $(this).on('click',
+                                    function () { dialogSave('del',ID) });
+                            }
+                            $(this).parents('td:first').removeAttr('title');// 有input刪除title
+                        });
+                        //#endregion 設定失效功能
+                    });
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        function A56ViewModel(
+        ID,
+        Replace_Object,
+        Update_Method,
+        Method_MEMO,
+        Replace_Word
+        ) {
+            var obj = {};
+            obj['ID'] = ID;
+            obj['Replace_Object'] = Replace_Object;
+            obj['Update_Method'] = Update_Method;
+            obj['Method_MEMO'] = Method_MEMO;
+            obj['Replace_Word'] = Replace_Word;
+            return obj;
+        }
+
+    });
+</script>

@@ -1,0 +1,435 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A5Main";
+    ViewBag.SubMenu = "A58Sub";
+    ViewBag.Title = "債券信評補登A59(整理檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:215px">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="width:600px;">
+                            <label>選擇動作 : </label>
+                            @Html.DropDownList("action",
+                           (SelectList)ViewBag.action,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td class="action downLoad" style="width:400px;">
+                            @*<label>查詢類型 : </label>
+            @Html.DropDownList("searchType",
+              (SelectList)ViewBag.searchOption,
+               new { @class = "form-control", @style = "display:inline-block" })*@
+                            <label>固收條件 : </label>
+                            @Html.DropDownList("portfolio",
+                            (SelectList)ViewBag.portfolio,
+                            new { @class = "form-control",@style = "display:inline-block" })                          
+                        </td>
+
+                    </tr>
+                    <tr class="action downLoad">
+                        <td style="width:600px; padding-top:5px;" class="form-group TS T0 T1 T3">
+                            <label>報導日&emsp; : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="width:400px;padding-top:10px;" class="TS T0 T1 T3">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>資料版本 : </label>
+                                    </td>
+                                    <td>
+                                        <div class="select-editable" >
+                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version" id="version" value=""/>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr class="action downLoad">
+                        <td style="width:600px; padding-top:5px;" class="TS T0 T2 T4">
+                            <label>購入日期 : </label>
+                            <input type="text" id="from" name="from">
+                            <label> ~&ensp;</label>
+                            <input type="text" id="to" name="to">
+                        </td>
+                        <td style="width:400px; padding-top:10px;" class="TS T0 T2 T3 T4">
+                            <label>債券編號 : </label>
+                            <input type="text" id="bondNumber" name="bondNumber" >
+                        </td>
+                    </tr>
+                    <tr class="action downLoad">
+                        <td style="width:600px;padding-top:10px;">
+                            <input type="button" class="btn btn-primary" style="" value="查詢(全部)" id="btnA58SearchAll" />
+                            <input type="button" class="btn btn-primary" style="" value="查詢(缺漏信評)" id="btnA58Search" />
+                            <input type="button" class="btn btn-primary dlexcel" value="下載A59Excel" id="btnA59Dl" disabled />
+                            <input type="button" class="btn btn-primary dlexcel" value="下載A59Excel(熟高、熟低)" id="btnA59Dl2" disabled />
+                        </td>
+                        <td style="width:400px; padding-top:5px;" class="T0 TS T1 T3 T4">
+                            <label>評等種類 : </label>
+                            @Html.DropDownList("sType",
+                           (SelectList)ViewBag.sType,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table>
+                <tr class="action upLoad" style="display:none">
+                    <td style="padding-top:10px;">
+                        @using (Ajax.BeginForm("UploadA59", "A5",
+                         new AjaxOptions { HttpMethod = "POST" },
+                         new { enctype = "multipart/form-data", @id = "form0" }))
+                        {
+                            <input type="file" name="file" class="filestyle" data-buttonName="btn-primary" data-buttonText="轉檔檔案" style="margin-right:10px" />
+                        }
+                    </td>
+                    <td style="padding-top:10px;">
+                        <input type="button" class="btn btn-primary" style="margin-right:10px" value="資料上傳" id="fileSubmit" />
+                        <input type="button" class="btn btn-primary" value="轉檔" id="btnTransfer" disabled />
+                    </td>
+                </tr>
+            </table>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+*執行B01、C01轉檔前先有信評資料。
+1. 選擇動作：(1)查詢&下載 (2)上傳&存檔
+2. 查詢條件一：所有條件。(需輸入所有欄位值)
+    查詢條件二：報導日+資料版本+選單條件。
+    查詢條件三：購買日(區間)+債券編號。
+    查詢條件四：報導日+資料版本+債券編號+選單條件。
+    查詢條件五：購買日(區間)+債券編號+選單條件。
+3. 可依選擇評等種類'原始投資信評'及'基準日信評'，下載及上傳EXCEL資料表，補登信評資料。"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchA58", "A5")';
+        url.getDbData = '@Url.Action("GetCacheData", "A5")';
+        url.getA59Excel = '@Url.Action("GetA59Excel","A5")';
+        url.transfer = '@Url.Action("Transfer", "A5")';
+        url.getReportDataVersion = '@Url.Action("GetVersion", "A5")';
+        //#endregion 註冊URL
+
+        //#region 選擇reportDate 後要觸發的動作
+        var versionFun = customerUtility.getVersion('versionSelect',
+            'datepicker',
+            '@Ref.Transfer_Table_Type.A41.ToString()',
+            url.getReportDataVersion);
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, null, versionFun); //id,是不是reportDate,初始參數
+        created.createDatepickerRange('from', 'to', false); //startid,endid,是不是reportDate
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        function setVerified() {
+            verified.datepicker("myForm", "datepicker", true);
+            //verified.datepicker("myForm", "from", false);
+            //verified.datepicker("myForm", "to", false);
+            //verified.required("myForm", "bondNumber", message.required(message.bondsNumber));
+            verified.required("myForm", "version", message.required(message.version));
+            verified.number('myForm', 'version');
+        }
+        //#endregion 註冊verified
+
+        //#region 刪除verified
+        function removeVerified() {
+            setVerified();
+            $("#myForm").validate().resetForm();
+            created.clearDatepickerRangeValue("from", "to");
+        }
+        //#endregion 刪除verified
+        //$('#searchType').on('change', function () {
+        //    removeVerified();
+        //    $('.TS input').val('').trigger('change');
+        //    $('.TS').hide();
+        //    var opencls = $(this).val();
+        //    $('.' + opencls).show();
+        //});
+
+        $('#action').on('change', function () {
+            clearJqgrid();
+            $('#form0').find('input:text').val('');
+            $('.filestyle').val('');
+            $('#btnA59Dl,#btnA59Dl2,#btnTransfer').prop('disabled', true);
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+            if (opencls == 'downLoad')
+                $('#searchType').val('T0').trigger('change');
+        });
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA58SearchAll':
+                case 'btnA58Search':
+                    $('#' + id).on('click', function () { A58Search(id) });
+                    break;
+                case 'btnA59Dl':
+                    $('#' + id).on('click', function () { A59DlExcel('A59') });
+                    break;
+                case 'btnA59Dl2':
+                    $('#' + id).on('click', function () { A59DlExcel('A59b') });
+                    break;
+                case 'fileSubmit':
+                    $('#' + id).click(fileSubmitFunction);
+                    break;
+                case 'btnTransfer':
+                    $('#' + id).click(transfer);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function A58Search(id) {
+            setVerified();
+            if ($('#myForm').valid()) {
+                clearJqgrid();
+                var searchType = id.indexOf('All') > -1 ? "All" : "Miss";
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        datepicker: $('#datepicker').val(),
+                        sType: $('#searchType').val() == 'T2' ? ' ' : $('#sType').val(),
+                        from: $('#from').val(),
+                        to: $('#to').val(),
+                        bondNumber: $('#bondNumber').val(),
+                        version: $('#version').val(),
+                        search: searchType,
+                        portfolio: $('#portfolio').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        var colNameArray = [
+                            "帳戶編號", "報導日", "債券編號",
+                            "Lots", "債券購入(認列)日期", "套用參數編號",
+                            "債券種類", "信評種類", "評等對象",
+                            "國內/國外", "孰高/孰低", "評等主標尺轉換",
+                            "優先順序", "資料處理日期", "資料版本"
+                        ];
+                        var colModelArray = [
+                            { name: "Reference_Nbr", index: "Reference_Nbr", align: 'left' },
+                            { name: "Report_Date", index: "Report_Date", align: 'center' },
+                            { name: "Bond_Number", index: "Bond_Number", align: 'right' },
+                            { name: "Lots", index: "Lots", align: 'right' },
+                            { name: "Origination_Date", index: "Origination_Date", align: 'center' },
+                            { name: "Parm_ID", index: "Parm_ID", align: 'left' },
+                            { name: "Bond_Type", index: "Bond_Type", align: 'left' },
+                            { name: "Rating_Type", index: "Rating_Type", align: 'center' },
+                            { name: "Rating_Object", index: "Rating_Object", align: 'left' },
+                            { name: "Rating_Org_Area", index: "Rating_Org_Area", align: 'left' },
+                            { name: "Rating_Selection", index: "Rating_Selection", align: 'center' },
+                            { name: "Grade_Adjust", index: "Grade_Adjust", align: 'left' },
+                            { name: "Rating_Priority", index: "Rating_Priority", align: 'left' },
+                            { name: "Processing_Date", index: "Processing_Date", align: 'center' },
+                            { name: "Version", index: "Version", align: 'left' }
+                        ];
+
+                        createJqgrid(
+                            "list1",
+                            "pager1",
+                            colNameArray,
+                            colModelArray,
+                            '@Ref.Table_Type.A58.GetDescription()',
+                            "downLoad",
+                            searchType
+                            );
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+
+        function A59DlExcel(type) {
+            $.ajax({
+                type: "POST",
+                url: url.getA59Excel,
+                data: JSON.stringify({
+                    type: type,
+                }),
+                dataType: "json",
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                {
+                    if (type == '@Ref.Excel_DownloadName.A59.ToString()')
+                    {
+                        window.location.href = "@Url.RouteUrl(new
+                        { Controller = "A5", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.A59.ToString()';
+                    }
+                    if (type == '@Ref.Excel_DownloadName.A59b.ToString()')
+                    {
+                        window.location.href = "@Url.RouteUrl(new
+                        { Controller = "A5", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.A59b.ToString()';
+                    }
+                }
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+        //#region 資料上傳(Excel 資料寫入 local sql)
+        function transfer() {
+            $.ajax({
+                type: "POST",
+                url: url.transfer,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    customerUtility.alert(result.DESCRIPTION, 's');
+                else
+                {
+                    if (result.DESCRIPTION.indexOf('@Ref.Message_Type.Check_Fail.GetDescription()') > -1)
+                    {
+                        customerUtility.checkDialog("A59", '@Ref.Check_Table_Type.Bonds_A59_Before_Check.ToString()');
+                    }
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            })
+        }
+        //#endregion 資料上傳(Excel 資料寫入 local sql)
+
+        //#region fileSubmitFunction (把檔案上傳到指定資料夾)
+        function fileSubmitFunction() {
+            var dataString;
+            if ($('#form0').find('input:text').val() == '')
+            {
+                customerUtility.alert('請選擇上傳檔案!','w');
+                return false;
+            }
+            var action = $("#form0").attr("action");
+            if ($("#form0").attr("enctype") == "multipart/form-data") {
+                dataString = new FormData($("#form0").get(0));
+                processData = false;
+            }
+            else {
+                // regular form, do your own thing if you need it
+            }
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                url: action,
+                data: dataString,
+                dataType: "json",
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.RETURN_FLAG) {
+                        var colNameArray = result.Datas.Data.colNames;
+                        var colModelArray = result.Datas.Data.colModel;
+                        createJqgrid(
+                          "list1",
+                          "pager1",
+                          colNameArray,
+                          colModelArray,
+                          '@Ref.Excel_UploadName.A59.GetDescription()',
+                          "upLoad",
+                          '@Ref.Excel_UploadName.A59.ToString()'
+                          );
+                        $('#btnTransfer').prop('disabled', false);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'w');
+                    }
+                }
+            });
+        }
+        //#endregion fileSubmitFunction
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //colModelArray
+        //title (標題)
+        //action downLoad(下載查詢) upLoad(上傳儲存)
+        //type downLoad時使用(All:全查 or Miss:查缺Grade_Adjust)
+        function createJqgrid(listId, pagerId, colNameArray, colModelArray, title, action, type) {
+            if (colNameArray.length > 0) {
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    url: url.getDbData,
+                    datatype: "json",
+                    mtype: "POST",
+                    postData:
+                    {
+                        action: action,
+                        type: type,
+                    },
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    //sortname: 'id',
+                    viewrecords: true,
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                        //if (type == 'Miss' && ($('#' + listId).jqGrid('getGridParam', 'records') > 0))
+                        //    $('#btnA59Dl').prop('disabled', false);
+                        //else
+                        //    $('#btnA59Dl').prop('disabled', true);
+                        $('#btnA59Dl').prop('disabled', false);
+                        $('#btnA59Dl2').prop('disabled', false);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+    });
+</script>

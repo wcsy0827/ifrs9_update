@@ -1,0 +1,257 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A5Main";
+    ViewBag.SubMenu = "A57Sub";
+    ViewBag.Title = "執行信評轉檔";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="width:550px; padding-top:5px;" class="form-group">
+                            <label>報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="width:450px;padding-top:10px;">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>資料版本 : </label>
+                                    </td>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version" id="version" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:10px">
+                            <input type="button" class="btn btn-primary" value="執行信評轉檔" id="btnTransfer" />
+                        </td>
+                        <td>
+                            <label>是否要抓前一版本已補登之評估日信評 : </label>
+                            @Html.DropDownList("complement",
+                           (SelectList)ViewBag.complement,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+*執行B01、C01轉檔前先有信評資料。
+1. 25日及月底日已設排程於PM8:00自動執行抓取Bloomberg資料，無需手動執行此頁面。
+2. 每月3日執行上傳A41表格後，需手動執行信評轉檔，將基準日信評匯入，請在轉檔後至債券信評補登A59查詢缺漏信評並補登。
+3. 記錄檔的成功、失敗欄位(Y:成功,N:失敗,R:成功後複寫)"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" >
+                </div>
+                <div id="jqgridDiv2" style="padding-top:10px">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.transfer = '@Url.Action("TransferA57A58", "A5")';
+        url.getDbData = '@Url.Action("GetCacheData", "A5")';
+        url.getReportDataVersion = '@Url.Action("GetVersion", "A5")';
+        url.checkVersion = '@Url.Action("CheckVerison","A5")';
+        url.autotransfer = '@Url.Action("autoTransfer","A5")';    //190222:增加一鍵補登
+        //#endregion 註冊URL
+
+        //#region 選擇reportDate 後要觸發的動作
+        var versionFun = customerUtility.getVersion('versionSelect',
+            'datepicker',
+            '@Ref.Transfer_Table_Type.A41.ToString()',
+            url.getReportDataVersion);
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, '',versionFun);
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        verified.number('myForm', 'version');
+        verified.required("myForm", "version", message.required(message.version));
+        //#endregion 註冊verified
+
+        createJqgrid("jqgridDiv","list1", "pager1",'@Ref.Table_Type.CheckTable.ToString()','(債券明細檔)轉檔紀錄');
+        createJqgrid("jqgridDiv2","list2", "pager2",'CheckTable2','(外部信評資料檔 & 債券信評檔_歷史檔 & 債券信評檔_整理檔)轉檔紀錄');
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnTransfer':
+                    $('#' + id).on('click', function () { transfer() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 執行信評轉檔
+        function transfer()
+        {
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        date: $('#datepicker').val(),
+                        version: $('#version').val(),
+                    }),
+                    dataType: "json",
+                    url: url.checkVersion,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    let deleteFlag = false;
+                    if(result.RETURN_FLAG)
+                    {
+                        if(!confirm("已經執行過信評轉檔,是否要重新執行?"))
+                            return false;
+                        deleteFlag = true;
+                    }
+                    if($('#complement').val() == "Y" && $('#version').val() == "1")
+                    {
+                        customerUtility.alert("此為本月最新版本,無前版本可補登",'w');
+                        return false;
+                    }
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            date: $('#datepicker').val(),
+                            version: $('#version').val(),
+                            complement :$('#complement').val(),
+                            deleteFlag : deleteFlag,
+                            A59Flag : false
+                        }),
+                        dataType: "json",
+                        url: url.transfer,
+                        contentType: 'application/json',
+                    })
+                    .done(function(result){
+                        if(result.RETURN_FLAG)
+                        {
+                            //190222加入自動補檔
+                            $.ajax({
+                                type: "POST",
+                                data: JSON.stringify({
+                                    datepicker:$('#datepicker').val(),
+                                    version: $('#version').val()
+                                }),
+                                dataType: 'json',
+                                url: url.autotransfer,
+                                contentType: 'application/json'
+                            }).done(function (result) {
+                                if (result.RETURN_FLAG)
+                                {
+                                    customerUtility.checkDialog('A57_A58db','@Ref.Check_Table_Type.Bonds_A58_Transfer_Check.ToString()');
+                                    customerUtility.alert(result.DESCRIPTION, 's');
+                                }
+                                else
+                                {
+                                    if (result.DESCRIPTION.indexOf('@Ref.Message_Type.Check_Fail.GetDescription()') > -1)
+                                    {
+                                        customerUtility.checkDialog("A59", '@Ref.Check_Table_Type.Bonds_A59_Before_Check.ToString()');
+                                    }
+                                    customerUtility.checkDialog('A57_A58db','@Ref.Check_Table_Type.Bonds_A58_Transfer_Check.ToString()');
+                                    customerUtility.alert(result.DESCRIPTION, 'e');
+                                }
+                                })
+                            //
+                            //customerUtility.checkDialog('A57_A58db','@Ref.Check_Table_Type.Bonds_A58_Transfer_Check.ToString()');
+                           // customerUtility.alert(result.DESCRIPTION,'s');
+                        }
+                        else
+                        {
+                            customerUtility.alert(result.DESCRIPTION,'e');
+                            if(result.DESCRIPTION.indexOf('@Ref.Message_Type.Check_Fail.GetDescription()') > -1)
+                            {
+                                customerUtility.checkDialog('A58_check','@Ref.Check_Table_Type.Bonds_A58_Before_Check.ToString()');
+                            }
+                        }
+                        clearJqgrid("jqgridDiv");
+                        clearJqgrid("jqgridDiv2");
+                        createJqgrid("jqgridDiv","list1", "pager1",'@Ref.Table_Type.CheckTable.ToString()','(債券明細檔)轉檔紀錄');
+                        createJqgrid("jqgridDiv2","list2", "pager2",'CheckTable2','(外部信評資料檔 & 債券信評檔_歷史檔 & 債券信評檔_整理檔)轉檔紀錄');
+                    })
+                })
+            }
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDiv) {
+            $('#'+jqgridDiv).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(jqgridDiv,listId, pagerId,type,title) {
+            var colNameArray = @Html.Raw(Json.Encode(ViewBag.jqgridColNames));
+            var colModelArray = @Html.Raw(Json.Encode(ViewBag.jqgridColModel));
+            $('#'+jqgridDiv).append('<table id="' + listId + '"></table>');
+            $('#'+jqgridDiv).append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: type,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: 5, //一頁筆數
+                rowList: [5, 10, 15], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: 150,
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                viewrecords: true,
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    jqgridCustom.updatePagerIcons($(this));
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+    });
+</script>

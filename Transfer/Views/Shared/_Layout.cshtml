@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html style="height:100%">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Expires" content="0">  
+    @*<meta http-equiv="cache"/>*@
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - IFRS9 應用程式</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryajax")
+    @Scripts.Render("~/bundles/jqueryjqgrid")
+    @Scripts.Render("~/bundles/toastr")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/jqueryUI")
+</head>
+<body style="height:100%">
+    <div class="nav-side-menu">
+        <div class="brand">IFRS9</div>
+        <i class="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content"></i>
+        <div class="menu-list">
+            <ul id="menu-content" class="menu-content collapse out">
+                <li id="HomeMain" class="HomeMenu">
+                    <a class="menu-a" href='@Url.Action("Index", "Home", null)'>
+                        <i class="fa fa-home fa-lg"></i>
+                        首頁
+                    </a>
+                </li>
+                <div id="menu">
+                    @{ Html.RenderAction("Menu", "Account", null); }
+                </div>
+                <li id="UserMain" data-toggle="collapse" data-target="#User" class="collapsed">
+                    <a  href="#">
+                        <i class="fa fa-user fa-lg"></i> User (@Transfer.Controllers.AccountController.CurrentUserName)
+                        <span class="arrow"></span>
+                    </a>
+                </li>
+                <ul class="sub-menu collapse" id="User">
+                    @*<li id="A00SubMain" class="">
+                        <i class='fa fa-sign-in fa-lg'></i>
+                    <a href='@Url.Action("Login","Account",null)'>登入</a></li>*@
+                    <li id="A01SubMain" class="">
+                        <i class='fa fa-sign-out fa-lg'></i>
+                    <a class="menu-a" id="LogOut" href='@Url.Action("Logout","Account",null)'>登出</a></li>
+                </ul>
+            </ul>
+        </div>
+    </div>
+    <div id="IFRS9CheckDialog"></div>
+    @RenderBody()
+    <input type="hidden" value="@ViewBag.Menu" id="vbMenu" />
+    <input type="hidden" value="@ViewBag.SubMenu" id="vbSubmenu" />
+    @Scripts.Render("~/bundles/Customer") @*客製化相關的 js*@
+    @Scripts.Render("~/bundles/Sidebar") @*menu 換頁的 js*@
+    <script>
+        (function () {
+            $(document).ajaxError(function (event, request, settings) {
+                if (request.status == 403)
+                {
+                    if (confirm("登入逾期,是否重新導向登入畫面?"))
+                        location.href = '@Url.Action("Logout", "Account")';
+                }
+            });
+
+            @*if (customerUtility.readCookie('.ASPXAUTH') == null)
+            {
+                location.href = '@Url.Action("Login", "Account")';
+            }*@
+            //$(document).mouseleave(function () {
+            //    window.onbeforeunload = function (e) {
+            //        customerUtility.onbeforeunloadfun();               
+            //    }
+            //});
+            //$(document).mouseenter(function (e) {
+            //    window.onbeforeunload = null
+            //    window.onunload = null
+            //});
+
+        //var IFRS9onbeforeunloadFlag = true; //reload 不登出要變成 false
+            document.onkeydown = fkey;
+            document.onkeypress = fkey;
+            document.onkeyup = fkey;
+            $('.sub-menu').children().click(function () {
+                //IFRS9onbeforeunloadFlag = false;
+                customerUtility.onbeforeunloadFlag = false;
+            });
+            $("a.menu-a").click(function () {
+                //IFRS9onbeforeunloadFlag = false;
+                customerUtility.onbeforeunloadFlag = false;
+                $("a.menu-a").click(function () { return false;})
+            });
+            $(".dlexcel").click(function () {
+                //IFRS9onbeforeunloadFlag = false;
+                customerUtility.onbeforeunloadFlag = false;
+            });
+
+            function fkey(e) {
+                e = e || window.event;
+                if (e.keyCode == 116 || e.keyCod == 17) {
+                    //IFRS9onbeforeunloadFlag = false;
+                    customerUtility.onbeforeunloadFlag = false;
+                }
+            };
+            //window.onbeforeunload = customerUtility.onbeforeunloadfun;
+            //window.onbeforeunload = function () {
+            //    customerUtility.onbeforeunloadfun();
+            //};
+            customerUtility.reportUrl = '@Url.HttpRouteUrl("Report", new { aspx = "ReportViewer" })';
+            customerUtility.unloadUrl = '@Url.Action("Logout", "Account")';
+            customerUtility.reportCommonUrl = '@Url.Action("GetReport", "Common")';
+            customerUtility.checkCacheCommonUrl = '@Url.Action("GetCommonCheckData", "Common")';
+            customerUtility.checkMessageDL = "@Url.RouteUrl(new
+            { Controller = "Common", Action = "DownloadMessage" })/?key=";
+            customerUtility.fixCheckbox();
+        })()
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

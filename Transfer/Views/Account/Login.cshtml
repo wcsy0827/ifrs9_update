@@ -1,0 +1,110 @@
+﻿@using BotDetect.Web.Mvc;
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="~/Content/Login.css" />
+<link href="@BotDetect.Web.CaptchaUrls.Absolute.LayoutStyleSheetUrl"
+      rel="stylesheet" type="text/css" />
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/toastr.js"></script>
+<script src="~/Scripts/jquery.blockUI.js"></script>
+<link rel="stylesheet" href="~/Content/toastr.css" type="text/css" />
+<style>
+    #toast-container > div {
+        left: 40%;
+    }
+</style>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Login</title>
+</head>
+<body>
+    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="padding-top: 100px;">
+        <div class="modal-dialog">
+            <div class="loginmodal-container">
+                <h1>IFRS9 Login</h1><br>
+                @using (Html.BeginForm("Logon", "Account", FormMethod.Post, new { id = "loginFrom" }))
+                {
+                    // 跨網站的偽造要求(CSRF)
+                    @Html.AntiForgeryToken()
+                    <table>
+                        <tr>
+                            <td style="position:absolute;margin-top:12px;">
+                                <label>
+                                    帳號&emsp; :&ensp;
+                                </label>
+                            </td>
+                            <td>
+                                <input class="form-control" data-toggle="tooltip" title="請輸入帳號"
+                                       id="userName" type="text" name="userId" placeholder="Username">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="position:absolute;margin-top:12px;">
+                                <label>
+                                    密碼&emsp; :&ensp;
+                                </label>
+                            </td>
+                            <td>
+                                <input class="form-control" data-toggle="tooltip" title="請輸入密碼"
+                                       id="passWord" type="password" name="pwd" placeholder="Password">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>
+                                    驗證碼 :&ensp;
+                                </label>
+                            </td>
+                            <td>
+                                @{ MvcCaptcha exampleCaptcha = new MvcCaptcha("ExampleCaptcha"); }
+                                @Html.Captcha(exampleCaptcha)
+                                @Html.TextBox("CaptchaCode", null, new { placeholder = "請輸入驗證碼" , style = "width:200px;height:30px", title = "請輸入驗證碼" })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input type="submit" name="login" class="login loginmodal-submit"
+                                       value="Login">
+                            </td>
+                        </tr>
+                    </table>                                    
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    (function () {
+        $('#ExampleCaptcha_CaptchaImageDiv').find('a').off('click');
+        $('#ExampleCaptcha_CaptchaImageDiv').find('a').on('click',function(){return false;});
+        var User = @Html.Raw(Json.Encode(TempData["User"]));
+        var Login = @Html.Raw(Json.Encode(TempData["Login"]));
+        if(User != null)
+            $('#userName').val(User);
+        $("#loginFrom").validate({
+            rules: {
+                userId: { required: true },
+                pwd: { required: true },
+                CaptchaCode:{ required: true }
+            }
+        })
+        $('form').submit(function () {
+            var valid = $('#loginFrom').valid();
+            if(valid)
+            $.blockUI();
+            return valid;
+            $.unblockUI();
+        });
+        if(Login != null && Login !== "")
+        {
+            //toastr.warning(Login);                
+            setTimeout(function() { alert(Login); }, 100);
+        }
+    })()
+</script>

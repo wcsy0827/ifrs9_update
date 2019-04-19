@@ -1,0 +1,449 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A4Main";
+    ViewBag.SubMenu = "A95_1Sub";
+    ViewBag.Title = "A95_1(產業別對應Ticker補登檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="">
+                            <label>選擇動作 : </label>
+                            @Html.DropDownList("action",
+                           (SelectList)ViewBag.action,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr class="action search">
+                        <td style="padding-top:8px;">
+                            <table>
+                                <tr>
+                                    <td >
+                                        <label>債券編號 : </label>
+                                        <input type="text" id="number" name="number">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:30px;padding-top:8px">
+                                        <input type="button" class="btn btn-primary" value="查詢" id="btnA95_1Search" style="margin-right:10px" />
+                                        <input type="button" class="btn btn-primary dlexcel" style="" value="下載A95_1Excel" id="btnA95_1Dl" disabled />
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table>
+                <tr class="action upload" style="display:none">
+                    <td style="padding-top:10px;">
+                        @using (Ajax.BeginForm("UploadA95_1", "A9",
+             new AjaxOptions { HttpMethod = "POST" },
+             new { enctype = "multipart/form-data", @id = "form0" }))
+                        {
+                            <input type="file" name="file" class="filestyle" data-buttonName="btn-primary" data-buttonText="轉檔檔案" style="margin-right:10px" />
+                        }
+                    </td>
+                    <td style="padding-top:10px;">
+                        <input type="button" class="btn btn-primary" style="margin-right:10px" value="資料上傳" id="fileSubmit" />
+                        <input type="button" class="btn btn-primary" value="轉檔" id="btnTransfer" disabled />
+                    </td>
+                </tr>
+            </table>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="A95_1Dialog"></div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.type = '@Ref.Table_Type.A95_1.ToString()';
+        url.search = '@Url.Action("GetA95_1Data", "A9")';
+        url.getDbData = '@Url.Action("GetDefaultCacheData", "A9")';
+        url.transfer = '@Url.Action("TransferA95_1", "A9")';
+        url.update = '@Url.Action("UpdateA95_1", "A9")';
+        url.getA95_1Excel = '@Url.Action("GetA95_1Excel", "A9")';
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var tableName = '@Ref.Table_Type.A95_1.tableNameGetDescription()';
+        var dialogId = 'A95_1Dialog';
+        var dialogformId = dialogId + 'Form';
+        var Bond_NumberId = dialogId + 'Bond_Number';
+        var Security_DesId = dialogId + 'Security_Des';
+        var Bloomberg_TickerId = dialogId + 'Bloomberg_Ticker';
+        var Processing_DateId = dialogId + 'Processing_Date';
+        var Processing_UserId = dialogId + 'Processing_User';
+        var saveId = dialogId + 'btnSave';
+        var deleteId = dialogId + 'btnDelete';
+        //#endregion 共用參數
+
+        var obj = [
+        { 'name': 'Bond_Number', 'type': 'string', 'title': '債券編號' ,'dis':'true'},
+        { 'name': 'Security_Des', 'type': 'string', 'title': 'Bloomberg Security_Des' ,'req': 'true' },
+        { 'name': 'Bloomberg_Ticker', 'type': 'string', 'title': 'Bloomberg Ticker簡碼' ,'req': 'true' },
+        { 'name': 'Processing_Date', 'type': 'string', 'title': '資料處理日期' ,'dis':'true'},
+        { 'name': 'Processing_User', 'type': 'string', 'title': '資料處理者' ,'dis':'true'},
+        ];
+
+        jqgridCustom.createDialog(dialogId, obj);
+
+        $('#action').on('change', function () {
+            clearJqgrid();
+            $('#btnTransfer').prop('disabled', true);
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+        });
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA95_1Search':
+                    $('#' + id).on('click', function () { A95_1Search() });
+                    break;
+                case 'fileSubmit':
+                    $('#' + id).click(fileSubmitFunction);
+                    break;
+                case 'btnTransfer':
+                    $('#' + id).click(transfer);
+                    break;
+                case 'btnA95_1Dl':
+                    $('#' + id).click(A95_1DlExcel);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region A95_1 查詢
+        function A95_1Search(id) {
+            $('#btnA95_1Dl').prop('disabled', true);
+            if ($('#myForm').valid()) {
+                clearJqgrid();
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        bondNumber: $('#number').val()
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    $('#btnA95_1Dl').prop('disabled', !result.RETURN_FLAG);
+                    if (result.RETURN_FLAG) {
+                        createJqgrid(
+                            "list1",
+                            "pager1",
+                            tableName,
+                            url.type + "Db"
+                            );
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            }
+        }
+        //#endregion A95_1 查詢
+
+        function A95_1DlExcel() {
+            $.ajax({
+                type: "POST",
+                url: url.getA95_1Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                { Controller = "A9", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.A95_1.ToString()';
+                else
+                customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+
+        //#region 資料上傳(Excel 資料寫入 local sql)
+        function transfer() {
+            $.ajax({
+                type: "POST",
+                url: url.transfer,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    customerUtility.alert(result.DESCRIPTION,'s');
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+        //#endregion 資料上傳(Excel 資料寫入 local sql)
+
+        //#region fileSubmitFunction (把檔案上傳到指定資料夾)
+        function fileSubmitFunction() {
+            var dataString;
+            var action = $("#form0").attr("action");
+            if ($("#form0").attr("enctype") == "multipart/form-data") {
+                dataString = new FormData($("#form0").get(0));
+                processData = false;
+            }
+            else {
+                // regular form, do your own thing if you need it
+            }
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                url: action,
+                data: dataString,
+                dataType: "json",
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid(
+                          "list1",
+                          "pager1",
+                          tableName,
+                          url.type +"Excel"
+                          );
+                        $('#btnTransfer').prop('disabled', false);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'w');
+                    }
+                }
+            });
+        }
+        //#endregion fileSubmitFunction
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //colModelArray
+        //title (標題)
+        //type Db(查詢) Excel(上傳儲存)
+        function createJqgrid(listId, pagerId, title, type) {
+            var colNameArray = @Html.Raw(Json.Encode(ViewBag.jqgridColNames));
+            var colModelArray = @Html.Raw(Json.Encode(ViewBag.jqgridColModel));
+            if(type == url.type + "Excel") //上傳檔案時不顯示以下欄位
+            {
+                colNameArray = customerUtility.remove(colNameArray,"資料處理者");
+                colModelArray.splice(5,1); //remove 資料處理者
+                colNameArray = customerUtility.remove(colNameArray,"資料處理日期");
+                colModelArray.splice(4,1); //remove 資料處理日期
+                colNameArray = customerUtility.remove(colNameArray,"執行動作");
+                colModelArray.splice(0,1); //remove 執行動作
+            }
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: type,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                shrinkToFit: false,
+                //autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true, //顯示總數
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'A95_1',actfun);
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Edit.ToString()',i);
+        }
+        actfun.Dele = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Dele.ToString()',i);
+        }
+        actfun.View = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.View.ToString()',i);
+        }
+
+        function dialogOpen(type,rowid)
+        {
+            var title = '';
+            $('#'+saveId+',#'+deleteId).hide();
+            $('#'+Security_DesId).attr('disabled',true);
+            $('#'+Bloomberg_TickerId).attr('disabled',true);
+            if(type == '@Ref.Action_Type.Edit.ToString()')
+            {
+                title = '@Ref.Action_Type.Edit.GetDescription()';
+                $('#'+saveId).show();
+                $('#'+Security_DesId).attr('disabled',false);
+                $('#'+Bloomberg_TickerId).attr('disabled',false);
+                dialogSetData(rowid);
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Dele.ToString()')
+            {
+                title = '@Ref.Action_Type.Dele.GetDescription()';
+                $('#'+deleteId).show();
+                dialogSetData(rowid);
+                $('#'+deleteId).off('click');
+                $('#'+deleteId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.View.ToString()')
+            {
+                title = '@Ref.Action_Type.View.GetDescription()';
+                dialogSetData(rowid);
+            }
+            $("#" + dialogId).dialog({
+                title: title,
+                position: { my: "center", at: "center", of: window },
+            });
+            $("#" + dialogId).dialog("open");
+            $('#'+dialogformId).validate().resetForm();
+        }
+
+        function dialogSetData(rowid)
+        {
+            rowid = rowid || 0;
+            //清空
+            $('#'+Bond_NumberId).val('');
+            $('#'+Security_DesId).val('');
+            $('#'+Bloomberg_TickerId).val('');
+            $('#'+Processing_DateId).val('');
+            $('#'+Processing_UserId).val('');
+            if(rowid > 0)
+            {
+                var data = $("#list1").getRowData(rowid);
+                //set value
+
+                $('#'+Bond_NumberId).val(data.Bond_Number);
+                $('#'+Security_DesId).val(data.Security_Des);
+                $('#'+Bloomberg_TickerId).val(data.Bloomberg_Ticker);
+                $('#'+Processing_DateId).val(data.Processing_Date);
+                $('#'+Processing_UserId).val(data.Processing_User);
+            }
+        }
+
+        function dialogSave(action)
+        {
+            let flag = false;
+            if(action =='@Ref.Action_Type.Dele.ToString()')
+            {
+                if(!confirm("確定刪除?"))
+                {
+                    return false;
+                }
+                flag = true;
+            }
+            if(action == '@Ref.Action_Type.Edit.ToString()' && $('#'+dialogformId).valid())
+            {
+                flag = true;
+            }
+            if(flag)
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        data : A95_1ViewModel(
+                            $('#'+Bond_NumberId).val(),
+                            $('#'+Security_DesId).val(),
+                            $('#'+Bloomberg_TickerId).val(),
+                            $('#'+Processing_DateId).val(),
+                            $('#'+Processing_UserId).val()
+                            ),
+                        action: action,
+                        bondNumber : $('#number').val()
+                    }),
+                    dataType: "json",
+                    url: url.update,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $("#" + dialogId).dialog("close");
+                        customerUtility.alert(result.DESCRIPTION,'s');
+                        clearJqgrid();
+                        createJqgrid("list1", "pager1", '@Ref.Table_Type.A95_1.GetDescription()', url.type + "Db");
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+
+        function A95_1ViewModel
+        (
+            Bond_Number,
+            Security_Des,
+            Bloomberg_Ticker,
+            Processing_Date,
+            Processing_User
+        )
+        {
+            var obj = {};
+            obj['Bond_Number'] = Bond_Number;
+            obj['Security_Des'] = Security_Des,
+            obj['Bloomberg_Ticker'] = Bloomberg_Ticker,
+            obj['Processing_Date'] = Processing_Date;
+            obj['Processing_User'] = Processing_User;
+            return obj;
+        }
+
+    });
+</script>

@@ -1,0 +1,671 @@
+﻿@{
+    ViewBag.Menu = "A4Main";
+    ViewBag.SubMenu = "A44Sub";
+    ViewBag.Title = "A44(換券資訊檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    #myForm1 input[type=text] {
+        width:160px;
+    }
+</style>
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table style="width:100%;">
+                    <tr>
+                        <td style="white-space:nowrap">
+                            新債券編號：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Bond_Number_New" name="Bond_Number_New" maxlength="40">
+                        </td>
+                        <td style="white-space:nowrap">
+                            新Lots：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Lots_New" name="Lots_New" maxlength="4">
+                        </td>
+                        <td style="white-space:nowrap">
+                            新Portfolio英文：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Portfolio_Name_New" name="Portfolio_Name_New" maxlength="30">
+                        </td>
+                        <td style="white-space:nowrap">
+                            換券日期：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Change_Date" name="Change_Date" maxlength="10" style="width:120px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap">
+                            舊債券編號：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Bond_Number_Old" name="Bond_Number_Old" maxlength="40">
+                        </td>
+                        <td style="white-space:nowrap">
+                            舊Lots：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Lots_Old" name="Lots_Old" maxlength="4">
+                        </td>
+                        <td style="white-space:nowrap">
+                            舊Portfolio英文：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Portfolio_Name_Old" name="Portfolio_Name_Old" maxlength="30">
+                        </td>
+                        <td style="white-space:nowrap">
+                        </td>
+                        <td style="white-space:nowrap">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    債券編號_新：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editBond_Number_New" id="editBond_Number_New" maxlength="40">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Lots_新：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editLots_New" id="editLots_New" maxlength="4">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Portfolio英文_新：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editPortfolio_Name_New" id="editPortfolio_Name_New" maxlength="30">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    債券編號_舊：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editBond_Number_Old" id="editBond_Number_Old" maxlength="40">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Lots_舊：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editLots_Old" id="editLots_Old" maxlength="4">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    Portfolio英文_舊：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editPortfolio_Name_Old" id="editPortfolio_Name_Old" maxlength="30">
+                </td>
+            </tr>
+            <tr id="trIssuer_Ticker_Old">
+                <td style="white-space:nowrap; text-align:right">
+                    換券前ISSUER_TICKER：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanIssuer_Ticker_Old"></span>
+                </td>
+            </tr>
+            <tr id="trGuarantor_Name_Old">
+                <td style="white-space:nowrap; text-align:right">
+                    換券前GUARANTOR_NAME：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanGuarantor_Name_Old"></span>
+                </td>
+            </tr>
+            <tr id="trGuarantor_EQY_Ticker_Old">
+                <td style="white-space:nowrap; text-align:right">
+                    換券前GUARANTOR_EQY_TICKER：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanGuarantor_EQY_Ticker_Old"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    換券日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editChange_Date" name="editChange_Date" maxlength="10">
+                </td>
+            </tr>
+            <tr id="trOrigination_Date_Old">
+                <td style="white-space:nowrap; text-align:right">
+                    舊券原始購入日：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanOrigination_Date_Old"></span>
+                </td>
+            </tr>
+            <tr id="trProcessing_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    資料處理日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanProcessing_Date"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="刪除" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnCancel" value="關閉" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetA44AllData", "A4")';
+        url.getDbData = '@Url.Action("GetCacheA44Data", "A4")';
+        url.getData = '@Url.Action("GetA44Data", "A4")';
+        url.saveData = '@Url.Action("SaveA44", "A4")';
+        url.deleteData = '@Url.Action("DeleteA44", "A4")';
+        //#endregion 註冊URL
+
+        //#region 產生datepicker
+        created.createDatepicker('Change_Date', false, null);
+        created.createDatepicker('editChange_Date', false, null);
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnCancel':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+            }
+        })
+        //#endregion
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Bond_Number_New').val("");
+            $('#Lots_New').val("");
+            $('#Portfolio_Name_New').val("");
+            $('#Change_Date').val("");
+            $('#Bond_Number_Old').val("");
+            $('#Lots_Old').val("");
+            $('#Portfolio_Name_Old').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var bondNumberNew = $('#Bond_Number_New').val().trim();
+            var lotsNew = $('#Lots_New').val().trim();
+            var portfolioNameNew = $('#Portfolio_Name_New').val().trim();
+            var changeDate = $('#Change_Date').val().trim();
+            var bondNumberOld = $('#Bond_Number_Old').val().trim();
+            var lotsOld = $('#Lots_Old').val().trim();
+            var portfolioNameOld = $('#Portfolio_Name_Old').val().trim();
+
+            if (changeDate != "") {
+                if (verified.isDate(changeDate, false) == false) {
+                    alert("換券日期 錯誤 (yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            var obj = {
+                Bond_Number_New: bondNumberNew,
+                Lots_New: lotsNew,
+                Portfolio_Name_New: portfolioNameNew,
+                Change_Date: changeDate,
+                Bond_Number_Old: bondNumberOld,
+                Lots_Old: lotsOld,
+                Portfolio_Name_Old: portfolioNameOld
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = ''; //標頭
+            var colNameArray = []; //每個欄位名稱要對應傳入資料屬性
+            var urlString = "";
+
+            title = '@ViewBag.Title';
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: urlString
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 100, sortable: false },
+                                    { name: "Processing_Date", index: "Processing_Date", align: 'left', width: 120 },
+                                    { name: "Bond_Number_New", index: "Bond_Number_New", align: 'left', width: 120 },
+                                    { name: "Lots_New", index: "Lots_New", align: 'left', width:100 },
+                                    { name: "Portfolio_Name_New", index: "Portfolio_Name_New", align: 'left', width: 150 },
+                                    { name: "Bond_Number_Old", index: "Bond_Number_Old", align: 'left', width: 150 },
+                                    { name: "Lots_Old", index: "Lots_Old", align: 'left', width: 150 },
+                                    { name: "Portfolio_Name_Old", index: "Portfolio_Name_Old", align: 'left', width: 200 },
+                                    { name: "Issuer_Ticker_Old", index: "Issuer_Ticker_Old", align: 'left', width: 220 },
+                                    { name: "Guarantor_Name_Old", index: "Guarantor_Name_Old", align: 'left', width: 270 },
+                                    { name: "Guarantor_EQY_Ticker_Old", index: "Guarantor_EQY_Ticker_Old", align: 'left', width: 280 },
+                                    { name: "Change_Date", index: "Change_Date", align: 'left', width: 120 },
+                                    { name: "Origination_Date_Old", index: "Origination_Date_Old", align: 'left', width: 120 }
+                                ];
+
+            var colNameArray = [
+                                   '',
+                                   '資料處理日期',                                   
+                                   '債券編號_新',
+                                   'Lots_新',
+                                   'Portfolio英文_新',
+                                   '債券編號_舊',
+                                   'Lots_舊',
+                                   'Portfolio英文_舊',
+                                   '換券前ISSUER_TICKER',
+                                   '換券前GUARANTOR_NAME',
+                                   '換券前GUARANTOR_EQY_TICKER',
+                                   '換券日期',
+                                   '舊券原始購入日'
+                               ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        //#region
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            SetAction("Modify", i, "修改");
+        }
+        actfun.View = function(i)
+        {
+            SetAction("View", i, "檢視");
+        }
+        actfun.Dele = function(i)
+        {
+            SetAction("Delete", i, "刪除");
+        }
+        //#endregion
+
+        //#region SetAction
+        function SetAction(actionType, rowid, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            if (actionType == "Add") {
+                $('#editBond_Number_New').val("");
+                $('#editLots_New').val("");
+                $('#editPortfolio_Name_New').val("");
+                $('#editBond_Number_Old').val("");
+                $('#editLots_Old').val("");
+                $('#editPortfolio_Name_Old').val("");
+                $('#spanIssuer_Ticker_Old').html("");
+                $('#spanGuarantor_Name_Old').html("");
+                $('#spanGuarantor_EQY_Ticker_Old').html("");
+                $('#editChange_Date').val("");
+                $('#spanOrigination_Date_Old').html("");
+                $('#spanProcessing_Date').html("");
+
+                $('#trIssuer_Ticker_Old').hide();
+                $('#trGuarantor_Name_Old').hide();
+                $('#trGuarantor_EQY_Ticker_Old').hide();
+                $('#trOrigination_Date_Old').hide();
+                $('#trProcessing_Date').hide();
+            }
+            else {
+                var data = $("#list1").getRowData(rowid);
+
+                $('#editBond_Number_New').val(data.Bond_Number_New);
+                $('#editLots_New').val(data.Lots_New);
+                $('#editPortfolio_Name_New').val(data.Portfolio_Name_New);
+                $('#editBond_Number_Old').val(data.Bond_Number_Old);
+                $('#editLots_Old').val(data.Lots_Old);
+                $('#editPortfolio_Name_Old').val(data.Portfolio_Name_Old);
+                $('#spanIssuer_Ticker_Old').html(data.Issuer_Ticker_Old);
+                $('#spanGuarantor_Name_Old').html(data.Guarantor_Name_Old);
+                $('#spanGuarantor_EQY_Ticker_Old').html(data.Guarantor_EQY_Ticker_Old);
+                $('#editChange_Date').val(data.Change_Date);
+                $('#spanOrigination_Date_Old').html(data.Origination_Date_Old);
+                $('#spanProcessing_Date').html(data.Processing_Date);
+
+                $('#trIssuer_Ticker_Old').show();
+                $('#trGuarantor_Name_Old').show();
+                $('#trGuarantor_EQY_Ticker_Old').show();
+                $('#trOrigination_Date_Old').show();
+                $('#trProcessing_Date').show();
+            }
+
+            $('#editBond_Number_New').prop('disabled', true);
+            $('#editLots_New').prop('disabled', true);
+            $('#editPortfolio_Name_New').prop('disabled', true);
+            $('#editBond_Number_Old').prop('disabled', true);
+            $('#editLots_Old').prop('disabled', true);
+            $('#editPortfolio_Name_Old').prop('disabled', true);
+            $('#editChange_Date').prop('disabled', true);
+            $('#editChange_Date').next().hide();
+
+            switch (actionType) {
+                case "Add":
+                case "Modify":
+                    $('#editBond_Number_New').prop('disabled', false);
+                    $('#editLots_New').prop('disabled', false);
+                    $('#editPortfolio_Name_New').prop('disabled', false);
+                    $('#editBond_Number_Old').prop('disabled', false);
+                    $('#editLots_Old').prop('disabled', false);
+                    $('#editPortfolio_Name_Old').prop('disabled', false);
+
+                    $('#editChange_Date').prop('disabled', false);
+                    $('#editChange_Date').next().show();
+
+                    if (actionType == "Modify") {
+                        $('#editBond_Number_New').prop('disabled', true);
+                        $('#editLots_New').prop('disabled', true);
+                        $('#editPortfolio_Name_New').prop('disabled', true);
+                        $('#editBond_Number_Old').prop('disabled', true);
+                        $('#editLots_Old').prop('disabled', true);
+                        $('#editPortfolio_Name_Old').prop('disabled', true);
+                    }
+
+                    $('#btnSave').show();
+                    $('#btnDelete').hide();
+                    break;
+                case "View":
+                    $('#btnSave').hide();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "Delete":
+                    $('#btnSave').hide();
+                    $('#btnDelete').show();
+
+                    break;
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = null;
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+            var bondNumberNew = $('#editBond_Number_New').val().trim();
+            var lotsNew = $('#editLots_New').val().trim();
+            var portfolioNameNew = $('#editPortfolio_Name_New').val().trim();
+            var bondNumberOld = $('#editBond_Number_Old').val().trim();
+            var lotsOld = $('#editLots_Old').val().trim();
+            var portfolioNameOld = $('#editPortfolio_Name_Old').val().trim();
+            var changeDate = $('#editChange_Date').val().trim();
+
+            if (bondNumberNew == "") {
+                alert("債券編號_新 必填");
+                return false;
+            }
+
+            if (lotsNew == "") {
+                alert("Lots_新 必填");
+                return false;
+            }
+
+            if (portfolioNameNew == "") {
+                alert("Portfolio英文_新 必填");
+                return false;
+            }
+
+            if (bondNumberOld == "") {
+                alert("債券編號_舊 必填");
+                return false;
+            }
+
+            if (lotsOld == "") {
+                alert("Lots_舊 必填");
+                return false;
+            }
+
+            if (portfolioNameOld == "") {
+                alert("Portfolio英文_舊 必填");
+                return false;
+            }
+
+            if (changeDate == "") {
+                alert("換券日期 必填");
+                return false;
+            }
+            else {
+                if (verified.isDate(changeDate, false) == false) {
+                    alert("換券日期 錯誤 (yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            var obj = {
+                Bond_Number_New: bondNumberNew,
+                Lots_New: lotsNew,
+                Portfolio_Name_New: portfolioNameNew,
+                Bond_Number_Old: bondNumberOld,
+                Lots_Old: lotsOld,
+                Portfolio_Name_Old: portfolioNameOld,
+                Change_Date: changeDate
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定刪除？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        bondNumberNew: $('#editBond_Number_New').val(),
+                        lotsNew: $('#editLots_New').val(),
+                        portfolioNameNew: $('#editPortfolio_Name_New').val()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+    });
+</script>

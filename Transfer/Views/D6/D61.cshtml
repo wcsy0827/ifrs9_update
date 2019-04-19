@@ -1,0 +1,961 @@
+﻿@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D61Sub";
+    ViewBag.Title = "D61(減損階段評估參數檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap; text-align:right">
+                            評估階段
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Assessment_Stage",
+      (SelectList)ViewBag.Assessment_Stage,
+      new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            評估種類
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Assessment_Kind",
+      (SelectList)ViewBag.Assessment_Kind,
+      new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            評估次分類
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Assessment_Sub_Kind",
+      (SelectList)ViewBag.Assessment_Sub_Kind,
+      new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap; text-align:right">
+                            評估項目編號
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <input type="text" id="Check_Item_Code" name="Check_Item_Code" maxlength="20">
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            評估項目
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <input type="text" id="Check_Item" name="Check_Item" maxlength="50">
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            處理狀態
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Status",
+      (SelectList)ViewBag.Status,
+      new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:10px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnSearch" value="查詢" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnReset" value="重設" />
+                    </td>
+                    <td >
+                        <input type="button" class="btn btn-primary"  id="btnAdd" value="新增" />
+                    </td>
+                    <td style="white-space:nowrap;padding-left:425px; text-align:right">
+                        使用狀態
+                    </td>
+                    <td>
+                        @Html.DropDownList("sIsActive",
+     (SelectList)ViewBag.IsActive,
+     new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        您登入的帳號：<span>@ViewBag.UserAccount</span>
+        <br />
+        是否有呈送複核的權限：<span id="spanIsSender">@ViewBag.IsSender</span>
+        <input type="hidden" id="IsSender" value="@ViewBag.IsSender" />
+        <input type="hidden" id="UserAccount" value="@ViewBag.UserAccount" />
+        <table>
+            <tr>
+                <td style="white-space:nowrap;">
+                    可複核人員：
+                    @Html.DropDownList("Auditor",
+              (SelectList)ViewBag.Auditor,
+              new { @class = "form-control", @style = "display:inline-block;width:200px" })
+                </td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnSendToAudit" value="呈送複核" />
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnAudit" value="複核確認" />
+                    &nbsp;&nbsp;
+                    <input type="button" class="btn btn-primary" id="btnReject" value="複核退回" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    評估階段：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editAssessment_Stage",
+              (SelectList)ViewBag.Assessment_Stage,
+              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    評估種類：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editAssessment_Kind",
+              (SelectList)ViewBag.Assessment_Kind,
+              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    評估次分類：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editAssessment_Sub_Kind",
+              (SelectList)ViewBag.Assessment_Sub_Kind,
+              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    評估項目編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editCheck_Item_Code" name="editCheck_Item_Code" maxlength="20">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    評估項目：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editCheck_Item" name="editCheck_Item" maxlength="50">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    說明：
+                </td>
+                <td style="white-space:nowrap">
+                    <textarea id="editCheck_Item_Memo" name="editCheck_Item_Memo" style="width:500px;height:100px"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    檢查條件：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editCheck_Symbol",
+              (SelectList)ViewBag.Check_Symbol,
+              new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    門檻：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editThreshold" name="editThreshold">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    通過給定數值：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editPass_Value" name="editPass_Value">
+                </td>
+            </tr>
+            <tr id="trRule_setter_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    規則設定者：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setter_Name"></span>
+                </td>
+            </tr>
+            <tr id="trRule_setting_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    規則編輯日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setting_Date"></span>
+                </td>
+            </tr>
+            <tr id="trAuditor_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    可複核人員：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAuditor_Name"></span>
+                </td>
+            </tr>
+            <tr id="trAudit_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    複核日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAudit_Date"></span>
+                </td>
+            </tr>
+            <tr id="trStatus">
+                <td style="white-space:nowrap; text-align:right">
+                    處理狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanStatus" style="display:none"></span>
+                    <span id="spanStatus_Name"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="hidden" id="hId" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="刪除" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnCancel" value="關閉視窗" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetD61AllData", "D6")';
+        url.getData = '@Url.Action("GetD61Data", "D6")';
+        url.getDbData = '@Url.Action("GetCacheD61Data", "D6")';
+        url.saveData = '@Url.Action("SaveD61", "D6")';
+        url.deleteData = '@Url.Action("DeleteD61", "D6")';
+        url.sendToAudit = '@Url.Action("SendD61ToAudit", "D6")';
+        url.audit = '@Url.Action("D61Audit", "D6")';
+        //#endregion 註冊URL
+
+        //#region
+        if ($("#spanIsSender").html() != "Y") {
+            $("#btnAdd").hide();
+        }
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnCancel':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+                case 'btnSendToAudit':
+                    $("#" + id).on('click', function () { SendToAudit(); });
+                    break;
+                case 'btnAudit':
+                    $("#" + id).on('click', function () { AuditData("2"); });
+                    break;
+                case 'btnReject':
+                    $("#" + id).on('click', function () { AuditData("3"); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Assessment_Stage').val("");
+            $('#Assessment_Kind').val("");
+            $('#Assessment_Sub_Kind').val("");
+            $('#Check_Item_Code').val("");
+            $('#Check_Item').val("");
+            $('#Status').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var assessmentStage = $('#Assessment_Stage').val().trim();
+            var assessmentKind = $('#Assessment_Kind').val().trim();
+            var assessmentSubKind = $('#Assessment_Sub_Kind').val().trim();
+            var checkItemCode = $('#Check_Item_Code').val().trim();
+            var checkItem = $('#Check_Item').val().trim();
+            var status = $('#Status').val().trim();
+            var isActive = $('#sIsActive').val().trim();
+            var obj = {
+                Assessment_Stage: assessmentStage,
+                Assessment_Kind: assessmentKind,
+                Assessment_Sub_Kind: assessmentSubKind,
+                Check_Item_Code: checkItemCode,
+                Check_Item: checkItem,
+                Status: status,
+                IsActive: isActive
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = '@ViewBag.Title'; //標頭
+            var urlString = "";
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: urlString
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        function formatterChange_Status(cellvalue, options, rdata)
+        {
+            var result = '';
+            switch(cellvalue)
+            {
+                case 'I':
+                    result = '新增';
+                    break;
+                case 'U':
+                    result = '修改';
+                    break;
+                case 'D':
+                    result = '刪除';
+                    break;
+            }
+            return result;
+        }
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 100, sortable: false },
+                                    { name: "IsActive", index: "IsActive", width: 100, sortable: false },
+                                    { name: "Assessment_Stage", index: "Assessment_Stage", align: 'left', width:100 },
+                                    { name: "Assessment_Kind", index: "Assessment_Kind", align: 'left' },
+                                    { name: "Assessment_Sub_Kind", index: "Assessment_Sub_Kind", align: 'left' },
+                                    { name: "Check_Item_Code", index: "Check_Item_Code", align: 'left' },
+                                    { name: "Check_Item", index: "Check_Item", align: 'left', width:250 },
+                                    { name: "Check_Item_Memo", index: "Check_Item_Memo", align: 'left', width:300 },
+                                    { name: "Check_Symbol", index: "Check_Symbol", align: 'left', width: 100 },
+                                    { name: "Threshold", index: "Threshold", align: 'left', width: 100 },
+                                    { name: "Pass_Value", index: "Pass_Value", align: 'left', width: 120 },
+                                    { name: "Rule_setter", index: "Rule_setter", align: 'left' },
+                                    { name: "Rule_setter_Name", index: "Rule_setter_Name", align: 'left' },
+                                    { name: "Rule_setting_Date", index: "Rule_setting_Date", align: 'left' },
+                                    { name: "Auditor", index: "Auditor", align: 'left' },
+                                    { name: "Auditor_Name", index: "Auditor_Name", align: 'left' },
+                                    { name: "Audit_Date", index: "Audit_Date", align: 'left' },
+                                    { name: "Status", index: "Status", align: 'left' },
+                                    { name: "Status_Name", index: "Status_Name", align: 'left' },
+                                    { name: "Change_Status", index: "Change_Status", align: 'center', width: 100 ,formatter : formatterChange_Status },
+                                    { name: "Id", index:"Id",  hidden:true}
+                               ];
+
+            var colNameArray = [
+                                   'Actions',
+                                   '生效/失效',
+                                   '評估階段',
+                                   '評估種類',
+                                   '評估次分類',
+                                   '評估項目編號',
+                                   '評估項目',
+                                   '說明',
+                                   '檢查條件',
+                                   '門檻',
+                                   '通過給定數值',
+                                   '規則設定者(帳號)',
+                                   '規則設定者',
+                                   '規則編輯日期',
+                                   '複核人員帳號',
+                                   '可複核人員',
+                                   '複核日期',
+                                   '處理狀態(代碼)',
+                                   '處理狀態',
+                                   '處理動作',
+                                   "Id"
+                               ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                multiselect: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+
+                    if ($("#spanIsSender").html() != "Y") {
+                        $(".actionEditIcon").hide();
+                        $(".actionDeleIcon").hide();
+                    }
+                    $('#' + listId + ' > tbody > tr:gt(0) ').each(function () {
+                        let tr = $(this);
+                        let Assessment_Kind = tr.find($.validator.format('td[aria-describedby$={0}_Assessment_Kind]', listId)).text();
+                        if(Assessment_Kind == '量化衡量')
+                        {
+                            tr.find('.actionDeleIcon').hide();
+                        }
+                    });
+                }
+            });
+
+            $("#" + listId).jqGrid('hideCol', ["Rule_setter", "Auditor", "Status"]);
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        //#region
+        var actfun = {};
+        actfun.Edit = function (i) {
+            SetAction("Modify", i, "修改");
+        }
+        actfun.View = function (i) {
+            SetAction("View", i, "檢視");
+        }
+        actfun.Dele = function (i) {
+            SetAction("Delete", i, "刪除");
+        }
+        //#endregion
+
+        //#region SetAction
+        function SetAction(actionType, id, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            //if (actionType == "Modify" || actionType == "Delete") {
+            //    if ($("#list1").getCell(id, "Status") == "1" || $("#list1").getCell(id, "Status") == "2") {
+            //        alert("待複核 或 複核完成 的資料，須做複核退回，才可 " + dialogTitle);
+            //        return false;
+            //    }
+            //}
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            $("#editAssessment_Kind option").remove();
+            customerUtility.addoption('editAssessment_Kind', @Html.Raw(Json.Encode(ViewBag.Assessment_Kind)));
+
+            if (actionType == "Add") {
+                $('#editAssessment_Kind option[value="量化衡量"]').remove();
+                $('#editAssessment_Stage').val("");
+                $('#editAssessment_Kind').val("");
+                $('#editAssessment_Sub_Kind').val("");
+                $('#editCheck_Item_Code').val("");
+                $('#editCheck_Item').val("");
+                $('#editCheck_Item_Memo').val("");
+                $('#editCheck_Symbol').val("");
+                $('#editThreshold').val("");
+                $('#editPass_Value').val("");
+                $('#spanRule_setter_Name').html("");
+                $('#spanRule_setting_Date').html("");
+                $('#spanAuditor_Name').html("");
+                $('#spanAudit_Date').html("");
+                $('#spanStatus').html("");
+                $('#spanStatus_Name').html("");
+                $('#hId').val("");
+                $('#trRule_setter_Name').hide();
+                $('#trRule_setting_Date').hide();
+                $('#trAuditor_Name').hide();
+                $('#trAudit_Date').hide();
+                $('#trStatus').hide();
+            }
+            else {
+                if (id == null) {
+                    alert("請選取要" + dialogTitle + "的資料行");
+                    return false;
+                }
+
+                $('#editAssessment_Stage').val($("#list1").getCell(id, "Assessment_Stage"));
+                $('#editAssessment_Kind').val($("#list1").getCell(id, "Assessment_Kind"));
+                $('#editAssessment_Sub_Kind').val($("#list1").getCell(id, "Assessment_Sub_Kind"));
+                $('#editCheck_Item_Code').val($("#list1").getCell(id, "Check_Item_Code"));
+                $('#editCheck_Item').val($("#list1").getCell(id, "Check_Item"));
+                $('#editCheck_Item_Memo').val($("#list1").getCell(id, "Check_Item_Memo"));
+                $('#editCheck_Symbol').val($("#list1").getCell(id, "Check_Symbol"));
+                $('#editThreshold').val($("#list1").getCell(id, "Threshold"));
+                $('#editPass_Value').val($("#list1").getCell(id, "Pass_Value"));
+                $('#spanRule_setter_Name').html($("#list1").getCell(id, "Rule_setter_Name"));
+                $('#spanRule_setting_Date').html($("#list1").getCell(id, "Rule_setting_Date"));
+                $('#spanAuditor_Name').html($("#list1").getCell(id, "Auditor_Name"));
+                $('#spanAudit_Date').html($("#list1").getCell(id, "Audit_Date"));
+                $('#spanStatus').html($("#list1").getCell(id, "Status"));
+                $('#spanStatus_Name').html($("#list1").getCell(id, "Status_Name"));
+                $('#hId').val($("#list1").getCell(id, "Id")); 
+
+                $('#trRule_setter_Name').show();
+                $('#trRule_setting_Date').show();
+                $('#trAuditor_Name').show();
+                $('#trAudit_Date').show();
+                $('#trStatus').show();
+            }
+
+            $('#editAssessment_Stage').prop('disabled', true);
+            $('#editAssessment_Kind').prop('disabled', true);
+            $('#editAssessment_Sub_Kind').prop('disabled', true);
+            $('#editCheck_Item_Code').prop('disabled', true);
+            $('#editCheck_Item').prop('disabled', true);
+            $('#editCheck_Item_Memo').prop('disabled', true);
+            $('#editCheck_Symbol').prop('disabled', true);
+            $('#editThreshold').prop('disabled', true);
+            $('#editPass_Value').prop('disabled', true);
+
+            switch (actionType) {
+                case "Add":
+                case "Modify":
+                    $('#editAssessment_Stage').prop('disabled', false);
+                    $('#editAssessment_Kind').prop('disabled', true);
+                    $('#editAssessment_Sub_Kind').prop('disabled', false);
+                    $('#editCheck_Item_Code').prop('disabled', true);
+                    $('#editCheck_Item').prop('disabled', false);
+                    $('#editCheck_Item_Memo').prop('disabled', false);
+                    $('#editCheck_Symbol').prop('disabled', false);
+                    $('#editThreshold').prop('disabled', false);
+                    $('#editPass_Value').prop('disabled', false);
+                    if( $('#editAssessment_Kind').val() == '量化衡量')
+                    {
+                        $('#editAssessment_Stage').prop('disabled', true);                      
+                        $('#editAssessment_Sub_Kind').prop('disabled', true);
+                        $('#editCheck_Item_Memo').prop('disabled',true);
+                    }
+                    if(actionType == "Add")
+                    {
+                        $('#editAssessment_Kind').prop('disabled', false);					
+                        $('#editCheck_Item_Code').prop('disabled', false);
+                    }
+                    $('#btnSave').show();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "View":
+                    $('#btnSave').hide();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "Delete":
+                    $('#btnSave').hide();
+                    $('#btnDelete').show();
+
+                    break;
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+
+            var assessmentStage = $('#editAssessment_Stage').val().trim();
+            var assessmentKind = $('#editAssessment_Kind').val();
+            assessmentKind = assessmentKind || '';
+            assessmentKind = assessmentKind.trim();
+            var assessmentSubKind = $('#editAssessment_Sub_Kind').val().trim();
+            var checkItemCode = $('#editCheck_Item_Code').val().trim();
+            var checkItem = $('#editCheck_Item').val().trim();
+            var checkItemMemo = $('#editCheck_Item_Memo').val().trim();
+            var checkSymbol = $('#editCheck_Symbol').val().trim();
+            var threshold = $('#editThreshold').val().trim();
+            var passValue = $('#editPass_Value').val().trim();
+            var Id = $('#hId').val();
+
+            if (assessmentStage == "") {
+                alert("評估階段 必填");
+                return false;
+            }
+
+            if (assessmentKind == "") {
+                alert("評估種類 必填");
+                return false;
+            }
+
+            if (assessmentSubKind == "") {
+                alert("評估次分類 必填");
+                return false;
+            }
+
+            if (checkItemCode == "") {
+                alert("評估項目編號 必填");
+                return false;
+            }
+
+            if (checkItem == "") {
+                alert("評估項目 必填");
+                return false;
+            }
+
+            if (threshold != "") {
+                if (isNaN(threshold)) {
+                    alert("門檻 必須為數字");
+                    return false;
+                }
+            }
+
+            if (passValue != "") {
+                if (isNaN(passValue)) {
+                    alert("通過給定數值 必須為數字");
+                    return false;
+                }
+            }
+
+            var obj = {
+                Assessment_Stage: assessmentStage,
+                Assessment_Kind: assessmentKind,
+                Assessment_Sub_Kind: assessmentSubKind,
+                Check_Item_Code: checkItemCode,
+                Check_Item: checkItem,
+                Check_Item_Memo: checkItemMemo,
+                Check_Symbol: checkSymbol,
+                Threshold: threshold,
+                Pass_Value: passValue,
+                Id: Id
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = {
+                Assessment_Stage: "",
+                Assessment_Kind: "",
+                Assessment_Sub_Kind: "",
+                Check_Item_Code: "",
+                Check_Item: "",
+                Check_Item_Memo: "",
+                Check_Symbol: "",
+                Threshold: "",
+                Pass_Value: "",
+                IsActive: ""
+            };
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定刪除？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        checkItemCode: $('#editCheck_Item_Code').val(),
+                        Id : $('#hId').val()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+
+        //#region SendToAudit
+        function SendToAudit() {
+            if ($("#IsSender").val() != "Y") {
+                alert("您沒有呈送複核的權限");
+                return false;
+            }
+
+            var auditor = $("#Auditor").val().trim();
+
+            if (auditor == "") {
+                alert("請選擇可複核人員");
+                return false;
+            }
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var checkItemCode = "";
+            var Ids = "";
+            if (!rowKey){
+                alert("請勾選要呈送複核的資料");
+                return false;
+            }
+            else if (confirm("確定呈送複核？")) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        alert("評估項目編號：" + grid.getCell(selectedIDs[i], "Check_Item_Code") + "，已複核完成，不可呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Rule_setter") == auditor) {
+                        alert("評估項目編號：" + grid.getCell(selectedIDs[i], "Check_Item_Code") + "，規則設定者 和 您選擇的可複核人員 不可相同");
+                        return false;
+                    }
+                    Ids += grid.getCell(selectedIDs[i], "Id") + ",";
+                    checkItemCode += grid.getCell(selectedIDs[i], "Check_Item_Code") + ",";
+                }
+                Ids =  Ids.substr(0, Ids.length - 1);
+                checkItemCode = checkItemCode.substr(0, checkItemCode.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    checkItemCode: checkItemCode,
+                    auditor: auditor,
+                    Ids : Ids
+                }),
+                dataType: "json",
+                url: url.sendToAudit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region AuditData
+        function AuditData(status) {
+            var userAccount = $("#UserAccount").val().trim();
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var checkItemCode = "";
+            var Ids = "";
+            var confirmWord = "";
+            if (status == "2") {
+                confirmWord = "確定複核？";
+            }
+            else if (status == "3") {
+                confirmWord = "確定退回？";
+            }
+
+            if (!rowKey) {
+                alert("請勾選要複核的資料");
+                return false;
+            }
+            else if (confirm(confirmWord)) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "0") {
+                        alert("評估項目編號：" + grid.getCell(selectedIDs[i], "Check_Item_Code") + "，尚未呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        if (status == "2") {
+                            alert("評估項目編號：" + grid.getCell(selectedIDs[i], "Check_Item_Code") + "，已複核完成，不可再做 複核確認");
+                            return false;
+                        }
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Auditor").trim() != userAccount) {
+                        alert("評估項目編號：" + grid.getCell(selectedIDs[i], "Check_Item_Code") + "，您不是此筆資料的可複核人員");
+                        return false;
+                    }
+
+                    checkItemCode += grid.getCell(selectedIDs[i], "Check_Item_Code") + ",";
+                    Ids += grid.getCell(selectedIDs[i], "Id") + ",";
+                }
+
+                checkItemCode = checkItemCode.substr(0, checkItemCode.length - 1);
+                Ids = Ids.substr(0, Ids.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    checkItemCode: checkItemCode,
+                    status: status,
+                    Ids: Ids
+                }),
+                dataType: "json",
+                url: url.audit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+    });
+</script>

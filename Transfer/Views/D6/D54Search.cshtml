@@ -1,0 +1,195 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D54SearchSub";
+    ViewBag.Title = "最終減損金額";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:185px">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="width:550px; padding-top:5px;" class="form-group">
+                            <label>報導日 : </label>&emsp;&emsp;&emsp;&emsp;
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+
+                        <td class="action search" style="width:400px; padding-top:5px;">
+                            <label>債券編號 : </label>
+                            <input type="text" id="bondNumber" name="bondNumber">
+                        </td>
+                    </tr>
+                    <tr class="action search">
+                        <td style="padding-top:5px;">
+                            <label>套用產品群代碼 : </label>
+                            @Html.DropDownList("Group_Product_Code",
+                            (SelectList)ViewBag.GPC,
+                            new { @class = "form-control", @style = "display:inline-block;" })
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>帳戶編號 : </label>
+                            <input type="text" id="refNumber" name="refNumber">
+                        </td>
+                    </tr>
+                    <tr >
+                        <td style="padding-top:10px;" colspan="2">
+                            <input type="button" class="btn btn-primary" value="最終減損金額查詢查詢" id="btnD54Search" style="margin-right:10px;" />
+                            <input type="button" class="btn btn-primary dlexcel" value="匯出" id="btnD54Excel" style="margin-right:10px;margin-left:20px;"disabled />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            @*<i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+只有擁有評估權限,且複核尚未選擇最終版本時才可以評估!
+"></i>*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetD54", "D6")';
+        url.getD54Excel = '@Url.Action("GetD54Excel", "D6")';
+        url.getDbData = '@Url.Action("GetCacheData", "D6")';
+        //#endregion 註冊URL
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //#endregion 註冊verified
+
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD54Search':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+                case 'btnD54Excel':
+                    $('#' + id).on('click', function () { getExcel() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 查詢量化評估需求資訊檔
+        function search()
+        {
+            $('#btnD54Excel').prop('disabled',true);
+            clearJqgrid("jqgridDiv");
+            if($('#myForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        reportdate: $('#datepicker').val(),
+                        groupProductCode: $('#Group_Product_Code').val(),
+                        bondNumber: $('#bondNumber').val(),
+                        refNumber: $('#refNumber').val(),
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function(result){
+                    if(result.RETURN_FLAG)
+                        createJqgrid("jqgridDiv","list1", "pager1");
+                    else
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                })
+            }
+        }
+        //#endregion 查詢量化評估需求資訊檔
+
+        //#region 執行量化評估需求資訊檔轉檔
+        function getExcel()
+        {
+            $.ajax({
+                type: "POST",
+                url: url.getD54Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                { Controller = "D6", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.D54.ToString()';
+                else
+                    customerUtility.alert(result.DESCRIPTION, 'e');
+            })
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDivId) {
+            $('#'+jqgridDivId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        function createJqgrid(jqgridDivId,listId, pagerId) {
+            $('#'+jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#'+jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    table: 'D54DbfileData',
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                viewrecords: true, //顯示總數
+                sortorder: "desc",
+                caption: '最終減損金額查詢', //標題
+                resizable: false,
+                shrinkToFit: false,
+                //autoencode: true, //jqgridCustom.randerAction 需拿掉
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    jqgridCustom.updatePagerIcons($(this));
+                    $('#btnD54Excel').prop('disabled', !($(this).jqGrid('getGridParam', 'records') > 0) )
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+
+    });
+</script>

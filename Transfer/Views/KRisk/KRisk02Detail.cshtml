@@ -1,0 +1,136 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "KRiskMain";
+    ViewBag.SubMenu = "KRisk02Sub";
+    ViewBag.Title = "執行減損計算(房貸)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="width:550px; padding-top:5px;" class="form-group">
+                            <label>報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="width:450px;padding-top:10px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:10px">
+                            <label>產品別 : </label>
+                            @Html.DropDownList("product",
+                           (SelectList)ViewBag.product,
+                            new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td colspan="2" style="padding-top:10px">
+                            <input type="button" class="btn btn-primary" value="執行減損計算(房貸)" id="btnKrisk" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明：
+查詢結果請至C07(減損計算輸出資料-房貸)"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.kriskComplete = '@Url.Action("KriskMortgageComplete", "KRisk")';
+        url.checkDelete = '@Url.Action("KriskCheckC07", "KRisk")';
+        //#endregion 註冊URL
+
+        //#region 註冊datepicker
+        created.createDatepicker('datepicker', true, '');
+        //#endregion 註冊datepicker
+
+        //#region 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //#endregion 註冊verified
+
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnKrisk':
+                    $('#' + id).on('click', function () { kriskComplete() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 通知Krisk 完成事件
+        function kriskComplete()
+        {
+            if($('#myForm').valid())
+            {
+                var text = $('#product :selected').text();
+                var f = text.indexOf("(") + 1;
+                var e = text.indexOf(")");
+                var productCode = text.substr(f, (e - f));
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: url.checkDelete,
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        date: $('#datepicker').val(),
+                        product: $('#product').val(),
+                        productCode: productCode,
+                    }),
+                })
+                .done(function (result) {
+                    let deleflag = false;
+                    if (result.RETURN_FLAG)
+                    {
+                        if (confirm("C07有重複資料是否要刪除?")) {
+                            deleflag = true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        url: url.kriskComplete,
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            date: $('#datepicker').val(),
+                            product: $('#product').val(),
+                            productCode: productCode,
+                            deleteFlag: deleflag
+                        }),
+                    })
+                    .done(function (result) {
+                        if (result.result == "0") {
+                            customerUtility.alert(result.message, 's');
+                        }
+                        if (result.result == "1") {
+                            customerUtility.alert(result.message, 'e');
+                        }
+                    });
+                });
+            }
+        }
+        //#endregion
+
+    });
+</script>

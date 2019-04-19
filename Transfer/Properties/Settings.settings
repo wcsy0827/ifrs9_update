@@ -1,0 +1,27 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Transfer.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="kriskUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://10.42.70.201:8080/</Value>
+    </Setting>
+    <Setting Name="ADDomain" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">LDAP://10.42.70.90:3268/DC=dtw,DC=intranet</Value>
+    </Setting>
+    <Setting Name="smtpServer" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">10.204.241.226</Value>
+    </Setting>
+    <Setting Name="mailAccount" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">glsisys.life@fbt.com</Value>
+    </Setting>
+    <Setting Name="mailPwd" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Aa87522899</Value>
+    </Setting>
+    <Setting Name="D63MailID" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="TaskScheduleLocation" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">D:\\IFRS9ReSetTransfer\\IFRS9ReSetTransfer\\bin\\Debug\\IFRS9ReSetTransfer.exe</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

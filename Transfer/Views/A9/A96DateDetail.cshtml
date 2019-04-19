@@ -1,0 +1,373 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A9Main";
+    ViewBag.SubMenu = "A96DateSub";
+    ViewBag.Title = "A96(信用利差最後交易日資料)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr class="action search">
+                        <td style="">
+                            <table>
+                                <tr>
+                                    <td style="width:580px" class="form-group" >
+                                        <label>報導日 : </label>&emsp;
+                                        <input type="text" id="datepicker1" name="datepicker1">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top:10px">
+                                        <input type="button" class="btn btn-primary" value="查詢" id="btnA96TradeSearch"  />
+                                        <input type="button" class="btn btn-primary" value="新增" id="btnAdd" style="margin-left:10px;" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="A96TradeDialog" title="" style="display:none">
+        <input type="hidden" id="actionType" value="" />
+        <form id="A96TradeDialogForm">
+            <table style="width:100%">
+                <tr>
+                    <td style="white-space:nowrap; text-align:right">
+                        評估日/基準日：
+                    </td>
+                    <td style="white-space:nowrap">
+                        <input type="text" name="A96TradeDialogReport_Date" id="A96TradeDialogReport_Date" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        最後交易日：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <input type="text" name="A96TradeDialogLast_Date" id="A96TradeDialogLast_Date" >
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding-top:10px">
+                        <input type="button" class="btn btn-primary" style="float:left" id="A96TradeDialogbtnSave" value="儲存" />
+                        <input type="button" class="btn btn-primary" style="float:left"  id="A96TradeDialogbtnDelete" value="刪除" />
+                        <input type="button" class="btn btn-primary" style="float:right"  id="A96TradeDialogbtnClose" value="關閉" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetA96Trade", "A9")';
+        url.getDbData = '@Url.Action("GetCacheData", "A9")';
+        url.saveA96Trade = '@Url.Action("saveA96Trade", "A9")'
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var dialogId = 'A96TradeDialog';
+        var dialogformId = dialogId + 'Form';
+        var Report_DateId = dialogId + 'Report_Date';
+        var Last_DateId = dialogId + 'Last_Date';
+        var saveId = dialogId + 'btnSave';
+        var deleteId = dialogId + 'btnDelete';
+        //#endregion 共用參數
+
+        //#region 產生 dialog
+        //var obj = [
+        //   { 'name': 'Report_Date', 'type': 'date', 'title': '評估日/基準日', 'req': 'true' },
+        //   { 'name': 'Last_Date', 'type': 'date', 'title': '最後交易日',  'req': 'true' },
+        //]
+        //jqgridCustom.createDialog(dialogId, obj);
+        //#endregion 產生 dialog
+
+
+        //#region 產生datepicker
+        created.createDatepicker('datepicker1', false, null);
+        created.createDatepicker(Report_DateId, false, null);
+        created.createDatepicker(Last_DateId, false, null);
+        //#endregion
+        verified.datepicker("A96TradeDialogForm", Report_DateId, false, $('#'+Report_DateId).val());
+        verified.datepicker("A96TradeDialogForm", Last_DateId, false, $('#'+Last_DateId).val());
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA96TradeSearch':
+                    $('#' + id).on('click', function () { A96TradeSearch() });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { dialogOpen('@Ref.Action_Type.Add.ToString()') });
+                    break;
+                case 'A96TradeDialogbtnClose':
+                    $("#" + id).on('click',function()
+                    {
+                        $('#' + dialogId).dialog('close');
+                    });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function A96TradeSearch() {
+            //if ($('#myForm').valid()) {
+                clearJqgrid();
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        reportDate : $('#datepicker1').val(),
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {                      
+                        createJqgrid(
+                            "list1",
+                            "pager1");
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+            //}
+        }
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //colModelArray
+        function createJqgrid(listId, pagerId,type) {
+            var colNameArray = @Html.Raw(Json.Encode(ViewBag.jqgridColNames));
+            var colModelArray = @Html.Raw(Json.Encode(ViewBag.jqgridColModel));
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: 'A96Trade',
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                sortorder: "desc",
+                caption:  '@Ref.Table_Type.A96_Trade.tableNameGetDescription()', //標題
+                resizable: false,
+                shrinkToFit: false,
+                //autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true, //顯示總數
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'A96Trade',actfun);
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Edit.ToString()',i);
+        }
+        actfun.Dele = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Dele.ToString()',i);
+        }
+        actfun.View = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.View.ToString()',i);
+        }
+
+        function dialogOpen(type,rowid)
+        {
+            var title = '';
+            $('#'+saveId+',#'+deleteId).hide();
+            $('#'+Report_DateId).val('');
+            $('#'+Last_DateId).val('');
+            $('#'+Report_DateId).removeClass('error');
+            $('#'+Last_DateId).removeClass('error');
+            if(type == '@Ref.Action_Type.Add.ToString()')
+            {
+                title = '@Ref.Action_Type.Add.GetDescription()';
+                $('#'+saveId).show();
+                $('#'+Report_DateId).next().prop('disabled',false);
+                $('#'+Report_DateId).prop('disabled',false);
+                $('#'+Last_DateId).next().prop('disabled',false);
+                $('#'+Last_DateId).prop('disabled',false);
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Edit.ToString()')
+            {
+                title = '@Ref.Action_Type.Edit.GetDescription()';
+                
+                $('#'+saveId).show();
+                $('#'+Report_DateId).next().prop('disabled',true);
+                $('#'+Report_DateId).prop('disabled',true);
+                $('#'+Last_DateId).next().prop('disabled',false);
+                $('#'+Last_DateId).prop('disabled',false);
+                dialogSetData(rowid);
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Dele.ToString()')
+            {
+                title = '@Ref.Action_Type.Dele.GetDescription()';
+                $('#'+deleteId).show();
+                $('#'+Report_DateId).next().prop('disabled',true);
+                $('#'+Report_DateId).prop('disabled',true);
+                $('#'+Last_DateId).next().prop('disabled',true);
+                $('#'+Last_DateId).prop('disabled',true);
+                dialogSetData(rowid);
+                $('#'+deleteId).off('click');
+                $('#'+deleteId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.View.ToString()')
+            {
+                title = '@Ref.Action_Type.View.GetDescription()';
+                $('#'+Report_DateId).next().prop('disabled',true);
+                $('#'+Report_DateId).prop('disabled',true);
+                $('#'+Last_DateId).next().prop('disabled',true);
+                $('#'+Last_DateId).prop('disabled',true);
+                dialogSetData(rowid);
+            }
+            $("#" + dialogId).dialog({
+                title: title,
+                position: { my: "center", at: "center", of: window },
+                width:'auto'
+            });
+            $("#" + dialogId).dialog("open");
+            $('#ui-datepicker-div').hide();
+            $('#A96TradeDialogbtnCancel').focus();
+            $('#'+Report_DateId).parent('td:first').find('button').click();
+            $('#ui-datepicker-div').hide();
+            $('#'+dialogformId).validate().resetForm();
+        }
+
+        function dialogSetData(rowid)
+        {
+            rowid = rowid || 0;
+            //清空
+            $('#'+Report_DateId).val('');
+            $('#'+Last_DateId).val('');
+            if(rowid > 0)
+            {
+                var data = $("#list1").getRowData(rowid);
+                //set value
+                $('#'+Report_DateId).val(data.Report_Date);
+                $('#'+Last_DateId).val(data.Last_Date);
+            }
+        }
+
+        //#region save Account
+        function dialogSave(action)
+        {
+            if(action == '@Ref.Action_Type.Edit.ToString()' || $('#'+dialogformId).valid())
+            {
+                if(action =='@Ref.Action_Type.Dele.ToString()')
+                {
+                    if(!confirm("確定刪除?"))
+                    {
+                        return false;
+                    }
+                }
+                if($('#A96TradeDialogForm').valid())
+                {
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            action: action, //action
+                            reportDate : $('#datepicker1').val(),
+                            data: A96TradeViewModel(
+                                $('#'+Report_DateId).val(),
+                                $('#'+Last_DateId).val())                            
+                        }),
+                        dataType: "json",
+                        url: url.saveA96Trade,
+                        contentType: 'application/json',
+                    })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            $("#" + dialogId).dialog("close");
+                            customerUtility.alert(result.DESCRIPTION,'s');
+                            clearJqgrid();
+                            createJqgrid("list1", "pager1");
+                        }
+                        else {
+                            customerUtility.alert(result.DESCRIPTION,'e');
+                        }
+                    });
+                }             
+            }
+        }
+        //#endregion save Account
+
+        function A96TradeViewModel
+        (
+            Report_Date,
+            Last_Date
+        )
+        {
+            var obj = {};
+            obj['Report_Date'] = Report_Date;
+            obj['Last_Date'] = Last_Date;
+            return obj;
+        }
+    });
+</script>

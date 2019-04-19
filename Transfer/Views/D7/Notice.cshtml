@@ -1,0 +1,783 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "NoticeSub";
+    ViewBag.Title = "通知設定";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr class="action search">
+                        <td style="">
+                            <table>
+                                <tr>
+                                    <td style="width:580px" class="form-group" >
+                                        <label>通知名稱 :</label>
+                                        @Html.DropDownList("Notice_Name",
+                                        (SelectList)ViewBag.NoticeName,
+                                        new { @class = "form-control", @style = "display:inline-block" })
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top:10px">
+                                        <input type="button" class="btn btn-primary" value="查詢" id="btnD74Search"  />
+                                        <input type="button" class="btn btn-primary" value="新增" id="btnAdd" style="margin-left:10px;" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+
+"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="D74Dialog" title="" style="display:none;">
+        <form id="D74DialogForm">
+            <table style="width:100%">
+                <tr>
+                    <td style="white-space:nowrap; text-align:right">
+                        通知名稱：
+                    </td>
+                    <td style="white-space:nowrap">
+                        <textarea id="D74DialogNotice_Name" name="D74DialogNotice_Name" style="width:280px;height:40px;"></textarea>
+                        @*<input type="text" name="D74DialogNotice_Name" id="D74DialogNotice_Name">*@
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        通知說明：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <textarea id="D74DialogNotice_Memo" name="D74DialogNotice_Memo" style="width:280px;height:100px;"></textarea>
+                        @*<input type="text" name="D74DialogNotice_Memo" id="D74DialogNotice_Memo">*@
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        發送郵件主旨：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <textarea id="D74DialogMail_Title" name="D74DialogMail_Title" style="width:280px;height:40px;"></textarea>
+                        @*<input type="text" name="D74DialogMail_Title" id="D74DialogMail_Title">*@
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        郵件內容：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <textarea id="D74DialogMail_Msg" name="D74DialogMail_Msg" style="width:280px;height:100px;"></textarea>
+                        @*<input type="text" name="D74DialogMail_Msg" id="D74DialogMail_Msg">*@
+                    </td>
+                </tr>
+                <tr style="display:none">
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        是否生效：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <table>
+                            <tr>
+                                <td>
+                                    <div class="radio radio-info">
+                                        @Html.RadioButton("D74DialogIsActive", "Y", true)
+                                        <label>是</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="radio radio-info">
+                                        @Html.RadioButton("D74DialogIsActive", "N")
+                                        <label>否</label>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="hidden" id="D74DialogNotice_ID" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding-top:10px">
+                        <input type="button" class="btn btn-primary" style="float:left" id="D74DialogbtnSave" value="儲存" />
+                        @*<input type="button" class="btn btn-primary" style="float:left" id="D74DialogbtnDelete" value="刪除" />*@
+                        <input type="button" class="btn btn-primary" style="float:right" id="D74DialogbtnClose" value="關閉" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="mailDialog" style="display:none;">
+        <input type="button" class="btn btn-primary" value="新增" id="btnAdd2" style="margin-bottom:10px;" />
+        <input type="hidden" id="mailId" />
+        <div id="jqgridDiv2" class="jqd">
+        </div>
+    </div>  
+    <div id="D74_1Dialog" title="" style="display:none;">     
+        <form id="D74_1DialogForm">
+            <table style="width:100%">
+                <tr>
+                    <td style="white-space:nowrap; text-align:right">
+                        收件者單位：
+                    </td>
+                    <td style="white-space:nowrap">
+                        <input type="text" name="D74_1DialogRecipient_Department" id="D74_1DialogRecipient_Department">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        收件者名稱：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <input type="text" name="D74_1DialogRecipient_Name" id="D74_1DialogRecipient_Name">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        收件者Mail：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <input type="text" name="D74_1DialogRecipient_mail" id="D74_1DialogRecipient_mail">
+                    </td>
+                </tr>
+                <tr style="display:none">
+                    <td style="white-space:nowrap; text-align:right;padding-top:10px">
+                        是否生效：
+                    </td>
+                    <td style="white-space:nowrap;padding-top:10px">
+                        <table>
+                            <tr>
+                                <td>
+                                    <div class="radio radio-info">
+                                        @Html.RadioButton("D74_1DialogIsActive", "Y", true)
+                                        <label>是</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="radio radio-info">
+                                        @Html.RadioButton("D74_1DialogIsActive", "N")
+                                        <label>否</label>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="hidden" id="D74_1DialogNotice_ID" />
+                        <input type="hidden" id="D74_1Dialog_ID" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding-top:10px">
+                        <input type="button" class="btn btn-primary" style="float:left" id="D74_1DialogbtnSave" value="儲存" />
+                        <input type="button" class="btn btn-primary" style="float:left" id="D74_1DialogbtnDelete" value="刪除" />
+                        <input type="button" class="btn btn-primary" style="float:right" id="D74_1DialogbtnClose" value="關閉" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("GetD74", "D7")';
+        url.getD74_1 = '@Url.Action("GetD74_1", "D7")';
+        url.getDbData = '@Url.Action("GetD7CacheData", "D7")';
+        url.saveD74 = '@Url.Action("SaveD74", "D7")';
+        url.saveD74_1 = '@Url.Action("SaveD74_1", "D7")';
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var dialogId = 'D74Dialog';
+        var dialogformId = dialogId + 'Form';
+        var Notice_IDId = dialogId + "Notice_ID";
+        var Notice_NameId = dialogId + 'Notice_Name';
+        var Notice_MemoId = dialogId + 'Notice_Memo';
+        var Mail_TitleId = dialogId + 'Mail_Title';
+        var Mail_MsgId = dialogId + 'Mail_Msg';
+        var IsActiveName = dialogId + 'IsActive';
+        var saveId = dialogId + 'btnSave';
+        var deleteId = dialogId + 'btnDelete';
+        var dialogId2 = 'D74_1Dialog';
+        var dialogformId2 = dialogId2 + 'Form';
+        var Notice_IDId2 = dialogId2 + "Notice_ID";
+        var IDId2 = dialogId2 + "_ID";
+        var Recipient_DepartmentId2 = dialogId2 + "Recipient_Department";
+        var Recipient_NameId2 = dialogId2 + "Recipient_Name";
+        var Recipient_mailId2 = dialogId2 + "Recipient_mail";
+        var IsActiveName2 = dialogId2 + "IsActive";
+        var saveId2 = dialogId2 + 'btnSave';
+        var deleteId2 = dialogId2 + 'btnDelete';
+        //#endregion 共用參數
+
+        //#region 註冊verified
+        verified.required(dialogformId, Notice_NameId, '通知名稱為必填!');
+        verified.maxlength(dialogformId, Notice_NameId,50);
+        verified.maxlength(dialogformId, Mail_TitleId,100);
+        verified.required(dialogformId, Mail_TitleId, '發送郵件主旨為必填!');
+        verified.maxlength(dialogformId, Mail_TitleId,50);
+        verified.required(dialogformId, Mail_MsgId, '郵件內容為必填!');
+        verified.maxlength(dialogformId, Mail_MsgId, 100);
+        verified.required(dialogformId2, Recipient_DepartmentId2, '收件者單位為必填!');
+        verified.maxlength(dialogformId2, Recipient_DepartmentId2, 30);
+        verified.required(dialogformId2, Recipient_NameId2, '收件者名稱為必填!');
+        verified.maxlength(dialogformId2, Recipient_NameId2, 20);
+        verified.required(dialogformId2, Recipient_mailId2, '收件者Mail為必填!');
+        verified.maxlength(dialogformId2, Recipient_mailId2, 50);
+        //#endregion 註冊verified
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnD74Search':
+                    $('#' + id).on('click', function () { D74Search() });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { dialogOpen('@Ref.Action_Type.Add.ToString()') });
+                    break;
+                case 'btnAdd2':
+                    $("#" + id).on('click', function () { dialogOpen2('@Ref.Action_Type.Add.ToString()') });
+                    break;
+                case 'D74DialogbtnClose':
+                    $("#" + id).on('click',function()
+                    {
+                        $('#' + dialogId).dialog('close');
+                    });
+                    break;
+                case 'D74_1DialogbtnClose':
+                    $("#" + id).on('click', function () {
+                        $('#' + dialogId2).dialog('close');
+                    });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function D74Search() {
+            clearJqgrid('jqgridDiv');
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        noticeID : $('#Notice_Name').val(),
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid(
+                            "jqgridDiv",
+                            "list1",
+                            "pager1");
+                    }
+                    else
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                })
+        }
+
+        function ActionFormatter(cellvalue, options, rdata) {
+            let str = '';
+            str += '<div class="btn-group">';
+            str += '<a title="修改" class="btn actionEditIcon" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D74' + options.gid + 'Edit' + options.rowId + '" return:false;="">';
+            str += '<i class="fa fa-pencil-square-o fa-lg"></i></a>';
+            str += '<a title="檢視" class="btn actionViewIcon" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" href="#" id="D74' + options.gid + 'View' + options.rowId + '" return:false;="">';
+            str += '<i class="fa fa-search fa-lg"></i></a>';
+            str += '</div>';
+            return str;
+        }
+
+        function MailNumFormatter(cellvalue, options, rdata) {
+            return "<a href='#' class='openDialog mailOpen' style='text-decoration:underline;' return:false; id='" + options.gid + "MailNum" + options.rowId + "' title='" + cellvalue + "'>" + cellvalue + "</a>";
+        }
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(jqgridDivId) {
+            $('#'+jqgridDivId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //colModelArray
+        function createJqgrid(jqgridDivId, listId, pagerId) {
+            clearJqgrid(jqgridDivId);
+            var colNameArray = [];
+            var colModelArray = [];
+            var type = '';
+            var caption = '';
+            if (listId == 'list1') //通知設定檔
+            {
+                type = 'D74';
+                caption = '@Ref.Table_Type.D74.tableNameGetDescription()';
+                colNameArray = ['Action', '通知名稱', '通知說明', '發送郵件主旨',
+                    '郵件內容', '收信者數量', '是否生效', 
+                    '新增者帳號', '新增時間', '最後修改者帳號', '最後修改時間', '通知代號'];
+                colModelArray = [
+                { name: "act", width: 80, align: "left", sortable: false, editable: false },
+                { name: "Notice_Name", index: "Notice_Name", align: 'left', width: 150 },
+                { name: "Notice_Memo", index: "Notice_Memo", align: 'left', width: 150 },
+                { name: "Mail_Title", index: "Mail_Title", align: 'left', width: 150 },
+                { name: "Mail_Msg", index: "Mail_Msg", align: 'left', width: 150 },
+                { name: "mailNum", index: "mailNum", align: 'center', width: 80, formatter: MailNumFormatter },
+                { name: "IsActive", index: "IsActive", align: 'left',  width: 80,hidden:true },
+                { name: "Create_User", index: "Create_User", align: 'center', width: 100 },
+                { name: "Create_Date_Time", index: "Create_Date_Time", align: 'center', width: 180 },
+                { name: "LastUpdate_User", index: "LastUpdate_User", align: 'center', width: 100 },
+                { name: "LastUpdate_Date_Time", index: "LastUpdate_Date_Time", align: 'center', width: 180 },
+                { name: "Notice_ID", index: "Notice_ID", align: 'left', hidden: true },
+                ];
+            }
+            else if (listId == 'list2') //通知郵件
+            {
+                type = 'D74_1';
+                caption = '@Ref.Table_Type.D74_1.tableNameGetDescription()';
+                colNameArray = ['Action', '收件者單位', '收件者名稱', '收件者Mail',
+                         '是否生效', '新增者帳號', '新增時間',
+                         '最後修改者帳號', '最後修改時間', '通知代號','ID'];
+                colModelArray = [
+                { name: "act", width: 100, align: "left", sortable: false, editable: false },
+                { name: "Recipient_Department", index: "Recipient_Department", align: 'left', width: 120 },
+                { name: "Recipient_Name", index: "Recipient_Name", align: 'left', width: 120 },
+                { name: "Recipient_mail", index: "Recipient_mail", align: 'left', width: 150 },
+                { name: "IsActive", index: "IsActive", align: 'left', width: 80,hidden:true },
+                { name: "Create_User", index: "Create_User", align: 'center', width: 100 },
+                { name: "Create_Date_Time", index: "Create_Date_Time", align: 'center', width: 180 },
+                { name: "LastUpdate_User", index: "LastUpdate_User", align: 'center', width: 100 },
+                { name: "LastUpdate_Date_Time", index: "LastUpdate_Date_Time", align: 'center', width: 180 },
+                { name: "Notice_ID", index: "Notice_ID", align: 'left', hidden: true },
+                { name: "ID" , index:"ID" , hidden:true}
+                ];
+            }
+            $('#' + jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#' + jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: type,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                sortorder: "desc",
+                caption: caption, //標題
+                resizable: false,
+                shrinkToFit: false,
+                //autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true, //顯示總數
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    if (listId == 'list1')
+                    {
+                        jqgridCustom.randerAction(listId, 'D74', actfun);
+                        $('#' + listId + ' > tbody > tr:gt(0) ').each(function(){                        
+                            $(this).find('.actionDeleIcon').hide();
+                            var noticeID = $(this).find($.validator.format('td[aria-describedby$={0}_Notice_ID]', listId)).text();                        
+                            $(this).find('td').find('a.mailOpen').each(function(){
+                                $(this).off('click');
+                                $(this).on('click', function () {
+                                    $('#mailId').val(noticeID);
+                                    $.ajax({
+                                        type: "POST",
+                                        data: JSON.stringify({
+                                            noticeID: noticeID,
+                                        }),
+                                        dataType: "json",
+                                        url: url.getD74_1,
+                                        contentType: 'application/json',
+                                    })
+                                    .done(function (result) {
+                                        createJqgrid(
+                                            "jqgridDiv2",
+                                            "list2",
+                                            "pager2");
+                                        $("#mailDialog").dialog({
+                                            title: '郵件設定',
+                                            position: { my: "center", at: "center", of: window },
+                                            width: 'auto'
+                                        });
+                                        $("#mailDialog").dialog("open");
+                                    })
+                                });
+                            });
+                        });
+                    }
+                    else if (listId == 'list2')
+                    {
+                        jqgridCustom.randerAction(listId, 'D74_1', actfun2);
+                        //$('.actionDeleIcon').hide();
+                    }
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Edit.ToString()',i);
+        }
+        actfun.Dele = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.Dele.ToString()',i);
+        }
+        actfun.View = function(i)
+        {
+            dialogOpen('@Ref.Action_Type.View.ToString()',i);
+        }
+
+        function dialogOpen(type,rowid)
+        {
+            var title = '';
+            $('#' + saveId).hide();
+            $('#' + Notice_NameId).attr('disabled', false);
+            $('#' + Notice_MemoId).attr('disabled', false);
+            $('#' + Mail_TitleId).attr('disabled', false);
+            $('#' + Mail_MsgId).attr('disabled', false);
+            $('input[name=' + IsActiveName + ']').attr('disabled', false);
+            if(type == '@Ref.Action_Type.Add.ToString()')
+            {
+                title = '@Ref.Action_Type.Add.GetDescription()';
+                dialogSetData(0);
+                $('#'+saveId).show();
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Edit.ToString()')
+            {
+                //$('#' + Notice_NameId).attr('disabled', true);
+                title = '@Ref.Action_Type.Edit.GetDescription()';
+                $('#'+saveId).show();
+                dialogSetData(rowid);
+                $('#'+saveId).off('click');
+                $('#'+saveId).on('click',function(){
+                    dialogSave(type);
+                });
+            }
+            else if(type == '@Ref.Action_Type.Dele.ToString()')
+            {
+            }
+            else if(type == '@Ref.Action_Type.View.ToString()')
+            {
+                $('#' + Notice_NameId).attr('disabled', true);
+                $('#' + Notice_MemoId).attr('disabled', true);
+                $('#' + Mail_TitleId).attr('disabled', true);
+                $('#' + Mail_MsgId).attr('disabled', true);
+                $('input[name=' + IsActiveName + ']').attr('disabled', true);
+                title = '@Ref.Action_Type.View.GetDescription()';
+                dialogSetData(rowid);
+            }
+            $("#" + dialogId).dialog({
+                title: title,
+                position: { my: "center", at: "center", of: window },
+                width: 'auto'
+            });
+            $("#" + dialogId).dialog("open");
+            $('#'+dialogformId).validate().resetForm();
+        }
+
+        function dialogSetData(rowid)
+        {
+            rowid = rowid || 0;
+            //清空
+
+            $('#' + Notice_IDId).val('');
+            $('#' + Notice_NameId).val('');
+            $('#' + Notice_MemoId).val('');
+            $('#' + Mail_TitleId).val('');
+            $('#' + Mail_MsgId).val('');
+            $('input[name=' + IsActiveName + ']').filter('[value=Y]').prop('checked', true);
+            if(rowid > 0)
+            {
+                var data = $("#list1").getRowData(rowid);
+                //set value
+                $('#' + Notice_IDId).val(data.Notice_ID);
+                $('#' + Notice_NameId).val(data.Notice_Name);
+                $('#' + Notice_MemoId).val(data.Notice_Memo);
+                $('#' + Mail_TitleId).val(data.Mail_Title);
+                $('#' + Mail_MsgId).val(data.Mail_Msg);
+                var isActive = data.IsActive;
+                $('input[name=' + IsActiveName + ']')
+                .each(function () {                    
+                    if ($(this).val() == isActive) {
+                        $(this).prop("checked", true);
+                    }
+                });
+            }
+        }
+
+        var actfun2 = {};
+        actfun2.Edit = function (i) {
+            dialogOpen2('@Ref.Action_Type.Edit.ToString()', i);
+        }
+        actfun2.Dele = function (i) {
+            dialogOpen2('@Ref.Action_Type.Dele.ToString()', i);
+        }
+        actfun2.View = function (i) {
+            dialogOpen2('@Ref.Action_Type.View.ToString()', i);
+        }
+
+        function dialogOpen2(type, rowid) {
+            var title = '';
+            $('#' + saveId2).hide();
+            $('#' + deleteId2).hide();
+            $('#' + Recipient_DepartmentId2).attr('disabled', false);
+            $('#' + Recipient_NameId2).attr('disabled', false);
+            $('#' + Recipient_mailId2).attr('disabled', false);
+            $('input[name=' + IsActiveName2 + ']').attr('disabled', false);
+
+            if (type == '@Ref.Action_Type.Add.ToString()') {
+                title = '@Ref.Action_Type.Add.GetDescription()';
+                dialogSetData2(0);
+                $('#' + saveId2).show();
+                $('#' + saveId2).off('click');
+                $('#' + saveId2).on('click', function () {
+                    dialogSave2(type);
+                });
+            }
+            else if (type == '@Ref.Action_Type.Edit.ToString()') {
+                //$('#' + Recipient_mailId2).attr('disabled', true);
+                title = '@Ref.Action_Type.Edit.GetDescription()';
+                $('#' + saveId2).show();
+                dialogSetData2(rowid);
+                $('#' + saveId2).off('click');
+                $('#' + saveId2).on('click', function () {
+                    dialogSave2(type);
+                });
+            }
+            else if (type == '@Ref.Action_Type.Dele.ToString()') {
+                $('#' + Recipient_DepartmentId2).attr('disabled', true);
+                $('#' + Recipient_NameId2).attr('disabled', true);
+                $('#' + Recipient_mailId2).attr('disabled', true);
+                $('input[name=' + IsActiveName2 + ']').attr('disabled', true);
+                title = '@Ref.Action_Type.Dele.GetDescription()';
+                dialogSetData2(rowid);
+                $('#' + deleteId2).show();
+                $('#' + deleteId2).off('click');
+                $('#' + deleteId2).on('click', function () {
+                    dialogSave2(type);
+                });
+            }
+            else if (type == '@Ref.Action_Type.View.ToString()') {
+                $('#' + Recipient_DepartmentId2).attr('disabled', true);
+                $('#' + Recipient_NameId2).attr('disabled', true);
+                $('#' + Recipient_mailId2).attr('disabled', true);
+                $('input[name=' + IsActiveName2 + ']').attr('disabled', true);
+                title = '@Ref.Action_Type.View.GetDescription()';
+                dialogSetData2(rowid);
+            }
+            $("#" + dialogId2).dialog({
+                title: title,
+                position: { my: "center", at: "center", of: window },
+                width: 'auto'
+            });
+            $("#" + dialogId2).dialog("open");
+            $('#' + dialogformId2).validate().resetForm();
+        }
+
+        function dialogSetData2(rowid)
+        {
+            rowid = rowid || 0;
+            $('#' + IDId2).val('');
+            $('#' + Notice_IDId2).val('');
+            $('#' + Recipient_DepartmentId2).val('');
+            $('#' + Recipient_NameId2).val('');
+            $('#' + Recipient_mailId2).val('');
+            $('input[name=' + IsActiveName2 + ']').filter('[value=Y]').prop('checked', true);
+            if (rowid > 0) {
+                var data = $("#list2").getRowData(rowid);
+                //set value
+                $('#' + IDId2).val(data.ID);
+                $('#' + Notice_IDId2).val(data.Notice_ID);
+                $('#' + Recipient_DepartmentId2).val(data.Recipient_Department);
+                $('#' + Recipient_NameId2).val(data.Recipient_Name);
+                $('#' + Recipient_mailId2).val(data.Recipient_mail);
+                var isActive = data.IsActive;
+                $('input[name=' + IsActiveName2 + ']')
+                    .each(function () {
+                        if ($(this).val() == isActive)
+                        {
+                            $(this).prop("checked" , true);
+                        }
+                    });
+            }
+        }
+
+        //#region save
+        function dialogSave(action)
+        {
+            @*if(action =='@Ref.Action_Type.Dele.ToString()')
+            {
+                if(!confirm("確定刪除?"))
+                {
+                    return false;
+                }
+            }*@
+            if($('#'+dialogformId).valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        action: action, //action
+                        noticeID: $('#Notice_Name').val(),
+                        data: D74ViewModel(
+                            $('#' + Notice_IDId).val(),
+                            $('#' + Notice_NameId).val(),
+                            $('#' + Notice_MemoId).val(),
+                            $('#' + Mail_TitleId).val(),
+                            $('#' + Mail_MsgId).val(),
+                            $('input[name=' + IsActiveName + ']:checked').val()
+                            )
+                    }),
+                    dataType: "json",
+                    url: url.saveD74,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $("#" + dialogId).dialog("close");
+                        customerUtility.alert(result.DESCRIPTION,'s');
+                        clearJqgrid('jqgridDiv');
+                        createJqgrid('jqgridDiv',"list1", "pager1");
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+
+        function dialogSave2(action)
+        {
+            if(action =='@Ref.Action_Type.Dele.ToString()')
+            {
+                if(!confirm("確定刪除?"))
+                {
+                    return false;
+                }
+            }
+            if ($('#' + dialogformId2).valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        action: action, //action
+                        noticeID: $('#Notice_Name').val(),
+                        data: D74_1ViewModel(
+                            $('#'+IDId2).val(),
+                            $('#mailId').val(),
+                            $('#' + Recipient_DepartmentId2).val(),
+                            $('#' + Recipient_NameId2).val(),
+                            $('#' + Recipient_mailId2).val(),
+                            $('input[name=' + IsActiveName2 + ']:checked').val()
+                            )
+                    }),
+                    dataType: "json",
+                    url: url.saveD74_1,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $("#" + dialogId2).dialog("close");
+                        customerUtility.alert(result.DESCRIPTION, 's');
+                        clearJqgrid('jqgridDiv');
+                        createJqgrid("jqgridDiv", "list1", "pager1");
+                        clearJqgrid('jqgridDiv2');
+                        createJqgrid("jqgridDiv2","list2", "pager2");
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+        //#endregion save
+
+        function D74ViewModel
+        (
+            Notice_ID,
+            Notice_Name,
+            Notice_Memo,
+            Mail_Title,
+            Mail_Msg,
+            IsActive
+        )
+        {
+            var obj = {};
+            obj['Notice_ID'] = Notice_ID;
+            obj['Notice_Name'] = Notice_Name;
+            obj['Notice_Memo'] = Notice_Memo;
+            obj['Mail_Title'] = Mail_Title;
+            obj['Mail_Msg'] = Mail_Msg;
+            obj['IsActive'] = IsActive;
+            return obj;
+        }
+
+        function D74_1ViewModel(
+            ID,
+            Notice_ID,
+            Recipient_Department,
+            Recipient_Name,
+            Recipient_mail,
+            IsActive
+            )
+        {
+            var obj = {};
+            obj['ID'] = ID;
+            obj['Notice_ID'] = Notice_ID;
+            obj['Recipient_Department'] = Recipient_Department;
+            obj['Recipient_Name'] = Recipient_Name;
+            obj['Recipient_mail'] = Recipient_mail;
+            obj['IsActive'] = IsActive;
+            return obj;
+        }
+
+    });
+</script>

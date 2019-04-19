@@ -1,0 +1,165 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A7Main";
+    ViewBag.SubMenu = "A73Sub";
+    ViewBag.Title = "等級違約率矩陣查詢(A73)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <div>
+                <input type="button" class="btn btn-primary" value="等級違約率矩陣查詢" id="btnA73Search" />
+                <input type="button" class="btn btn-primary dlexcel" value="下載Excel" id="btnA73Dl" disabled />
+            </div>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="說明：
+查詢前請至A7上傳Moody Exhibit 29資料。(每年4月更新)"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetData", "A7")';
+        url.getExcel = '@Url.Action("GetExcel", "A7")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA73Search':
+                    $("#" + id).on('click', function () { showJqgrid('@Ref.Table_Type.A73.ToString()') });
+                    break;
+                case 'btnA73Dl':
+                    $("#" + id).on('click', function () { dlExcel('@Ref.Excel_DownloadName.A73.ToString()') });
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 下載Excel 檔案
+        function dlExcel(type) {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: type
+                }),
+                dataType: "json",
+                url: url.getExcel,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    window.location.href = "@Url.RouteUrl(new
+                    { Controller = "A7", Action = "DownloadExcel"})/?type=" + type;
+                    IFRS9onbrforeunloadFlag = true;
+                }
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                //alert(result.DESCRIPTION);
+            })
+        }
+        //#endregion 下載Excel 檔案
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type) {
+            clearJqgrid();
+            var title = '@Ref.Table_Type.A73.GetDescription()'; //標頭
+            var colNameArray = []; //每個欄位名稱要對應傳入資料屬性
+            var widthArray = []; //每個欄位大小 L,M
+            var data; // json Data 由Ajax 拿到
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    type: type
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    data = result.Datas.Data;
+                    $('#btnA73Dl').prop('disabled', false);
+                    createJqgrid("list1", "pager1", data, title);
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, data, title) {
+            var jagridMWidth = 80; //寬度
+            var colModelArray = [];
+            var colNameArray = data[0]; //欄位Title 由第一筆資料取的
+            if (data.length > 0) {
+                for (let i = 0; i < colNameArray.length; i++) {
+                    var obj = {
+                        name: colNameArray[i],
+                        index: colNameArray[i],
+                        width: jagridMWidth
+                    }
+                    colModelArray.push(obj);
+                }
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    data: data.slice(1), //資料為第二筆以後
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    //sortname: 'id',
+                    viewrecords: true,
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+    });
+</script>

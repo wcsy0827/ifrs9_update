@@ -1,0 +1,445 @@
+﻿@{
+    ViewBag.Menu = "A9Main";
+    ViewBag.SubMenu = "A94Sub";
+    ViewBag.Title = "A94(主權債測試指標_Ticker)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap">
+                            國家：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Country" name="Country" maxlength="30">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    國家：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editCountry" id="editCountry" maxlength="30">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    政府債務/GDP Ticker：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editIGS_Index_Map" id="editIGS_Index_Map" maxlength="20">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    短期外債 Ticker：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editShort_term_Debt_Map" id="editShort_term_Debt_Map" maxlength="20">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    外匯儲備 Ticker：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editForeign_Exchange_Map" id="editForeign_Exchange_Map" maxlength="20">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    年度GDP Y/Y Ticker：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editGDP_Yearly_Map" id="editGDP_Yearly_Map" maxlength="20">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="刪除" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnClose" value="關閉" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetA94AllData", "A9")';
+        url.getDbData = '@Url.Action("GetCacheA94Data", "A9")';
+        url.getData = '@Url.Action("GetA94Data", "A9")';
+        url.saveData = '@Url.Action("SaveA94", "A9")';
+        url.deleteData = '@Url.Action("DeleteA94", "A9")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnClose':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+            }
+        })
+        //#endregion
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Country').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var country = $('#Country').val().trim();
+
+            var obj = {
+                Country: country
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = ''; //標頭
+            var colNameArray = []; //每個欄位名稱要對應傳入資料屬性
+            var urlString = "";
+
+            title = '@ViewBag.Title';
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: urlString
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 100, sortable: false },
+                                    { name: "Country", index: "Country", align: 'left'},
+                                    { name: "IGS_Index_Map", index: "IGS_Index_Map", align: 'left', width:200},
+                                    { name: "Short_term_Debt_Map", index: "Short_term_Debt_Map", align: 'left'},
+                                    { name: "Foreign_Exchange_Map", index: "Foreign_Exchange_Map", align: 'left'},
+                                    { name: "GDP_Yearly_Map", index: "GDP_Yearly_Map", align: 'left', width: 200 }
+                                ];
+
+            var colNameArray = [
+                                   '',
+                                   '國家',
+                                   '政府債務/GDP Ticker',
+                                   '短期外債 Ticker',
+                                   '外匯儲備 Ticker',
+                                   '年度GDP Y/Y Ticker'
+                               ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        //#region
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            SetAction("Modify", i, "修改");
+        }
+        actfun.View = function(i)
+        {
+            SetAction("View", i, "檢視");
+        }
+        actfun.Dele = function(i)
+        {
+            SetAction("Delete", i, "刪除");
+        }
+        //#endregion
+
+        //#region SetAction
+        function SetAction(actionType, rowid, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            if (actionType == "Add") {
+                $('#editCountry').val("");
+                $('#editIGS_Index_Map').val("");
+                $('#editShort_term_Debt_Map').val("");
+                $('#editForeign_Exchange_Map').val("");
+                $('#editGDP_Yearly_Map').val("");
+            }
+            else {
+                var data = $("#list1").getRowData(rowid);
+
+                $('#editCountry').val(data.Country);
+                $('#editIGS_Index_Map').val(data.IGS_Index_Map);
+                $('#editShort_term_Debt_Map').val(data.Short_term_Debt_Map);
+                $('#editForeign_Exchange_Map').val(data.Foreign_Exchange_Map);
+                $('#editGDP_Yearly_Map').val(data.GDP_Yearly_Map);
+            }
+
+            $('#editCountry').prop('disabled', true);
+            $('#editIGS_Index_Map').prop('disabled', true);
+            $('#editShort_term_Debt_Map').prop('disabled', true);
+            $('#editForeign_Exchange_Map').prop('disabled', true);
+            $('#editGDP_Yearly_Map').prop('disabled', true);
+
+            switch (actionType) {
+                case "Add":
+                case "Modify":
+                    $('#editCountry').prop('disabled', false);
+                    $('#editIGS_Index_Map').prop('disabled', false);
+                    $('#editShort_term_Debt_Map').prop('disabled', false);
+                    $('#editForeign_Exchange_Map').prop('disabled', false);
+                    $('#editGDP_Yearly_Map').prop('disabled', false);
+
+                    if (actionType == "Modify") {
+                        $('#editCountry').prop('disabled', true);
+                    }
+
+                    $('#btnSave').show();
+                    $('#btnDelete').hide();
+                    break;
+                case "View":
+                    $('#btnSave').hide();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "Delete":
+                    $('#btnSave').hide();
+                    $('#btnDelete').show();
+
+                    break;
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = null;
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+
+            var country = $('#editCountry').val().trim();
+            var igsIndexMap = $('#editIGS_Index_Map').val().trim();
+            var shortTermDebtMap = $('#editShort_term_Debt_Map').val().trim();
+            var foreignExchangeMap = $('#editForeign_Exchange_Map').val().trim();
+            var gdpYearlyMap = $('#editGDP_Yearly_Map').val().trim();
+
+            if (country == "") {
+                alert("國家 必填");
+                return false;
+            }
+
+            var obj = {
+                Country: country,
+                IGS_Index_Map: igsIndexMap,
+                Short_term_Debt_Map: shortTermDebtMap,
+                Foreign_Exchange_Map: foreignExchangeMap,
+                GDP_Yearly_Map: gdpYearlyMap
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定刪除？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        country: $('#editCountry').val()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+    });
+</script>

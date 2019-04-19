@@ -1,0 +1,321 @@
+﻿@using Transfer.Enum;
+@{
+    ViewBag.Menu = "C0Main";
+    ViewBag.SubMenu = "C07MortgageSub";
+    ViewBag.Title = "C07(減損計算輸出資料-房貸)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .ui-datepicker-trigger {
+        border: none;
+        background: none;
+    }
+
+    .error {
+        color: red;
+    }
+</style>
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <label>產品 :</label>
+                            @Html.DropDownList("Product_Code",
+                             (SelectList)ViewBag.ProductCode,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap;padding-left:20px">
+                            <label>評估基準日/報導日 :</label>
+                            <input type="text" id="Report_Date" name="Report_Date" maxlength="10">
+                        </td>
+                        <td style="white-space:nowrap;display:none;">
+                            <label>資料版本 :</label>
+                            <input type="text" id="Version" name="Version" value="">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td id="tdSearch">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td id="tdReset">
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" style="display:none" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary dlexcel" value="匯出Excel" id="btnExportExcel" disabled />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetC07Data", "C0")';
+        url.getDbData = '@Url.Action("GetCacheC07Data", "C0")';
+        url.getExcel = '@Url.Action("GetC07Excel", "C0")';
+        //#endregion 註冊URL
+
+        //#region 產生datepicker
+        created.createDatepicker('Report_Date', true, '');
+        //#endregion
+
+        //#region Set Default
+        var debtType = '@Transfer.Enum.Ref.GroupProductCode.M.ToString()';
+        var type = '@Ref.Excel_DownloadName.C07Mortgage.ToString()';
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnExportExcel':
+                    $("#" + id).on('click', function () { dlExcel(); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Product_Code').val("");
+            $('#Report_Date').val("");
+            $('#Version').val("");
+        }
+        //#endregion
+
+        var groupProductCode = "";
+        var productCode = "";
+        var reportDate = "";
+        var version = "";
+        //#region SearchData
+        function SearchData() {
+            if (CheckData() == true) {
+                showJqgrid("2", groupProductCode, productCode, reportDate, version);
+            }
+        }
+        //#endregion
+
+        //#region CheckData
+        function CheckData() {
+            if ($('#Product_Code').prop('selectedIndex') < 0) {
+                toastr.error("請選擇 產品");
+                return false;
+            }
+
+            var text = $('#Product_Code :selected').text();
+            var f = text.indexOf("(") + 1;
+            var e = text.indexOf(")");
+
+            groupProductCode = text.substr(f, (e - f));
+
+            productCode = $('#Product_Code').val().trim();
+            reportDate = $('#Report_Date').val().trim();
+            version = $('#Version').val().trim();
+
+            if (productCode == "") {
+                alert("您選擇的產品組合沒有Product_Code，請至 D05 新增");
+                return false;
+            }
+
+            if (reportDate == "") {
+                toastr.error("請輸入 評估基準日/報導日");
+                return false;
+            }
+            else {
+                if (verified.isDate(reportDate, false) == false) {
+                    toastr.error("評估基準日/報導日 格式錯誤(yyyy/MM/dd)");
+                    return false;
+                }
+            }
+
+            //if (version == "") {
+            //    toastr.error("請輸入 資料版本");
+            //    return false;
+            //}
+
+            return true;
+        }
+        //#endRegion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, groupProductCode, productCode, reportDate, version) {
+            clearJqgrid();
+
+            var title = ''; //標頭
+            var colNameArray = []; //每個欄位名稱要對應傳入資料屬性
+            var dataString = "";
+            var urlString = "";
+
+            title = '@ViewBag.Title';
+            colNameArray = ['Report_Date',
+                            'Processing_Date', 'Product_Code', 'Reference_Nbr', 'PD', 'Lifetime_EL',
+                            'Y1_EL', 'EL', 'Impairment_Stage', 'Version',
+                            'PRJID', 'FLOWID'];
+
+            dataString = JSON.stringify({
+                debtType: debtType,
+                groupProductCode: groupProductCode,
+                productCode: productCode,
+                reportDate: reportDate,
+                version: version
+            });
+
+            urlString = url.getData;
+
+            $.ajax({
+                type: "POST",
+                data: dataString,
+                dataType: "json",
+                url: urlString,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var widthArray =
+                        ['L',
+                         'L', 'L', 'L', 'L', 'L',
+                         'L', 'L', 'L', 'L',
+                         'L','L'];
+
+                    $('#btnExportExcel').prop('disabled', false);
+
+                    createJqgrid("list1", "pager1", colNameArray, widthArray, title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //widthArray (寬度設定 L=> 210 M=>120)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, colNameArray, widthArray, title) {
+            var colModelArray = [];
+            var jagridLWidth = 210;
+            var jagridMWidth = 120;
+
+            if (colNameArray.length > 0 && colNameArray.length === widthArray.length) {
+
+                colModelArray = [
+                                    { name: "Report_Date", index: "Report_Date", align: 'left' },
+                                    { name: "Processing_Date", index: "Processing_Date", align: 'left' },
+                                    { name: "Product_Code", index: "Product_Code", align: 'left' },
+                                    { name: "Reference_Nbr", index: "Reference_Nbr", align: 'left' },
+                                    { name: "PD", index: "PD", align: 'right' },
+                                    { name: "Lifetime_EL", index: "Lifetime_EL", align: 'right', width: 160 },
+                                    { name: "Y1_EL", index: "Y1_EL", align: 'right' },
+                                    { name: "EL", index: "EL", align: 'right' },
+                                    { name: "Impairment_Stage", index: "Impairment_Stage", align: 'center' },
+                                    { name: "Version", index: "Version", align: 'center' },
+                                    { name: "PRJID", index: "PRJID", align: 'left', width: 260 },
+                                    { name: "FLOWID", index: "FLOWID", align: 'left', width: 260 },
+                               ];
+
+                colNameArray = ['評估基準日/報導日',
+                                '資料處理日期', '產品', '案件編號/帳號', '第一年違約率', '存續期間預期信用損失',
+                                '一年期預期信用損失', '最終預期信用損失', '減損階段', '資料版本',
+                                '專案名稱', '流程名稱'];
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+                $("#" + listId).jqGrid({
+                    url: url.getDbData,
+                    datatype: "json",
+                    mtype: "POST",
+                    jsonReader:
+                    {
+                        repeatitems: false,
+                    },
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    width: jqgridCustom.getwidth(),
+                    shrinkToFit: false,
+                    viewsortcols: [true, 'vertical', true],
+                    viewrecords: true,
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                    }
+                });
+
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+
+        //#region 下載Excel 檔案
+        function dlExcel() {
+            if (CheckData() == true){
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        debtType: debtType,
+                        groupProductCode: groupProductCode,
+                        productCode: productCode,
+                        reportDate: reportDate,
+                        version: version
+                    }),
+                    dataType: "json",
+                    url: url.getExcel,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        window.location.href = "@Url.RouteUrl(new
+                        {
+                            Controller = "C0", Action = "DownloadExcel"})/?type=" + type;
+                        }
+                    else {
+                        toastr.error(result.DESCRIPTION);
+                    }
+                })
+            }
+        }
+        //#endregion 下載Excel 檔案
+
+    });
+</script>

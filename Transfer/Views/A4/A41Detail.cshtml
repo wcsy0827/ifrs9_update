@@ -1,0 +1,223 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A4Main";
+    ViewBag.SubMenu = "A41Sub";
+    ViewBag.Title = "A41(債券明細檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table width="100%">
+                    <tr>
+                        <td style="width:580px" class="form-group">
+                            <label>報導日 : </label>&emsp;&emsp;&emsp;
+                            <input type="text" id="datepicker1" name="datepicker1">
+                        </td>
+                        <td style="width:450px; padding-top:8px">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>版本 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                                   </td>
+                                    <td>
+                                        <div class="select-editable">
+                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                            <input type="text" name="version" id="version" value="" />
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:580px" class="form-group">
+                            <label>債券購入日期 : </label>
+                            <input type="text" id="datepicker2" name="datepicker2">
+                        </td>
+                        <td style="width:450px; padding-top:8px">
+                            <label>債券編號 : </label>
+                            <input type="text" id="number" name="number">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:5px">
+                <tr>
+                    <td style="padding-left:30px">
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnA41Search" style="margin-right:10px" />
+                    </td>
+                </tr>
+            </table>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="說明： 
+1.報導日+版本 為必填
+2.債券購入日期 & 債券編號 為選填
+"></i>
+            @*查詢組合一：報導日+版本
+            查詢組合二：債券購入日期or債券編號*@
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dialogtest" title=""></div>
+</div>
+
+<script type="text/javascript">
+
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getReportDataVersion = '@Url.Action("GetVersion", "A4")';
+        url.getData = '@Url.Action("GetData", "A4")';
+        url.getDbData = '@Url.Action("GetCacheData", "A4")';
+        //#endregion 註冊URL
+
+        //#region 選擇reportDate 後要觸發的動作
+        var versionFun = customerUtility.getVersion('versionSelect',
+            'datepicker1',
+            '@Ref.Transfer_Table_Type.A41.ToString()',
+            url.getReportDataVersion);
+        //#endregion 選擇reportDate 後要觸發的動作
+
+        //#region 產生datepicker
+        created.createDatepicker('datepicker1', true, '', versionFun);
+        created.createDatepicker('datepicker2', false,  null);
+        //#endregion
+
+        //#region 註冊verified
+        verified.datepicker("myForm1", "datepicker1", false, $('#datepicker1').val());
+        verified.required('myForm1', 'version', message.required(message.version));
+        verified.number('myForm1', 'version');
+        //#endregion 註冊verified
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnA41Search':
+                    //$("#" + id).on('click', function () { checkType() });
+                    $("#" + id).on('click', function () { search() });
+                    break;
+                //case 'btnA41BondsSearch':
+                //    $("#" + id).on('click', function () { BondsSearch() });
+                //    break;
+            }
+        })
+        //#endregion 註冊click事件
+        function setVerified(_Oflag)
+        {           
+            _Oflag = _Oflag || '';
+            verified.datepicker("myForm1", "datepicker1", false, $('#datepicker1').val());
+            verified.required('myForm1', 'version', message.required(message.version));
+            verified.number('myForm1', 'version');
+            if(_Oflag == 'Y')
+                verified.datepicker("myForm1", "datepicker2", false, $('#datepicker2').val());
+        }
+
+      
+
+        //#region 驗證重設
+        function resetVerified()
+        {
+            $('#myForm1').validate().resetForm();
+            $('#datepicker2').rules("remove",'dateFormate');
+        }
+        //#endregion 驗證重設
+
+        //#region 查詢條件
+
+        function search()
+        {
+            clearJqgrid();
+            resetVerified();
+            if($('#datepicker2').val() != '')
+                setVerified('Y');
+            else
+                setVerified('N');
+            if ($('#myForm1').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        ReportDate : $('#datepicker1').val(),
+                        OriginationDate : $('#datepicker2').val(),
+                        Version : $('#version').val(),
+                        BondNumber: $('#number').val()
+                    }),
+                    dataType: "json",
+                    url: url.getData,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid("list1", "pager1", '@Ref.Table_Type.A41.tableNameGetDescription()');
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            var _height =  jqgridCustom.getHeight();
+            console.log(_height);
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: "Db",
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: @Html.Raw(Json.Encode(ViewBag.jqgridColNames)),
+                colModel: @Html.Raw(Json.Encode(ViewBag.jqgridColModel)),
+                rownumbers: true, //每列編號
+                rownumWidth: 40,
+                rowNum: 30, //一頁筆數
+                rowList: [30, 50, 100], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height:_height,
+                width: jqgridCustom.getwidth(),
+                caption: title, //標題
+                shrinkToFit: false,
+                contentType: "application/json",
+                viewrecords: true, //顯示總數
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+    });
+</script>

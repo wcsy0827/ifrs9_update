@@ -1,0 +1,182 @@
+﻿@{
+    ViewBag.Menu = "A6Main";
+    ViewBag.SubMenu = "A60Sub";
+    ViewBag.Title = "A6 (上傳檔案)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td>
+                        @using (Ajax.BeginForm("Upload", "A6",
+                    new AjaxOptions { HttpMethod = "POST" },
+                    new { enctype = "multipart/form-data", @id = "form0" }))
+                        {
+                            <input type="file" name="file" class="filestyle" data-buttonName="btn-primary" data-buttonText="轉檔檔案" style="margin-right:10px" />
+                        }
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" style="margin-right:10px" value="資料上傳" id="fileSubmit" />
+                        <input type="button" class="btn btn-primary" value="轉檔" id="btnTransfer" disabled />
+                    </td>
+                </tr>
+            </table>
+        <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+           alt="資料來源：
+Moody下載資料表，Exhibit 7 - Average Corporate Debt Recovery Rates Measured By Trading Prices。(固定每年4月維護)
+說明：
+請將Exhibit 7單獨從資料表中COPY出一份資料表再上傳。"></i>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+
+        //#region 註冊URL
+        var url = {};
+        url.transfer = '@Url.Action("Transfer", "A6")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'fileSubmit':
+                    $("#" + id).click(fileSubmitFunction);
+                    break;
+                case 'btnTransfer':
+                    $("#" + id).click(transfer);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 資料上傳(Excel 資料寫入 local sql)
+        function transfer() {
+            $.ajax({
+                type: "POST",
+                url: url.transfer,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    customerUtility.alert(result.DESCRIPTION,'s');
+                else
+                    customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+        //#endregion 資料上傳(Excel 資料寫入 local sql)
+
+        //#region fileSubmitFunction (把檔案上傳到指定資料夾)
+        function fileSubmitFunction() {
+            var dataString;
+            var action = $("#form0").attr("action");
+            if ($("#form0").attr("enctype") == "multipart/form-data") {
+                dataString = new FormData($("#form0").get(0));
+                processData = false;
+            }
+            else {
+                // regular form, do your own thing if you need it
+            }
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                url: action,
+                data: dataString,
+                dataType: "json", //change to your own, else read my note above on enabling the JsonValueProviderFactory in MVC
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.RETURN_FLAG) {
+                        var colNameArray =
+                        colNameArray = ['Data_Year', 'Lien_Position',
+                                    'Recovery_Rate', 'LGD'];
+                        var data = result.Datas.Data;
+                        createJqgrid("list1", "pager1", colNameArray, data, "Exhibit 7");
+                        $('#btnTransfer').prop('disabled', false);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'w');
+                    }
+                },
+                error: function (result) {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        }
+        //#endregion fileSubmitFunction
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //colNameArray (設定上方Title *要與Data 傳入Json 屬性相對應)
+        //widthArray (寬度設定 L=> 210 M=>120)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, colNameArray, data, title) {
+            var colModelArray = [];
+            //var jagridLWidth = 210;
+            var jagridMWidth = 220;
+            if (colNameArray.length > 0) {
+                for (let i = 0; i < colNameArray.length; i++) {
+                    var obj = {
+                        name: colNameArray[i],
+                        index: colNameArray[i],
+                        width: jagridMWidth
+                    }
+                    colModelArray.push(obj);
+                }
+
+                $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+                $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+                $("#" + listId).jqGrid({
+                    data: data,
+                    datatype: "local",
+                    mtype: "POST",
+                    colNames: colNameArray,
+                    colModel: colModelArray,
+                     rowNum: jqgridCustom.rowNum(), //一頁筆數
+                    rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                    pager: '#' + pagerId,
+                    height: jqgridCustom.getHeight(),
+                    width: jqgridCustom.getwidth(),
+                    //sortname: 'id',
+                    //viewrecords: true,
+                    sortorder: "desc",
+                    caption: title, //標題
+                    resizable: false,
+                    shrinkToFit: false,
+                    autoencode: true,
+                    viewsortcols: [true, 'vertical', true],
+                    ajaxRowOptions: { contentType: "application/json" },
+                    serializeRowData: function (data) {
+                        return JSON.stringify(data);
+                    },
+                    loadComplete: function () {
+                        var table = $(this);
+                        jqgridCustom.updatePagerIcons(table);
+                    }
+                });
+                $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+            }
+        }
+        //#endregion createJqgrid
+    });
+</script>

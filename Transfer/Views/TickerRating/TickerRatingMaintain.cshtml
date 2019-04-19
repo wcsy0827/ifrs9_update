@@ -1,0 +1,908 @@
+﻿@{
+    ViewBag.Menu = "A5Main";
+    ViewBag.SubMenu = "TickerRatingSub";
+    ViewBag.Title = "Ticker & Rating 維護";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:250px">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap;text-align:right">
+                            項目：
+                        </td>
+                        <td style="white-space:nowrap" colspan="3">
+                            @Html.DropDownList("Maintain_Type",
+                             (SelectList)ViewBag.maintainType,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;text-align:right">
+                            編號：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Ticker_Rating_ID" name="Ticker_Rating_ID">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right">
+                            <div class="query Issuer">Issuer：</div>
+                            <div class="query Bond_Number" style="display:none">Bond_Number：</div>
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Issuer" name="Issuer" maxlength="50" class="query Issuer" style="width:300px">
+                            <input type="text" id="Bond_Number" name="Bond_Number" maxlength="50" class="query Bond_Number" style="display:none">
+                        </td>
+                    </tr>
+                    <tr class="query Guarantor_Ticker">
+                        <td style="white-space:nowrap;text-align:right">
+                            GUARANTOR_NAME：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="GUARANTOR_NAME" name="GUARANTOR_NAME" maxlength="50" style="width:300px">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right">
+                            GUARANTOR_EQY_TICKER：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="GUARANTOR_EQY_TICKER" name="GUARANTOR_EQY_TICKER" maxlength="50" style="width:300px">
+                        </td>
+                    </tr>
+                    <tr class="query Issuer_Ticker" style="display:none">
+                        <td style="white-space:nowrap;text-align:right">
+                            ISSUER_EQUITY_TICKER：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="ISSUER_EQUITY_TICKER" name="ISSUER_EQUITY_TICKER" maxlength="50" style="width:300px">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right">
+                        </td>
+                        <td style="white-space:nowrap">
+                        </td>
+                    </tr>
+                    <tr class="query Rating" style="display:none">
+                        <td style="white-space:nowrap;text-align:right">
+                            S&P：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="S_And_P" name="S_And_P" maxlength="50" style="width:300px">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right">
+                            Moody's：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Moodys" name="Moodys" maxlength="50" style="width:300px">
+                        </td>
+                    </tr>
+                    <tr class="query Rating" style="display:none">
+                        <td style="white-space:nowrap;text-align:right">
+                            Fitch：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Fitch" name="Fitch" maxlength="50" style="width:300px">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right">
+                            Fitch_TW：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Fitch_TW" name="Fitch_TW" maxlength="50" style="width:300px">
+                        </td>
+                    </tr>
+                    <tr class="query Rating" style="display:none">
+                        <td style="white-space:nowrap;text-align:right">
+                            TRC：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="TRC" name="TRC" maxlength="50" style="width:300px">
+                        </td>
+                        <td style="white-space:nowrap;text-align:right">
+                        </td>
+                        <td style="white-space:nowrap">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr>
+                <td style="white-space:nowrap" align="center" colspan="2">
+                    <span id="spanTable_Name"></span>
+                </td>
+            </tr>
+            <tr id="trTicker_Rating_ID">
+                <td style="white-space:nowrap; text-align:right">
+                    編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanTicker_Rating_ID"></span>
+                </td>
+            </tr>
+            <tr id="trIssuer">
+                <td style="white-space:nowrap; text-align:right">
+                    Issuer：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editIssuer" id="editIssuer" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trGUARANTOR_NAME">
+                <td style="white-space:nowrap; text-align:right">
+                    GUARANTOR_NAME：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editGUARANTOR_NAME" id="editGUARANTOR_NAME" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trBond_Number">
+                <td style="white-space:nowrap; text-align:right">
+                    Bond_Number：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editBond_Number" id="editBond_Number" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trGUARANTOR_EQY_TICKER">
+                <td style="white-space:nowrap; text-align:right">
+                    GUARANTOR_EQY_TICKER：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editGUARANTOR_EQY_TICKER" id="editGUARANTOR_EQY_TICKER" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trISSUER_EQUITY_TICKER">
+                <td style="white-space:nowrap; text-align:right">
+                    ISSUER_EQUITY_TICKER：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editISSUER_EQUITY_TICKER" id="editISSUER_EQUITY_TICKER" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trS_And_P">
+                <td style="white-space:nowrap; text-align:right">
+                    S&P：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editS_And_P" id="editS_And_P" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trMoodys">
+                <td style="white-space:nowrap; text-align:right">
+                    Moody's：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editMoodys" id="editMoodys" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trFitch">
+                <td style="white-space:nowrap; text-align:right">
+                    Fitch：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editFitch" id="editFitch" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trFitch_TW">
+                <td style="white-space:nowrap; text-align:right">
+                    Fitch_TW：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editFitch_TW" id="editFitch_TW" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr id="trTRC">
+                <td style="white-space:nowrap; text-align:right">
+                    TRC：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" name="editTRC" id="editTRC" maxlength="50" style="width:300px">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="刪除" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnCancel" value="取消" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region
+        $('#Maintain_Type').on('change', function () {
+            $('.query').hide();
+            var selectedValue = $(this).val();
+            $('.' + selectedValue).show();
+
+            if (selectedValue == "Bond_Rating") {
+                $('.Bond_Number').show();
+                $('.Rating').show();
+            }
+            else {
+                $('.Issuer').show();
+
+                if (selectedValue == "Issuer_Rating" || selectedValue == "Guarantor_Rating") {
+                    $('.Rating').show();
+                }
+            }
+        });
+        //#endregion
+
+        //#region 註冊URL
+        var url = {};
+        url.getData = "";
+        url.saveData = "";
+        url.deleteData = "";
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(""); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnCancel':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+            }
+        })
+        //#endregion
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Ticker_Rating_ID').val("");
+            $('#Issuer').val("");
+            $('#Bond_Number').val("");
+            $('#GUARANTOR_NAME').val("");
+            $('#GUARANTOR_EQY_TICKER').val("");
+            $('#ISSUER_EQUITY_TICKER').val("");
+            $('#S_And_P').val("");
+            $('#Moodys').val("");
+            $('#Fitch').val("");
+            $('#Fitch_TW').val("");
+            $('#TRC').val("");
+        }
+        //#endregion
+
+        //#region grid
+        var gridTitle = "";
+        var colModelArray;
+        var colNameArray;
+        //#endregion
+
+        //#region SearchData
+        function SearchData(queryType) {
+            var maintainType = $('#Maintain_Type').val().trim();
+            var tickerRatingID = $('#Ticker_Rating_ID').val().trim();
+            var issuer = $('#Issuer').val().trim();
+            var bondNumber = $('#Bond_Number').val().trim();
+            var guarantorNAME = $('#GUARANTOR_NAME').val().trim();
+            var guarantorEqyTicker = $('#GUARANTOR_EQY_TICKER').val().trim();
+            var issuerEquityTicker = $('#ISSUER_EQUITY_TICKER').val().trim();
+            var sAndP = $('#S_And_P').val().trim();
+            var moodys = $('#Moodys').val().trim();
+            var fitch = $('#Fitch').val().trim();
+            var fitchTW = $('#Fitch_TW').val().trim();
+            var trc = $('#TRC').val().trim();
+
+            gridTitle = $('#Maintain_Type :selected').text();
+
+            var obj;
+
+            switch (maintainType)
+            {
+                case "Guarantor_Ticker":
+                    url.getData = '@Url.Action("GetGuarantorTickerData", "TickerRating")';
+                    colModelArray = [
+                                        { name: "act", index: "act", width: 100, sortable: false },
+                                        { name: "Table_Name", index: "Table_Name", align: 'left', width: 100 },
+                                        { name: "Guarantor_Ticker_ID", index: "Guarantor_Ticker_ID", align: 'left', width:100 },
+                                        { name: "Issuer", index: "Issuer", align: 'left', width: 200 },
+                                        { name: "GUARANTOR_NAME", index: "GUARANTOR_NAME", align: 'left', width: 300 },
+                                        { name: "GUARANTOR_EQY_TICKER", index: "GUARANTOR_EQY_TICKER", align: 'left', width: 250 }
+                                    ];
+                    colNameArray = ['', '資料表名稱' ,'編號', 'Issuer', 'GUARANTOR_NAME', "GUARANTOR_EQY_TICKER"];
+                    obj = {
+                              Table_Name : maintainType,
+                              Guarantor_Ticker_ID: tickerRatingID,
+                              Issuer: issuer,
+                              GUARANTOR_NAME: guarantorNAME,
+                              GUARANTOR_EQY_TICKER: guarantorEqyTicker
+                          };
+                    break;
+                case "Issuer_Ticker":
+                    url.getData = '@Url.Action("GetIssuerTickerData", "TickerRating")';
+                    colModelArray = [
+                                        { name: "act", index: "act", width: 100, sortable: false },
+                                        { name: "Table_Name", index: "Table_Name", align: 'left', width: 100 },
+                                        { name: "Issuer_Ticker_ID", index: "Issuer_Ticker_ID", align: 'left', width:100 },
+                                        { name: "Issuer", index: "Issuer", align: 'left', width: 200 },
+                                        { name: "ISSUER_EQUITY_TICKER", index: "ISSUER_EQUITY_TICKER", align: 'left', width: 250 }
+                                    ];
+                    colNameArray = ['', '資料表名稱' ,'編號', 'Issuer', 'ISSUER_EQUITY_TICKER'];
+                    obj = {
+                        Table_Name : maintainType,
+                        Issuer_Ticker_ID: tickerRatingID,
+                        Issuer: issuer,
+                        ISSUER_EQUITY_TICKER: issuerEquityTicker
+                    };
+                    break;
+                case "Issuer_Rating":
+                    url.getData = '@Url.Action("GetIssuerRatingData", "TickerRating")';
+                    colModelArray = [
+                                        { name: "act", index: "act", width: 100, sortable: false },
+                                        { name: "Table_Name", index: "Table_Name", align: 'left', width: 100 },
+                                        { name: "Issuer_Rating_ID", index: "Issuer_Rating_ID", align: 'left', width: 100 },
+                                        { name: "Issuer", index: "Issuer", align: 'left', width: 300 },
+                                        { name: "S_And_P", index: "S_And_P", align: 'left', width: 100 },
+                                        { name: "Moodys", index: "Moodys", align: 'left', width: 100 },
+                                        { name: "Fitch", index: "Fitch", align: 'left', width: 100 },
+                                        { name: "Fitch_TW", index: "Fitch_TW", align: 'left', width: 100 },
+                                        { name: "TRC", index: "TRC", align: 'left', width: 100 }
+                                    ];
+                    colNameArray = ['', '資料表名稱' ,'編號', 'Issuer', 'S&P', "Moody's", "Fitch", "Fitch_TW", "TRC"];
+                    obj = {
+                        Table_Name : maintainType,
+                        Issuer_Rating_ID: tickerRatingID,
+                        Issuer: issuer,
+                        S_And_P: sAndP,
+                        Moodys: moodys,
+                        Fitch: fitch,
+                        Fitch_TW: fitchTW,
+                        TRC: trc
+                    };
+                    break;
+                case "Guarantor_Rating":
+                    url.getData = '@Url.Action("GetGuarantorRatingData", "TickerRating")';
+                    colModelArray = [
+                                        { name: "act", index: "act", width: 100, sortable: false },
+                                        { name: "Table_Name", index: "Table_Name", align: 'left', width: 100 },
+                                        { name: "Guarantor_Rating_ID", index: "Guarantor_Rating_ID", align: 'left', width: 100 },
+                                        { name: "Issuer", index: "Issuer", align: 'left', width: 300 },
+                                        { name: "S_And_P", index: "S_And_P", align: 'left', width: 100 },
+                                        { name: "Moodys", index: "Moodys", align: 'left', width: 100 },
+                                        { name: "Fitch", index: "Fitch", align: 'left', width: 100 },
+                                        { name: "Fitch_TW", index: "Fitch_TW", align: 'left', width: 100 },
+                                        { name: "TRC", index: "TRC", align: 'left', width: 100 }
+                                   ];
+                    colNameArray = ['', '資料表名稱' ,'編號', 'Issuer', 'S&P', "Moody's", "Fitch", "Fitch_TW", "TRC"];
+                    obj = {
+                        Table_Name : maintainType,
+                        Guarantor_Rating_ID: tickerRatingID,
+                        Issuer: issuer,
+                        S_And_P: sAndP,
+                        Moodys: moodys,
+                        Fitch: fitch,
+                        Fitch_TW: fitchTW,
+                        TRC: trc
+                    };
+                    break;
+                case "Bond_Rating":
+                    url.getData = '@Url.Action("GetBondRatingData", "TickerRating")';
+                    colModelArray = [
+                                        { name: "act", index: "act", width: 100, sortable: false },
+                                        { name: "Table_Name", index: "Table_Name", align: 'left', width: 100 },
+                                        { name: "Bond_Rating_ID", index: "Bond_Rating_ID", align: 'left', width: 100 },
+                                        { name: "Bond_Number", index: "Bond_Number", align: 'left', width: 300 },
+                                        { name: "S_And_P", index: "S_And_P", align: 'left', width: 100 },
+                                        { name: "Moodys", index: "Moodys", align: 'left', width: 100 },
+                                        { name: "Fitch", index: "Fitch", align: 'left', width: 100 },
+                                        { name: "Fitch_TW", index: "Fitch_TW", align: 'left', width: 100 },
+                                        { name: "TRC", index: "TRC", align: 'left', width: 100 }
+                                   ];
+                    colNameArray = ['', '資料表名稱', '編號', 'Bond_Number', 'S&P', "Moody's", "Fitch", "Fitch_TW", "TRC"];
+                    obj = {
+                        Table_Name : maintainType,
+                        Bond_Rating_ID: tickerRatingID,
+                        Bond_Number: bondNumber,
+                        S_And_P: sAndP,
+                        Moodys: moodys,
+                        Fitch: fitch,
+                        Fitch_TW: fitchTW,
+                        TRC: trc
+                    };
+                    break;
+            }
+
+            showJqgrid(queryType, obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(queryType, obj) {
+            clearJqgrid();
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    queryType: queryType,
+                    dataModel:obj
+                }),
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+
+                    createJqgrid("list1", "pager1", data);
+                }
+                else {
+                    toastr.error(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //data (要秀的資料Json型別Data)
+        function createJqgrid(listId, pagerId, data) {
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: gridTitle, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                multiselect: false,
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+                },
+            });
+
+            $("#" + listId).jqGrid('hideCol', ["Table_Name"]);
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            SetAction("Modify", i, "修改");
+        }
+        actfun.View = function(i)
+        {
+            SetAction("View", i, "檢視");
+        }
+        actfun.Dele = function(i)
+        {
+            SetAction("Delete", i, "刪除");
+        }
+
+        //#region SetAction
+        function SetAction(actionType, rowid, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            $('#trTicker_Rating_ID').hide();
+            $('#trIssuer').hide();
+            $('#trGUARANTOR_NAME').hide();
+            $('#trBond_Number').hide();
+            $('#trGUARANTOR_EQY_TICKER').hide();
+            $('#trISSUER_EQUITY_TICKER').hide();
+            $('#trS_And_P').hide();
+            $('#trMoodys').hide();
+            $('#trFitch').hide();
+            $('#trFitch_TW').hide();
+            $('#trTRC').hide();
+
+            if (actionType == "Add") {
+                $('#spanTable_Name').html($('#Maintain_Type').val());
+                $('#spanTicker_Rating_ID').html("");
+                $('#editIssuer').val("");
+                $('#editGUARANTOR_NAME').val("");
+                $('#editBond_Number').val("");
+                $('#editGUARANTOR_EQY_TICKER').val("");
+                $('#editISSUER_EQUITY_TICKER').val("");
+                $('#editS_And_P').val("");
+                $('#editMoodys').val("");
+                $('#editFitch').val("");
+                $('#editFitch_TW').val("");
+                $('#editTRC').val("");
+            }
+            else {
+                var data = $("#list1").getRowData(rowid);
+                $('#spanTable_Name').html(data.Table_Name);
+                $('#trTicker_Rating_ID').show();
+            }
+
+            switch ($('#spanTable_Name').html()) {
+                case "Guarantor_Ticker":
+                    $('#trIssuer').show();
+                    $('#trGUARANTOR_NAME').show();
+                    $('#trGUARANTOR_EQY_TICKER').show();
+                    if (actionType != "Add"){
+                        $('#spanTicker_Rating_ID').html(data.Guarantor_Ticker_ID);
+                        $('#editIssuer').val(data.Issuer);
+                        $('#editGUARANTOR_NAME').val(data.GUARANTOR_NAME);
+                        $('#editGUARANTOR_EQY_TICKER').val(data.GUARANTOR_EQY_TICKER);
+                    }
+                    break;
+                case "Issuer_Ticker":
+                    $('#trIssuer').show();
+                    $('#trISSUER_EQUITY_TICKER').show();
+                    if (actionType != "Add"){
+                        $('#spanTicker_Rating_ID').html(data.Issuer_Ticker_ID);
+                        $('#editIssuer').val(data.Issuer);
+                        $('#editISSUER_EQUITY_TICKER').val(data.ISSUER_EQUITY_TICKER);
+                    }
+                    break;
+                case "Issuer_Rating":
+                case "Guarantor_Rating":
+                case "Bond_Rating":
+                    if ($('#spanTable_Name').html() == "Bond_Rating") {
+                        $('#trBond_Number').show();
+                    }
+                    else {
+                        $('#trIssuer').show();
+                    }
+
+                    $('#trS_And_P').show();
+                    $('#trMoodys').show();
+                    $('#trFitch').show();
+                    $('#trFitch_TW').show();
+                    $('#trTRC').show();
+
+                    if (actionType != "Add"){
+                        if ($('#spanTable_Name').html() == "Issuer_Rating") {
+                            $('#spanTicker_Rating_ID').html(data.Issuer_Rating_ID);
+                            $('#editIssuer').val(data.Issuer);
+                        }
+                        else if ($('#spanTable_Name').html() == "Guarantor_Rating") {
+                            $('#spanTicker_Rating_ID').html(data.Guarantor_Rating_ID);
+                            $('#editIssuer').val(data.Issuer);
+                        }
+                        else if ($('#spanTable_Name').html() == "Bond_Rating") {
+                            $('#spanTicker_Rating_ID').html(data.Bond_Rating_ID);
+                            $('#editBond_Number').val(data.Bond_Number);
+                        }
+
+                        $('#editS_And_P').val(data.S_And_P);
+                        $('#editMoodys').val(data.Moodys);
+                        $('#editFitch').val(data.Fitch);
+                        $('#editFitch_TW').val(data.Fitch_TW);
+                        $('#editTRC').val(data.TRC);
+                    }
+
+                    break;
+            }
+
+            $('#editIssuer').prop('disabled', true);
+            $('#editGUARANTOR_NAME').prop('disabled', true);
+            $('#editBond_Number').prop('disabled', true);
+            $('#editGUARANTOR_EQY_TICKER').prop('disabled', true);
+            $('#editISSUER_EQUITY_TICKER').prop('disabled', true);
+            $('#editS_And_P').prop('disabled', true);
+            $('#editMoodys').prop('disabled', true);
+            $('#editFitch').prop('disabled', true);
+            $('#editFitch_TW').prop('disabled', true);
+            $('#editTRC').prop('disabled', true);
+
+            switch (actionType) {
+                case "Add":
+                case "Modify":
+                    $('#editIssuer').prop('disabled', false);
+                    $('#editGUARANTOR_NAME').prop('disabled', false);
+                    $('#editBond_Number').prop('disabled', false);
+                    $('#editGUARANTOR_EQY_TICKER').prop('disabled', false);
+                    $('#editISSUER_EQUITY_TICKER').prop('disabled', false);
+                    $('#editS_And_P').prop('disabled', false);
+                    $('#editMoodys').prop('disabled', false);
+                    $('#editFitch').prop('disabled', false);
+                    $('#editFitch_TW').prop('disabled', false);
+                    $('#editTRC').prop('disabled', false);
+
+                    if (actionType == "Modify") {
+                        if ($('#spanTable_Name').html() == "Bond_Rating") {
+                            $('#editBond_Number').prop('disabled', true);
+                        }
+                        else {
+                            $('#editIssuer').prop('disabled', true);
+                        }
+                    }
+
+                    $('#btnSave').show();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "View":
+                    $('#btnSave').hide();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "Delete":
+                    $('#btnSave').hide();
+                    $('#btnDelete').show();
+
+                    break;
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+
+            var tableName = $('#spanTable_Name').html();
+            var tickerRatingID = $('#spanTicker_Rating_ID').val();
+            var issuer = $('#editIssuer').val().trim();
+            var bondNumber = $('#editBond_Number').val().trim();
+            var guarantorNAME = $('#editGUARANTOR_NAME').val().trim();
+            var guarantorEqyTicker = $('#editGUARANTOR_EQY_TICKER').val().trim();
+            var issuerEquityTicker = $('#editISSUER_EQUITY_TICKER').val().trim();
+            var sAndP = $('#editS_And_P').val().trim();
+            var moodys = $('#editMoodys').val().trim();
+            var fitch = $('#editFitch').val().trim();
+            var fitchTW = $('#editFitch_TW').val().trim();
+            var trc = $('#editTRC').val().trim();
+
+            switch (tableName)
+            {
+                case "Guarantor_Ticker":
+                    if (issuer == "") {
+                        toastr.error("Issuer 必填");
+                        return false;
+                    }
+
+                    if (guarantorNAME == "") {
+                        toastr.error("GUARANTOR_NAME 必填");
+                        return false;
+                    }
+
+                    if (guarantorEqyTicker == "") {
+                        toastr.error("GUARANTOR_EQY_TICKER 必填");
+                        return false;
+                    }
+
+                    url.saveData = '@Url.Action("SaveGuarantorTicker", "TickerRating")';
+                    obj = {
+                        Issuer: issuer,
+                        GUARANTOR_NAME: guarantorNAME,
+                        GUARANTOR_EQY_TICKER: guarantorEqyTicker
+                    };
+                    break;
+                case "Issuer_Ticker":
+                    if (issuer == "") {
+                        toastr.error("Issuer 必填");
+                        return false;
+                    }
+
+                    if (issuerEquityTicker == "") {
+                        toastr.error("ISSUER_EQUITY_TICKER 必填");
+                        return false;
+                    }
+
+                    url.saveData = '@Url.Action("SaveIssuerTicker", "TickerRating")';
+
+                    obj = {
+                        Issuer: issuer,
+                        ISSUER_EQUITY_TICKER: issuerEquityTicker
+                    };
+                    break;
+                case "Issuer_Rating":
+                case "Guarantor_Rating":
+                case "Bond_Rating":
+                    if (tableName == "Bond_Rating")
+                    {
+                        if (bondNumber == "") {
+                            toastr.error("Bond_Number 必填");
+                            return false;
+                        }
+
+                        url.saveData = '@Url.Action("SaveBondRating", "TickerRating")';
+                        obj = {
+                            Bond_Number: bondNumber,
+                            S_And_P: sAndP,
+                            Moodys: moodys,
+                            Fitch: fitch,
+                            Fitch_TW: fitchTW,
+                            TRC: trc
+                        };
+                    }
+                    else {
+                        if (issuer == "") {
+                            toastr.error("Issuer 必填");
+                            return false;
+                        }
+
+                        if (tableName == "Issuer_Rating"){
+                            url.saveData = '@Url.Action("SaveIssuerRating", "TickerRating")';
+                        }
+                        else if (tableName == "Guarantor_Rating"){
+                            url.saveData = '@Url.Action("SaveGuarantorRating", "TickerRating")';
+                        }
+
+                        obj = {
+                            Issuer: issuer,
+                            S_And_P: sAndP,
+                            Moodys: moodys,
+                            Fitch: fitch,
+                            Fitch_TW: fitchTW,
+                            TRC: trc
+                        };
+                    }
+
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    $("#Maintain_Type").val(tableName);
+                    SearchData("ALL");
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定刪除？")) {
+                var parameter = JSON.stringify({
+                    issuer: $('#editIssuer').val()
+                });
+
+                switch ($('#spanTable_Name').html()) {
+                    case "Guarantor_Ticker":
+                        url.deleteData = '@Url.Action("DeleteGuarantorTicker", "TickerRating")';
+                        break;
+                    case "Issuer_Ticker":
+                        url.deleteData = '@Url.Action("DeleteIssuerTicker", "TickerRating")';
+                        break;
+                    case "Issuer_Rating":
+                        url.deleteData = '@Url.Action("DeleteIssuerRating", "TickerRating")';
+                        break;
+                    case "Guarantor_Rating":
+                        url.deleteData = '@Url.Action("DeleteGuarantorRating", "TickerRating")';
+                        break;
+                    case "Bond_Rating":
+                        parameter = JSON.stringify({
+                            bondNumber: $('#editBond_Number').val()
+                        });
+
+                        url.deleteData = '@Url.Action("DeleteBondRating", "TickerRating")';
+                        break;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    data: parameter,
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        $("#Maintain_Type").val($('#spanTable_Name').html());
+                        SearchData("ALL");
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+    });
+</script>

@@ -1,0 +1,529 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "SystemMain";
+    ViewBag.SubMenu = "SystemAssessmentSub";
+    ViewBag.Title = "設定評定";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <table>
+                <tr>
+                    <td >
+                        <label>群組設定 : </label>
+                    </td>
+                    <td>
+                        @Html.DropDownList("setProductCode",
+                        (SelectList)ViewBag.productCode,
+                         new { @class = "form-control", @style = "display:inline-block" })
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <table style="width:100%">
+                    <tr>
+                        <td style="width:40%" >
+                            <div class="jqgridDiv" style="margin-bottom: 5px;" hidden>
+                                <input type="button" class="btn btn-primary" value="新增評定" id="btnAssessmentAdd" style="margin-right:5px"/>
+                                <input type="button" class="btn btn-primary" value="刪除評定" id="btnAssessmentDel" />
+                            </div>
+                            <div id="jqgridDiv" class="jqd">
+                            </div>
+                        </td>
+                        <td style="width:30%">
+                            <div class="jqgridDiv2" style="margin-bottom: 5px;" hidden>
+                                <input type="button" class="btn btn-primary" value="新增覆核者" id="btnAuditorAdd" style="margin-right:5px" />
+                                <input type="button" class="btn btn-primary" value="刪除覆核者" id="btnAuditorDel" />
+                            </div>
+                            <div id="jqgridDiv2" class="jqd">
+                            </div>
+                        </td>
+                        <td style="width:30%">
+                            <div class="jqgridDiv3" style="margin-bottom: 5px;" hidden>
+                                <input type="button" class="btn btn-primary" value="新增呈送者" id="btnPresentedAdd" style="margin-right:5px" />
+                                <input type="button" class="btn btn-primary" value="刪除呈送者" id="btnPresentedDel" />
+                            </div>
+                            <div id="jqgridDiv3" class="jqd">
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="SetAssessmentDialog">
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.search = '@Url.Action("SearchAssessment", "System")';
+        url.getCacheData = '@Url.Action("GetCacheDataInAssessment", "System")';
+        url.getAddUser = '@Url.Action("SearchAssessmentAddUser", "System")';
+        url.assessmentAdd = '@Url.Action("AssessmentSetAdd", "System")';
+        url.assessmentDel = '@Url.Action("AssessmentSetDel", "System")';
+        //#endregion 註冊URL
+
+        //#region dialog相關ID
+        var dialogId = 'SetAssessmentDialog';
+        var dialogformId = dialogId + 'Form';
+        var dialogDeleteBtn = dialogId + "btnDelete";
+        var dialogSaveBtn = dialogId + "btnSave";
+        var dialogTableId = dialogId + 'table';
+        var dialogTableTrId = dialogTableId + 'tr';
+        var dialogAccountId = dialogId + 'account';
+        var dialogAccountTrId = dialogAccountId + 'tr';
+        var dialogTypeId = dialogId + 'type';
+
+        var productCode = '';
+        var tableId = '';
+        
+        //#endregion dialog相關ID
+
+        //#region dialog設定
+        var obj = [
+            { 'name': 'table', 'type': 'string', 'title': '資料表編號', 'max': '5', 'req': 'true' },
+            { 'name': 'account', 'type': 'selectOption', 'title': '新增帳號' },
+            { 'name': 'type', 'type': 'string', 'title': '判斷狀態', 'hide': 'true' }
+        ]
+        jqgridCustom.createDialog(dialogId, obj);
+
+        $('#' + dialogDeleteBtn).remove(); //用不到刪除
+        $('#' + dialogSaveBtn).on('click', function () {            
+            var type = $('#' + dialogTypeId).val();
+            if (type == '@Ref.SetAssessmentType.Assessment.ToString()') {
+                if (!$('#' + dialogformId).valid())
+                {
+                    return false;
+                }
+                if ($('#' + dialogTableId).val() == "D64")
+                {
+                    if(!confirm("如欲設定量化評估權限,請於D63設定,請確認是否繼續?"))
+                        return false;
+                }
+                if ($('#' + dialogTableId).val() == "D66")
+                {
+                    if(!confirm("如欲設定質化評估權限,請於D65設定,請確認是否繼續?"))
+                        return false;
+                }
+            }
+            else
+            {
+                if ($.type($('#' + dialogAccountId).val()) == "null" || $('#' + dialogAccountId).val().length == 0)
+                {
+                    customerUtility.alert("新增帳號不可為空!",'w');
+                    return false;
+                }
+            }
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    model: SetAssessmentViewModel($('#setProductCode').val(), null,
+                        $('#'+dialogTableId).val(),$('#'+dialogAccountId).val()),
+                    type: type
+                }),
+                dataType: "json",
+                url: url.assessmentAdd,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    $("#" + dialogId).dialog("close");
+                    if (type == '@Ref.SetAssessmentType.Assessment.ToString()')
+                    {
+                        clearJqgrid('jqgridDiv');
+                        clearJqgrid('jqgridDiv2');
+                        clearJqgrid('jqgridDiv3');
+                        createJqgrid("jqgridDiv", "list1", "pager1", '@Ref.SetAssessmentType.Assessment.ToString()');
+                    }
+                    else
+                    {
+                        clearJqgrid('jqgridDiv2');
+                        clearJqgrid('jqgridDiv3');
+                        createJqgrid("jqgridDiv2", "list2", "pager2", '@Ref.SetAssessmentType.Auditor.ToString()');
+                        createJqgrid("jqgridDiv3", "list3", "pager3", '@Ref.SetAssessmentType.Presented.ToString()');
+                    }
+                }
+                else {
+                    customerUtility.alert(result.DESCRIPTION,'e');
+                }
+            });
+        });
+        //#endregion dialog設定
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnAssessmentAdd':
+                case 'btnAuditorAdd':
+                case 'btnPresentedAdd':
+                    $("#" + id).on('click', function () { AssessmentAdd(id) });
+                    break;
+                case 'btnAssessmentDel':
+                case 'btnAuditorDel':
+                case 'btnPresentedDel':
+                    $("#" + id).on('click', function () { AssessmentDel(id) });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region 新增資料表編號/新增帳號
+        function AssessmentAdd(id)
+        {
+            if (id.indexOf('@Ref.SetAssessmentType.Assessment.ToString()') > -1) //評定設定表
+            {
+                $('#' + dialogAccountTrId).hide();
+                $('#' + dialogTableTrId).show();
+                $('#' + dialogTableId).val('');
+                $('#' + dialogTypeId).val('@Ref.SetAssessmentType.Assessment.ToString()');
+                $("#" + dialogId).dialog({
+                    position: { my: "top center", at: "top center", of: window },
+                    title: "新增" + '@Ref.SetAssessmentType.Assessment.GetDescription()'
+                });
+                $("#" + dialogId).dialog("open");
+            }
+            if (id.indexOf('@Ref.SetAssessmentType.Auditor.ToString()') > -1) //可覆核人員設定檔
+            {
+                $('#' + dialogAccountTrId).show();
+                $('#' + dialogTableId).val(tableId);
+                $('#' + dialogTableTrId).hide();
+                $("#" + dialogId).dialog({
+                    position: { my: "top center", at: "top center", of: window },
+                    title: "新增" + '@Ref.SetAssessmentType.Auditor.GetDescription()'
+                });
+                $("#" + dialogId).dialog("open");
+                $('#' + dialogTypeId).val('@Ref.SetAssessmentType.Auditor.ToString()');
+
+                $("#" + dialogAccountId + " option").remove();
+                var optionObj = [];
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        productCode: productCode,
+                        tableId: tableId,
+                        type: '@Ref.SetAssessmentType.Auditor.ToString()'
+                    }),
+                    dataType: "json",
+                    url: url.getAddUser,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $.each(result.Datas.Data, function (i, v) {
+                            optionObj.push({ value: v.Item1, text: v.Item2 })
+                        })
+                        customerUtility.addoption(dialogAccountId, optionObj);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+            if (id.indexOf('@Ref.SetAssessmentType.Presented.ToString()') > -1) //可呈送人員設定檔
+            {
+                $('#' + dialogAccountTrId).show();
+                $('#' + dialogTableId).val(tableId);
+                $('#' + dialogTableTrId).hide();
+                $("#" + dialogId).dialog({
+                    position: { my: "top center", at: "top center", of: window },
+                    title: "新增" + '@Ref.SetAssessmentType.Presented.GetDescription()'
+                });
+                $("#" + dialogId).dialog("open");
+                $('#' + dialogTypeId).val('@Ref.SetAssessmentType.Presented.ToString()');
+
+                $("#" + dialogAccountId + " option").remove();
+                var optionObj = [];
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        productCode: productCode,
+                        tableId: tableId,
+                        type: '@Ref.SetAssessmentType.Presented.ToString()'
+                    }),
+                    dataType: "json",
+                    url: url.getAddUser,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $.each(result.Datas.Data, function (i, v) {
+                            optionObj.push({ value: v.Item1, text: v.Item2 })
+                        })
+                        customerUtility.addoption(dialogAccountId, optionObj);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+            $('#'+dialogformId).validate().resetForm();
+        }
+        //#endregion 新增資料表編號
+
+        //#region 刪除資料表編號/刪除帳號
+        function AssessmentDel(id)
+        {
+            var type = '';
+            var pc = $('#setProductCode').val();
+            var datas = [];
+            var list = '';
+            //var pagenum = 1;
+            //var rownum = 10;
+            if (id.indexOf('@Ref.SetAssessmentType.Assessment.ToString()') > -1) //評定設定表
+            {
+                list = 'list1';
+                //pagenum = $("#" + list1).getGridParam('page');
+                //rownum = $("#" + list1).getGridParam('rowNum');
+                type = '@Ref.SetAssessmentType.Assessment.ToString()';
+                var selects = $("#" + list).jqGrid('getGridParam', 'selarrrow');
+                $.each(selects, function (i, v) {
+                    let data = $("#" + list).getRowData(v);
+                    datas.push(SetAssessmentViewModel(pc, null, data.Table_Id));
+                });               
+            }
+            if (id.indexOf('@Ref.SetAssessmentType.Auditor.ToString()') > -1) //可覆核人員設定檔
+            {
+                list = 'list2';
+                type = '@Ref.SetAssessmentType.Auditor.ToString()';
+                var selects = $("#" + list).jqGrid('getGridParam', 'selarrrow');
+                $.each(selects, function (i, v) {
+                    let data = $("#" + list).getRowData(v);
+                    datas.push(SetAssessmentViewModel(pc, null, tableId, data.User_Account));
+                });
+            }
+            if (id.indexOf('@Ref.SetAssessmentType.Presented.ToString()') > -1) //可呈送人員設定檔
+            {
+                list = 'list3';
+                type = '@Ref.SetAssessmentType.Presented.ToString()';
+                var selects = $("#" + list).jqGrid('getGridParam', 'selarrrow');
+                $.each(selects, function (i, v) {
+                    let data = $("#" + list).getRowData(v);
+                    datas.push(SetAssessmentViewModel(pc, null, tableId, data.User_Account));
+                });
+            }           
+            if (type != '' && datas.length > 0)
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        models: datas,
+                        type: type
+                    }),
+                    dataType: "json",
+                    url: url.assessmentDel,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        if (type == '@Ref.SetAssessmentType.Assessment.ToString()') {
+                            clearJqgrid('jqgridDiv');
+                            clearJqgrid('jqgridDiv2');
+                            clearJqgrid('jqgridDiv3');
+                            createJqgrid("jqgridDiv", "list1", "pager1", '@Ref.SetAssessmentType.Assessment.ToString()');
+                        }
+                        else {
+                            clearJqgrid('jqgridDiv2');
+                            clearJqgrid('jqgridDiv3');
+                            createJqgrid("jqgridDiv2", "list2", "pager2", '@Ref.SetAssessmentType.Auditor.ToString()');
+                            createJqgrid("jqgridDiv3", "list3", "pager3", '@Ref.SetAssessmentType.Presented.ToString()');
+                        }
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+        //#endregion 刪除資料表編號/刪除帳號
+
+        //#region ProductCode change 事件
+        $('#setProductCode').on('change', function (date) {
+            var selectValue = $('#setProductCode').val().trim();
+            //$('#btnMenuSave').prop('disabled', selectValue.length === 0)
+            if (selectValue.length > 0) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        productCode: selectValue,
+                        assessmentFlag : true
+                    }),
+                    dataType: "json",
+                    url: url.search,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        clearJqgrid('jqgridDiv');
+                        clearJqgrid('jqgridDiv2');
+                        clearJqgrid('jqgridDiv3');
+                        createJqgrid("jqgridDiv", "list1", "pager1", '@Ref.SetAssessmentType.Assessment.ToString()');
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+            else
+                $("#menuCheckbox").children().remove();
+        })
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid(divId) {
+            $('.' + divId).hide(); //btn 隱藏
+            $('#' + divId).children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(jqgridDivId, listId, pagerId, type) {
+            $('.' + jqgridDivId).show(); //btn 顯示
+            var colNames = [];
+            var colModel = [];
+            var title = '';
+            var delId = '';
+            if (type == '@Ref.SetAssessmentType.Assessment.ToString()') {
+                title = '@Ref.SetAssessmentType.Assessment.GetDescription()';
+                delId = 'btnAssessmentDel';
+                colNames = ["群組編號", "群組名稱", "資料表編號"];
+                colModel = [
+                        { name: "Group_Product_Code", index: "Group_Product_Code", align: 'left', width: 80 },
+                        { name: "Group_Product_Name", index: "Group_Product_Name", align: 'left', width: 150 },
+                        { name: "Table_Id", index: "Table_Id", align: 'left', width: 110 }
+                ];
+            }
+            if (type == '@Ref.SetAssessmentType.Auditor.ToString()') {
+                title = '@Ref.SetAssessmentType.Auditor.GetDescription()';
+                delId = 'btnAuditorDel';
+                colNames = ["人員帳號", "人員名稱"];
+                colModel = [
+                        { name: "User_Account", index: "User_Account", align: 'left', width: 120 },
+                        { name: "User_Name", index: "User_Name", align: 'left', width: 120 }
+                ];
+            }
+            if (type == '@Ref.SetAssessmentType.Presented.ToString()') {
+                title = '@Ref.SetAssessmentType.Presented.GetDescription()';
+                delId = 'btnPresentedDel';
+                colNames = ["人員帳號", "人員名稱"];
+                colModel = [
+                        { name: "User_Account", index: "User_Account", align: 'left', width: 120 },
+                        { name: "User_Name", index: "User_Name", align: 'left', width: 120 }
+                ];
+            }
+            $('#' + jqgridDivId).append('<table id="' + listId + '"></table>');
+            $('#' + jqgridDivId).append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                url: url.getCacheData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: type,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colNames: colNames,
+                colModel: colModel,
+                rowNum: 15, //一頁筆數
+                //rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: 450,
+                //width: jqgridCustom.getwidth(),              
+                caption: title, //標題
+                shrinkToFit: false,
+                contentType: "application/json",
+                onSelectRow: ShowAccount,
+                multiselect: true,
+                multiboxonly: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.checkboxSet(listId, delId);
+                },
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false, search: false, refresh: false });
+        }
+        //#endregion createJqgrid
+
+        function ShowAccount(cellvalue, options, rdata) {      
+            var grid_id = '';
+            if (rdata && typeof rdata.target.cellIndex != 'undefined' && rdata.target.cellIndex > 0) {
+                grid_id = rdata.currentTarget.id;
+                if (grid_id == 'list1' )
+                {                  
+                    //if($.inArray(cellvalue, $("#" + grid_id).jqGrid('getGridParam', 'selarrrow')) > -1)
+                    //{
+                    $('#btnAssessmentDel').prop('disabled', false);
+                        clearJqgrid('jqgridDiv2');
+                        clearJqgrid('jqgridDiv3');
+                        var data = $("#" + grid_id).getRowData(cellvalue);
+                        productCode = data.Group_Product_Code;
+                        tableId = data.Table_Id;
+                        $.ajax({
+                            type: "POST",
+                            data: JSON.stringify({
+                                productCode: data.Group_Product_Code,
+                                tableId: data.Table_Id,
+                                assessmentFlag: false
+                            }),
+                            dataType: "json",
+                            url: url.search,
+                            contentType: 'application/json'
+                        })
+                        .done(function (result) {
+                            if (result.RETURN_FLAG) {
+                                createJqgrid("jqgridDiv2", "list2", "pager2", '@Ref.SetAssessmentType.Auditor.ToString()');
+                                createJqgrid("jqgridDiv3", "list3", "pager3", '@Ref.SetAssessmentType.Presented.ToString()');
+                            }
+                            else {
+                                customerUtility.alert(result.DESCRIPTION,'e');
+                            }
+                        });
+                    //}
+                    //else {
+                    //    clearJqgrid('jqgridDiv2');
+                    //    clearJqgrid('jqgridDiv3');
+                    //}
+                }
+                if (grid_id == 'list2')
+                {
+                    $('#btnAuditorDel').prop('disabled', false);
+                }
+                if (grid_id == 'list3')
+                {
+                    $('#btnPresentedDel').prop('disabled', false);
+                }
+            }
+        }
+
+        function SetAssessmentViewModel(
+        Group_Product_Code,
+        Group_Product_Name,
+        Table_Id,
+        User_Account,
+        User_Name
+        ) {
+            var obj = {};
+            obj['Group_Product_Code'] = Group_Product_Code;
+            obj['Group_Product_Name'] = Group_Product_Name;
+            obj['Table_Id'] = Table_Id;
+            obj['User_Account'] = User_Account;
+            obj['User_Name'] = User_Name;
+            return obj;
+        }
+    });
+</script>

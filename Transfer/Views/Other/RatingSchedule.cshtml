@@ -1,0 +1,178 @@
+﻿@{
+    Layout = null;
+}
+<link rel="stylesheet" href="~/Content/bootstrap.css" type="text/css" />
+<link href="~/Content/build.css" rel="stylesheet" />
+<link href="~/Content/jquery.jqGrid/ui.jqgrid.css" rel="stylesheet" />
+<link href="~/Content/themes/base/jquery.ui.all.css" rel="stylesheet" />
+<link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="~/Content/customJqgrid.css" type="text/css" />
+<link rel="stylesheet" href="~/Content/light.css" type="text/css" />
+<script src="~/Scripts/modernizr-2.6.2.js"></script>
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/jquery.blockUI.js"></script>
+<script src="~/Scripts/jquery.jqGrid.js"></script>
+<script src="~/Scripts/i18n/grid.locale-tw.js"></script>
+<script src="~/Scripts/customJqgrid.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/bootstrap-filestyle.min.js"></script>
+<!DOCTYPE html>
+<style>
+    p {
+        margin:0;
+    }
+</style>
+<html style="height:100%">
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>RatingSchedule</title>
+</head>
+<body style="padding-left:30px;height:100%;">
+    <div>
+        <h2>排程執行紀錄</h2>
+        @*<div class="container">
+            <div class="led-box">
+                <div class="led-green"></div>
+                <p>Green LED</p>
+            </div>
+            <div class="led-box">
+                <div class="led-yellow"></div>
+                <p>Yellow LED</p>
+            </div>
+            <div class="led-box">
+                <div class="led-red"></div>
+                <p>Red LED</p>
+            </div>
+            <div class="led-box">
+                <div class="led-blue"></div>
+                <p>Blue LED</p>
+            </div>
+        </div>*@
+    </div>
+    <table style="width:95%;height:100%;">
+        <tr>
+            <td style="padding-bottom:10px">
+                <input type="button" class="btn btn-primary" value="更新" id="btnUpdate" />
+            </td>
+        </tr>
+        <tr style="height:100%;">
+            <td style="height:100%;">
+                <div class="viewDetail" style="height:100%;">
+                    <div id="jqgridDiv" class="jqd" style="height:100%;">
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <h3>以上作業未完成請通知財會精算科，莊美怡 0930068895。</h3>
+</body>
+</html>
+<script>
+    (function () {
+        
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetData", "Other")';
+        var setTime = 5;
+        //getData();
+        $('#btnUpdate').on('click', function () {
+            getData();
+        });
+        function reloads()
+        {
+            getData();
+            setTimeout(function () { reloads() }, setTime * 60 * 1000);
+        }
+        reloads();
+        
+        function getData() {
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {              
+                 data = result.Datas.Data;
+                 createJqgrid("list0", "pager0", data);
+            });
+        }
+
+        function formatterTransferType(cellvalue, options, rdata)
+        {
+            if (cellvalue == "Y")
+                return "<p style ='float:left; margin-left: 20px;' class='led-green'></p><p style='color:blue'>成功</p>"
+            else if (cellvalue == "R")
+                return "<p style ='float:left; margin-left: 20px;' class='led-green'></p><p style='color:blue'>成功</p>"
+            else
+                return "<p style ='float:left; margin-left: 20px;' class='led-red'></p><p style='color:red'>失敗</p>"
+        }
+
+        //#region 
+        function createJqgrid(listId, pagerId, data) {
+            var colNameArray = ["評估日/報導日", "資料版本",
+                                "資料表名稱", "成功/失敗",
+                                "開始日期", "開始時間",
+                                "結束日期", "結束時間"];
+            var colModelArray = [
+                        { name: "ReportDate", index: "ReportDate", align: 'center'},
+                        { name: "Version", index: "Version", align: 'right',width:85},
+                        { name: "File_Name", index: "File_Name", align: 'left', width: 250 },
+                        { name: "TransferType", index: "TransferType", align: 'center', width: 120, formatter: formatterTransferType },
+                        { name: "Create_Date", index: "Create_Date", align: 'center', width: 125 },
+                        { name: "Create_Time", index: "Create_Time", align: 'center', width: 125 },
+                        { name: "End_Date", index: "End_Date", align: 'center', width: 125 },
+                        { name: "End_Time", index: "End_Time", align: 'center', width: 125 },
+            ];
+
+            var _width = Number($('.viewDetail').width());
+            let _body = Number($('.jqd').height());
+            let _range = 150;
+            let num = parseInt((_body - _body * 0.1) / _range);
+            let rowNum = num * 5;
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: rowNum, //一頁筆數
+                rowList: [rowNum, rowNum * 2, rowNum * 3], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: num * _range,
+                width: _width,
+                //sortname: 'id',
+                //viewrecords: true,
+                sortorder: "desc",
+                caption: "排程執行紀錄", //標題
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                viewrecords: true,
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false, search: false, refresh:false});
+        }
+        //#endregion
+
+
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+    })()
+
+</script>

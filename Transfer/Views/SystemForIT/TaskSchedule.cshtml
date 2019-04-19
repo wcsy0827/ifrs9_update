@@ -1,0 +1,227 @@
+﻿@{
+    ViewBag.Menu = "SystemMain";
+    ViewBag.SubMenu = "TaskScheduleSub";
+    ViewBag.Title = "TaskSchedule(排程重啟)";
+    Layout = "~/Views/Shared/_LayoutForIT.cshtml";
+}
+
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <h3>作業未完成請通知財會精算科，莊美怡 0930068895。</h3>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table>
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="更新" id="btnUpdate" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div>
+        基準日：<input type="text" id="Report_Date" name="Report_Date" maxlength="10">
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetTaskSchedule", "SystemForIT")';
+        url.restartTask = '@Url.Action("RestartTaskSchedule", "SystemForIT")';
+        //#endregion
+
+        //#region 產生datepicker
+        created.createDatepicker('Report_Date', true, '');
+        //#endregion
+
+        var setTime = 5;
+        //getData();
+        $('#btnUpdate').on('click', function () {
+            getData();
+        });
+        function reloads() {
+            getData();
+            setTimeout(function () { reloads() }, setTime * 60 * 1000);
+        }
+        reloads();
+
+        function getData() {
+            clearJqgrid();
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url.getData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                data = result.Datas.Data;
+                createJqgrid("list0", "pager0", data);
+            });
+        }
+
+        function formatterTransferType(cellvalue, options, rdata) {
+            if (cellvalue == "Y")
+                return "<p style ='float:left; margin-left: 20px;' class='led-green'></p><p style='color:blue'>成功</p>"
+            else if (cellvalue == "R")
+                return "<p style ='float:left; margin-left: 20px;' class='led-green'></p><p style='color:blue'>成功</p>"
+            else if (cellvalue == "Other")
+                return "<p style ='float:left; margin-left: 20px;'></p>"
+            else
+                return "<p style ='float:left; margin-left: 20px;' class='led-red'></p><p style='color:red'>失敗</p>"
+        }
+
+        //#region
+        function createJqgrid(listId, pagerId, data) {
+
+            var colNameArray = ["Action",
+                                "觸發排程",
+                                "評估日/報導日", "資料版本",
+                                "資料表名稱", "成功/失敗",
+                                "開始日期", "開始時間",
+                                "結束日期", "結束時間"];
+            var colModelArray = [
+                        { name: "Action", width: 70, align: "center", sortable: false, editable: false, formatter: ActionFormatterBtn },
+                        { name: "Trigger_Task", index: "Trigger_Task", align: 'center' },
+                        { name: "ReportDate", index: "ReportDate", align: 'center' },
+                        { name: "Version", index: "Version", align: 'right', width: 85 },
+                        { name: "File_Name", index: "File_Name", align: 'left', width: 300 },
+                        { name: "TransferType", index: "TransferType", align: 'center', width: 120, formatter: formatterTransferType },
+                        { name: "Create_Date", index: "Create_Date", align: 'center', width: 125 },
+                        { name: "Create_Time", index: "Create_Time", align: 'center', width: 125 },
+                        { name: "End_Date", index: "End_Date", align: 'center', width: 125 },
+                        { name: "End_Time", index: "End_Time", align: 'center', width: 125 },
+            ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                rowNum: 20, //一頁筆數
+                rowList: [20, 40, 60], //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: 315,
+                //width: '100',
+                width: jqgridCustom.getwidth(),
+                //sortname: 'id',
+                //viewrecords: true,
+                sortorder: "desc",
+                caption: "排程執行紀錄", //標題
+                resizable: false,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                ajaxRowOptions: { contentType: "application/json" },
+                viewrecords: true,
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+
+                    $('#' + listId + ' > tbody > tr:gt(0) ').each(function () {
+                        $(this).find('td').find('input').each(function () {
+                            let tr = $(this).parents('tr:first');
+                            let Trigger_Task = tr.find($.validator.format('td[aria-describedby$={0}_Trigger_Task]', listId)).text();
+                            if ($(this).attr('id').indexOf('Action') > -1) {
+                                $(this).off('click');
+                                $(this).on('click',
+                                    function () { dialogSave('restart', Trigger_Task) });
+                            }
+                            $(this).parents('td:first').removeAttr('title');
+                        });
+                    });
+                }
+            });
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false, search: false, refresh: false });
+        }
+        //#endregion
+
+        //#region
+        function dialogSave(type, Trigger_Task) {
+            if (type == "restart") {
+                var reportDate = $('#Report_Date').val();
+                var confirmWord = "";
+
+                if (Trigger_Task != "StartKRiskService" 
+                    && Trigger_Task != "StopKRiskService"
+                    && Trigger_Task != "StartTomcatService"
+                    && Trigger_Task != "StopTomcatService") 
+                {
+                    if (reportDate == "") {
+                        alert("請輸入 基準日");
+                        return false;
+                    }
+                    else {
+                        if (verified.isDate(reportDate, false) == false) {
+                            alert("基準日 錯誤(yyyy/MM/dd)");
+                            return false;
+                        }
+                    }
+
+                    confirmWord = "排程：" + Trigger_Task + "，基準日：" + reportDate + "\n確定重啟？";
+                }
+                else {
+                    confirmWord = "確定重啟？";
+                }
+
+                if (confirm(confirmWord) == false) {
+                    return false
+                }
+                else {
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({
+                            triggerTask: Trigger_Task,
+                            reportDate: reportDate
+                        }),
+                        dataType: "json",
+                        url: url.restartTask,
+                        contentType: 'application/json',
+                    })
+                    .done(function (result) {
+                        alert(result.DESCRIPTION);
+                        if (result.RETURN_FLAG) {
+                            getData();
+                        }
+                    });
+                }
+            }
+        }
+        //#endregion
+
+        //#region Audit formate button
+        function ActionFormatterBtn(cellvalue, options, rdata) {
+            return '<input type="button" class="btn btn-primary" value="重啟" id="' + options.gid + "Action" + options.rowId + '" ' +
+                   ' title=" " style="width:80px">';
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+    });
+</script>

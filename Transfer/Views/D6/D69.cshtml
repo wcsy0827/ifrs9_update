@@ -1,0 +1,931 @@
+﻿@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D69Sub";
+    ViewBag.Title = "D69(基本要件參數檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="height:200px">
+            <form id="myForm1">
+                <table style="width:100%;margin-top:5px">
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <label>規則編號 :</label>
+                            <input type="text" id="Rule_ID" name="Rule_ID">
+                        </td>
+                        <td style="white-space:nowrap;display:none;">
+                            <label>基本要件是否通過 :</label>
+                            @Html.DropDownList("Basic_Pass",
+                             (SelectList)ViewBag.BasicPass,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;display:none;">
+                            <label>原始購買是否符合信用風險低條件 :</label>
+                            @Html.DropDownList("Rating_Ori_Good_Ind",
+                             (SelectList)ViewBag.RatingOriGoodInd,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <label>處理狀態 :</label>
+                            @Html.DropDownList("Status",
+                             (SelectList)ViewBag.Status,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <label>使用狀態 :</label>
+                            @Html.DropDownList("IsActive",
+                             (SelectList)ViewBag.IsActive,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap;display:none;">
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:10px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnSearch" value="查詢" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnReset" value="重設"  />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        您登入的帳號：<span>@ViewBag.UserAccount</span>
+        <br />
+        是否有呈送複核的權限：<span id="spanIsSender">@ViewBag.IsSender</span>
+        <input type="hidden" id="IsSender" value="@ViewBag.IsSender" />
+        <input type="hidden" id="UserAccount" value="@ViewBag.UserAccount" />
+        <table>
+            <tr>
+                <td style="white-space:nowrap;">
+                    可複核人員：
+                    @Html.DropDownList("Auditor",
+                             (SelectList)ViewBag.Auditor,
+                             new { @class = "form-control", @style = "display:inline-block;width:200px" })
+                </td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnSendToAudit" value="呈送複核" />
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td style="white-space:nowrap;">
+                    <input type="button" class="btn btn-primary" id="btnAudit" value="複核確認" />
+                    &nbsp;&nbsp;
+                    <input type="button" class="btn btn-primary" id="btnReject" value="複核退回" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr id="trRule_ID">
+                <td style="white-space:nowrap; text-align:right">
+                    規則編號：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_ID"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    基本要件是否通過：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editBasic_Pass",
+                             (SelectList)ViewBag.BasicPass,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    原始購買是否符合信用風險低條件：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editRating_Ori_Good_Ind",
+                             (SelectList)ViewBag.RatingOriGoodInd,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    評等下降數：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editRating_Notch" name="editRating_Notch">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    是否包含：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editIncluding_Ind",
+                             (SelectList)ViewBag.IncludingInd,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    範圍 _以上/以下：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editApply_Range",
+                             (SelectList)ViewBag.ApplyRange,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    報導日是否符合信用風險低條件：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editRating_Curr_Good_Ind",
+                             (SelectList)ViewBag.RatingCurrGoodInd,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    原始信評是否缺漏：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editOri_Rating_Missing_Ind",
+                             (SelectList)ViewBag.OriRatingMissingInd,
+                             new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr id="trRule_setter_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    規則設定者：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setter_Name"></span>
+                </td>
+            </tr>
+            <tr id="trRule_setting_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    規則編輯日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanRule_setting_Date"></span>
+                </td>
+            </tr>
+            <tr id="trAuditor_Name">
+                <td style="white-space:nowrap; text-align:right">
+                    可複核人員：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAuditor_Name"></span>
+                </td>
+            </tr>
+            <tr id="trAudit_Date">
+                <td style="white-space:nowrap; text-align:right">
+                    複核日期：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanAudit_Date"></span>
+                </td>
+            </tr>
+            <tr id="trStatus">
+                <td style="white-space:nowrap; text-align:right">
+                    處理狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanStatus" style="display:none"></span>
+                    <span id="spanStatus_Name"></span>
+                </td>
+            </tr>
+            <tr id="trRule_desc">
+                <td style="white-space:nowrap; text-align:right">
+                    Rule_desc：
+                </td>
+                <td style="white-space:nowrap">
+                    <textarea id="editRule_desc" name="editRule_desc" style="width:500px;height:100px"></textarea>                
+                </td>
+            </tr>
+            <tr id="trIsActive">
+                <td style="white-space:nowrap; text-align:right">
+                    使用狀態：
+                </td>
+                <td style="white-space:nowrap">
+                    <span id="spanIsActive" style="display:none"></span>
+                    <span id="spanIsActive_Name"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="設為失效" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnCancel" value="關閉" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetD69AllData", "D6")';
+        url.getData = '@Url.Action("GetD69Data", "D6")';
+        url.saveData = '@Url.Action("SaveD69", "D6")';
+        url.deleteData = '@Url.Action("DeleteD69", "D6")';
+        url.sendToAudit = '@Url.Action("SendD69ToAudit", "D6")';
+        url.audit = '@Url.Action("D69Audit", "D6")';
+        //#endregion 註冊URL
+
+        //#region
+        if ($("#spanIsSender").html() != "Y") {
+            $("#btnAdd").hide();
+        }
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnCancel':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+                case 'btnSendToAudit':
+                    $("#" + id).on('click', function () { SendToAudit(); });
+                    break;
+                case 'btnAudit':
+                    $("#" + id).on('click', function () { AuditData("2"); });
+                    break;
+                case 'btnReject':
+                    $("#" + id).on('click', function () { AuditData("3"); });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Rule_ID').val("");
+            $('#Basic_Pass').val("");
+            $('#Rating_Ori_Good_Ind').val("");
+            $('#Status').val("");
+            $('#IsActive').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var ruleID = $('#Rule_ID').val().trim();
+            var basicPass = $('#Basic_Pass').val().trim();
+            var ratingOriGoodInd = $('#Rating_Ori_Good_Ind').val().trim();
+            var status = $('#Status').val().trim();
+            var isActive = $('#IsActive').val().trim();
+
+            var obj = {
+                ActionType: "",
+                Rule_ID: ruleID,
+                Basic_Pass: basicPass,
+                Rating_Ori_Good_Ind: ratingOriGoodInd,
+                Status: status,
+                IsActive: isActive
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = '@ViewBag.Title'; //標頭
+            var urlString = "";
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: urlString
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    var data = result.Datas.Data;
+
+                    createJqgrid("list1", "pager1", data, title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //data (要秀的資料Json型別Data)
+        //title (標題)
+        function createJqgrid(listId, pagerId, data, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 70, sortable: false },
+                                    { name: "Rule_ID", index: "Rule_ID", align: 'left', width: 100 },
+                                    { name: "IsActive", index: "IsActive", align: 'left' },
+                                    { name: "IsActive_Name", index: "IsActive_Name", align: 'left' },
+                                    { name: "Status", index: "Status", align: 'left' },
+                                    { name: "Status_Name", index: "Status_Name", align: 'left' },
+                                    { name: "Basic_Pass", index: "Basic_Pass", align: 'left' },
+                                    { name: "Basic_Pass_Name", index: "Basic_Pass_Name", align: 'left' },
+                                    { name: "Rating_Ori_Good_Ind", index: "Rating_Ori_Good_Ind", align: 'left', width: '250' },
+                                    { name: "Rating_Ori_Good_Ind_Name", index: "Rating_Ori_Good_Ind_Name", align: 'left', width: '250' },
+                                    { name: "Rating_Notch", index: "Rating_Notch", align: 'left' },
+                                    { name: "Including_Ind", index: "Including_Ind", align: 'left' },
+                                    { name: "Including_Ind_Name", index: "Including_Ind_Name", align: 'left' },
+                                    { name: "Apply_Range", index: "Apply_Range", align: 'left', width: '250' },
+                                    { name: "Apply_Range_Name", index: "Apply_Range_Name", align: 'left', width: '250' },
+                                    { name: "Rating_Curr_Good_Ind", index: "Rating_Curr_Good_Ind", align: 'left', width: '250' },
+                                    { name: "Rating_Curr_Good_Ind_Name", index: "Rating_Curr_Good_Ind_Name", align: 'left', width: '250' },
+                                    { name: "Ori_Rating_Missing_Ind", index: "Ori_Rating_Missing_Ind", align: 'left'},
+                                    { name: "Rule_setter", index: "Rule_setter", align: 'left' },
+                                    { name: "Rule_setter_Name", index: "Rule_setter_Name", align: 'left' },
+                                    { name: "Rule_setting_Date", index: "Rule_setting_Date", align: 'left' },
+                                    { name: "Auditor", index: "Auditor", align: 'left' },
+                                    { name: "Auditor_Name", index: "Auditor_Name", align: 'left' },
+                                    { name: "Audit_Date", index: "Audit_Date", align: 'left' },
+                                    { name: "Rule_desc", index: "Rule_desc", align: 'left', width: '200' }
+                               ];
+
+            var colNameArray = [
+                                'Actions',
+                                '規則編號',
+                                '使用狀態(代碼)',
+                                '使用狀態',
+                                '處理狀態(代碼)',
+                                '處理狀態',
+                                '基本要件是否通過(代碼)',
+                                '基本要件是否通過',
+                                '原始購買是否符合信用風險低條件(代碼)',
+                                '原始購買是否符合信用風險低條件',
+                                '評等下降數',
+                                '是否包含(代碼)',
+                                '是否包含',
+                                '範圍 _以上/以下(1:以上   0:以下)(代碼)',
+                                '範圍 _以上/以下(1:以上   0:以下)',
+                                '報導日是否符合信用風險低條件(代碼)',
+                                '報導日是否符合信用風險低條件',
+                                '原始信評是否缺漏',
+                                '規則設定者帳號',
+                                '規則設定者',
+                                '規則編輯日期',
+                                '可複核人員帳號',
+                                '可複核人員',
+                                '複核日期',
+                                'Rule_desc'
+                              ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                data: data,
+                datatype: "local",
+                mtype: "POST",
+                colNames: colNameArray,
+                colModel: colModelArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                multiselect: true,
+                ajaxRowOptions: { contentType: "application/json" },
+                serializeRowData: function (data) {
+                    return JSON.stringify(data);
+                },
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData');
+                    $(".actionEditIcon").hide();
+
+                    if ($("#spanIsSender").html() != "Y") {
+                        $(".actionDeleIcon").hide();
+                    }
+                }
+            });
+
+            $("#" + listId).jqGrid('hideCol', ["Rule_setter", "Auditor",
+                                               "Basic_Pass", "Rating_Ori_Good_Ind", "Including_Ind", "Apply_Range", "Rating_Curr_Good_Ind",
+                                               "Status", "IsActive"]);
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+            var ruleID = $('#spanRule_ID').html().trim();
+            var basicPass = $('#editBasic_Pass').val().trim();
+            var ratingOriGoodInd = $('#editRating_Ori_Good_Ind').val().trim();
+            var ratingNotch = $('#editRating_Notch').val().trim();
+            var includingInd = $('#editIncluding_Ind').val().trim();
+            var applyRange = $('#editApply_Range').val().trim();
+            var ratingCurrGoodInd = $('#editRating_Curr_Good_Ind').val().trim();
+            var oriRatingMissingInd = $('#editOri_Rating_Missing_Ind').val().trim();
+            var ruleDesc = $('#editRule_desc').val().trim();
+
+            if (basicPass == "") {
+                alert("基本要件是否通過 必填");
+                return false;
+            }
+
+            //if (basicPass == "N") {
+            //    if (ratingOriGoodInd == "") {
+            //        toastr.error("原始購買是否符合信用風險低條件 必填");
+            //        return false;
+            //    }
+
+            //    if (ratingNotch == "") {
+            //        toastr.error("評等下降數 必填");
+            //        return false;
+            //    }
+            //}
+
+            if (ratingNotch!="") {
+                if (isNaN(ratingNotch)) {
+                    alert("評等下降數 必須為數字");
+                    return false;
+                }
+
+                if (includingInd == "") {
+                    alert("評等下降數 如有填，則 是否包含 必填");
+                    return false;
+                }
+
+                if (applyRange == "") {
+                    alert("評等下降數 如有填，則 範圍 _以上/以下 必填");
+                    return false;
+                }
+            }
+
+            var obj = {
+                ActionType: actionType,
+                Rule_ID: ruleID,
+                Basic_Pass: basicPass,
+                Rating_Ori_Good_Ind: ratingOriGoodInd,
+                Rating_Notch: ratingNotch,
+                Including_Ind: includingInd,
+                Apply_Range: applyRange,
+                Rating_Curr_Good_Ind: ratingCurrGoodInd,
+                Ori_Rating_Missing_Ind: oriRatingMissingInd,
+                Rule_setter: "",
+                Rule_setting_Date: "",
+                Auditor: "",
+                Audit_Date: "",
+                Status: "",
+                Rule_desc: ruleDesc
+            };
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: url.saveData
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = {
+                ActionType: "",
+                Rule_ID: "",
+                Basic_Pass: "",
+                Rating_Ori_Good_Ind: "",
+                Rating_Notch: "",
+                Including_Ind: "",
+                Apply_Range: "",
+                Rating_Curr_Good_Ind: "",
+                Ori_Rating_Missing_Ind: "",
+                Rule_setter: "",
+                Rule_setting_Date: "",
+                Auditor: "",
+                Audit_Date: "",
+                Status: "",
+                Rule_desc: "",
+                IsActive: ""
+            };
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定設為失效？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        ruleID: $('#spanRule_ID').html()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+
+        //#region SendToAudit
+        function SendToAudit() {
+            if ($("#IsSender").val() != "Y") {
+                alert("您沒有呈送複核的權限");
+                return false;
+            }
+
+            var auditor = $("#Auditor").val().trim();
+
+            if (auditor == "") {
+                alert("請選擇可複核人員");
+                return false;
+            }
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var ruleID = "";
+
+            if (!rowKey){
+                alert("請勾選要呈送複核的資料");
+                return false;
+            }
+            else if (confirm("確定呈送複核？")) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，已複核完成，不可呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Rule_setter") == auditor) {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，規則設定者 和 您選擇的可複核人員 不可相同");
+                        return false;
+                    }
+
+                    ruleID += grid.getCell(selectedIDs[i], "Rule_ID") + ",";
+                }
+
+                ruleID = ruleID.substr(0, ruleID.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    ruleID: ruleID,
+                    auditor: auditor
+                }),
+                dataType: "json",
+                url: url.sendToAudit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region AuditData
+        function AuditData(status) {
+            var userAccount = $("#UserAccount").val().trim();
+
+            var grid = $("#list1");
+            var rowKey = grid.getGridParam("selrow");
+
+            var ruleID = "";
+
+            var confirmWord = "";
+            if (status == "2") {
+                confirmWord = "確定複核？";
+            }
+            else if (status == "3") {
+                confirmWord = "確定退回？";
+            }
+
+            if (!rowKey) {
+                alert("請勾選要複核的資料");
+                return false;
+            }
+            else if (confirm(confirmWord)) {
+                var selectedIDs = grid.getGridParam("selarrrow");
+                for (var i = 0; i < selectedIDs.length; i++) {
+                    if (grid.getCell(selectedIDs[i], "Status") == "0") {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，尚未呈送複核");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Status") == "2") {
+                        if (status == "2") {
+                            alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，已複核完成，不可再做 複核確認");
+                            return false;
+                        }
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Status") != "1") {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，非呈送複核狀態，不可執行複核確認");
+                        return false;
+                    }
+
+                    if (grid.getCell(selectedIDs[i], "Auditor").trim() != userAccount) {
+                        alert("規則編號：" + grid.getCell(selectedIDs[i], "Rule_ID") + "，您不是此筆資料的可複核人員");
+                        return false;
+                    }
+
+                    ruleID += grid.getCell(selectedIDs[i], "Rule_ID") + ",";
+                }
+
+                ruleID = ruleID.substr(0, ruleID.length - 1);
+            }
+            else {
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    ruleID: ruleID,
+                    status: status
+                }),
+                dataType: "json",
+                url: url.audit,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+    });
+
+    //#region SetAction
+    function SetAction(actionType, id, dialogTitle) {
+        $("#actionType").val(actionType);
+
+        //if (actionType == "Modify" || actionType == "Delete") {
+        //    if ($("#list1").getCell(id, "Status") == "1" || $("#list1").getCell(id, "Status") == "2") {
+        //        alert("待複核 或 複核完成 的資料，請先做 複核退回，才可 " + dialogTitle);
+        //        return false;
+        //    }
+        //}
+
+        if (actionType == "Modify") {
+            if ($("#list1").getCell(id, "Status") == "1" || $("#list1").getCell(id, "Status") == "2") {
+                alert("待複核 或 複核完成 的資料，請先做 複核退回，才可 " + dialogTitle);
+                return false;
+            }
+        }
+
+        $("#dialogEdit").dialog({
+            title: dialogTitle,
+            position: { my: "center", at: "center", of: window },
+        });
+
+        if (actionType == "Add") {
+            $('#spanRule_ID').html("");
+            $('#editBasic_Pass').val("");
+            $('#editRating_Ori_Good_Ind').val("");
+            $('#editRating_Notch').val("");
+            $('#editIncluding_Ind').val("");
+            $('#editApply_Range').val("");
+            $('#editRating_Curr_Good_Ind').val("");
+            $('#editOri_Rating_Missing_Ind').val("");
+            $('#spanRule_setter_Name').html("");
+            $('#spanRule_setting_Date').html("");
+            $('#spanAuditor_Name').html("");
+            $('#spanAudit_Date').html("");
+            $('#spanStatus').html("");
+            $('#spanStatus_Name').html("");
+            $('#editRule_desc').val("");
+            $('#spanIsActive').html("");
+            $('#spanIsActive_Name').html("");
+
+            $('#trRule_ID').hide();
+            $('#trRule_setter_Name').hide();
+            $('#trRule_setting_Date').hide();
+            $('#trAuditor_Name').hide();
+            $('#trAudit_Date').hide();
+            $('#trStatus').hide();
+            $('#trIsActive').hide();
+        }
+        else {
+            if (id == null) {
+                alert("請選取要" + dialogTitle + "的資料行");
+                return false;
+            }
+
+            $('#spanRule_ID').html($("#list1").getCell(id, "Rule_ID"));
+            $('#editBasic_Pass').val($("#list1").getCell(id, "Basic_Pass"));
+            $('#editRating_Ori_Good_Ind').val($("#list1").getCell(id, "Rating_Ori_Good_Ind"));
+            $('#editRating_Notch').val($("#list1").getCell(id, "Rating_Notch"));
+            $('#editIncluding_Ind').val($("#list1").getCell(id, "Including_Ind"));
+            $('#editApply_Range').val($("#list1").getCell(id, "Apply_Range"));
+            $('#editRating_Curr_Good_Ind').val($("#list1").getCell(id, "Rating_Curr_Good_Ind"));
+            $('#editOri_Rating_Missing_Ind').val($("#list1").getCell(id, "Ori_Rating_Missing_Ind"));
+            $('#spanRule_setter_Name').html($("#list1").getCell(id, "Rule_setter_Name"));
+            $('#spanRule_setting_Date').html($("#list1").getCell(id, "Rule_setting_Date"));
+            $('#spanAuditor_Name').html($("#list1").getCell(id, "Auditor_Name"));
+            $('#spanAudit_Date').html($("#list1").getCell(id, "Audit_Date"));
+            $('#spanStatus').html($("#list1").getCell(id, "Status"));
+            $('#spanStatus_Name').html($("#list1").getCell(id, "Status_Name"));
+            $('#editRule_desc').val($("#list1").getCell(id, "Rule_desc"));
+            $('#spanIsActive').html($("#list1").getCell(id, "IsActive"));
+            $('#spanIsActive_Name').html($("#list1").getCell(id, "IsActive_Name"));
+
+            $('#trRule_ID').show();
+            $('#trRule_setter_Name').show();
+            $('#trRule_setting_Date').show();
+            $('#trAuditor_Name').show();
+            $('#trAudit_Date').show();
+            $('#trStatus').show();
+            $('#trIsActive').show();
+        }
+
+        $('#editBasic_Pass').prop('disabled', true);
+        $('#editRating_Ori_Good_Ind').prop('disabled', true);
+        $('#editRating_Notch').prop('disabled', true);
+        $('#editIncluding_Ind').prop('disabled', true);
+        $('#editApply_Range').prop('disabled', true);
+        $('#editRating_Curr_Good_Ind').prop('disabled', true);
+        $('#editOri_Rating_Missing_Ind').prop('disabled', true);
+        $('#editRule_desc').prop('disabled', true);
+
+        switch (actionType) {
+            case "Add":
+            case "Modify":
+                $('#editBasic_Pass').prop('disabled', false);
+                $('#editRating_Ori_Good_Ind').prop('disabled', false);
+                $('#editRating_Notch').prop('disabled', false);
+                $('#editIncluding_Ind').prop('disabled', false);
+                $('#editApply_Range').prop('disabled', false);
+                $('#editRating_Curr_Good_Ind').prop('disabled', false);
+                $('#editOri_Rating_Missing_Ind').prop('disabled', false);
+                $('#editRule_desc').prop('disabled', false);
+
+                $('#btnSave').show();
+                $('#btnDelete').hide();
+
+                break;
+            case "View":
+                $('#btnSave').hide();
+                $('#btnDelete').hide();
+
+                break;
+            case "Delete":
+                $('#btnSave').hide();
+                $('#btnDelete').show();
+
+                break;
+        }
+
+        $("#dialogEdit").dialog("open");
+    }
+    //#endregion
+
+    //#region Edit
+    function GridDatalist1Edit(id) {
+        //SetAction("Modify", id, "修改");
+    }
+    //#endregion
+
+    //#region View
+    function GridDatalist1View(id) {
+        SetAction("View", id, "檢視");
+    }
+    //#endregion
+
+    //#region DeleteData
+    function GridDatalist1Dele(id) {
+        SetAction("Delete", id, "刪除");
+    }
+    //#endregion
+</script>

@@ -1,0 +1,535 @@
+﻿@{
+    ViewBag.Menu = "C1Main";
+    ViewBag.SubMenu = "C13MortgageSub";
+    ViewBag.Title = "C13Mortgage(前瞻性篩選變數資料)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm1">
+                <table>
+                    <tr>
+                        <td style="white-space:nowrap;text-align:right">
+                            資料年度：
+                        </td>
+                        <td style="white-space:nowrap">
+                            <input type="text" id="Year" name="Year" maxlength="4">
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            季別：
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Quartly",
+                                               (SelectList)ViewBag.Quartly,
+                                               new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;text-align:right">
+                            是否為消費者物價指數預測值：
+                        </td>
+                        <td style="white-space:nowrap">
+                            @Html.DropDownList("Consumer_Price_Index_Pre_Ind",
+                                               (SelectList)ViewBag.YN,
+                                               new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                        <td style="white-space:nowrap; text-align:right">
+                            是否為失業率預測值：
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @Html.DropDownList("Unemployment_Rate_Pre_Ind",
+                                               (SelectList)ViewBag.YN,
+                                               new { @class = "form-control", @style = "display:inline-block" })
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:20px">
+                <tr>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="查詢" id="btnSearch" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" value="重設" id="btnReset" />
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-primary" id="btnAdd" value="新增" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row main_body" style="overflow:auto;height:100%;">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogEdit" title="">
+        <input type="hidden" id="actionType" value="" />
+        <table style="width:100%">
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    年度：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editYear" name="editYear" maxlength="4">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    季別：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editQuartly",
+                                       (SelectList)ViewBag.Quartly,
+                                       new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    消費者物價指數：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editConsumer_Price_Index" name="editConsumer_Price_Index">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    是否為消費者物價指數預測值：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editConsumer_Price_Index_Pre_Ind",
+                                       (SelectList)ViewBag.YN,
+                                       new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    失業率：
+                </td>
+                <td style="white-space:nowrap">
+                    <input type="text" id="editUnemployment_Rate" name="editUnemployment_Rate">
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space:nowrap; text-align:right">
+                    是否為失業率預測值：
+                </td>
+                <td style="white-space:nowrap">
+                    @Html.DropDownList("editUnemployment_Rate_Pre_Ind",
+                                       (SelectList)ViewBag.YN,
+                                       new { @class = "form-control", @style = "display:inline-block" })
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="white-space:nowrap; text-align:center">
+                    <input type="button" id="btnSave" value="儲存" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnDelete" value="刪除" />
+                    &nbsp;&nbsp;
+                    <input type="button" id="btnClose" value="關閉視窗" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getAllData = '@Url.Action("GetC13AllData", "C1")';
+        url.getDbData = '@Url.Action("GetCacheC13Data", "C1")';
+        url.getData = '@Url.Action("GetC13Data", "C1")';
+        url.saveData = '@Url.Action("SaveC13", "C1")';
+        url.deleteData = '@Url.Action("DeleteC13", "C1")';
+        //#endregion 註冊URL
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReset':
+                    $("#" + id).on('click', function () { SearchReset(); });
+                    break;
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { SearchData(); });
+                    break;
+                case 'btnAdd':
+                    $("#" + id).on('click', function () { AddData(); });
+                    break;
+                case 'btnSave':
+                    $("#" + id).on('click', function () { SaveData(); });
+                    break;
+                case 'btnDelete':
+                    $("#" + id).on('click', function () { DeleteData(); });
+                    break;
+                case 'btnClose':
+                    $("#" + id).on('click', function () { $("#dialogEdit").dialog("close"); });
+                    break;
+            }
+        })
+        //#endregion
+
+        //#region SearchReset
+        function SearchReset() {
+            $('#Year').val("");
+            $('#Quartly').val("");
+            $('#Consumer_Price_Index_Pre_Ind').val("");
+            $('#Unemployment_Rate_Pre_Ind').val("");
+        }
+        //#endregion
+
+        //#region SearchData
+        function SearchData() {
+            var year = $('#Year').val().trim();
+            var quartly = $('#Quartly').val().trim();
+            var consumerPriceIndexPreInd = $('#Consumer_Price_Index_Pre_Ind').val().trim();
+            var unemploymentRatePreInd = $('#Unemployment_Rate_Pre_Ind').val().trim();
+
+            var obj = {
+                Year_Quartly: year + quartly,
+                Consumer_Price_Index_Pre_Ind: consumerPriceIndexPreInd,
+                Unemployment_Rate_Pre_Ind: unemploymentRatePreInd
+            };
+
+            showJqgrid("2", obj);
+        }
+        //#endregion
+
+        //#region 去controller 撈取資料並且用JqGrid套件顯示
+        function showJqgrid(type, obj) {
+            clearJqgrid();
+
+            var title = '@ViewBag.Title';
+            var urlString = "";
+
+            switch (type) {
+                case "1":
+                    urlString = url.getAllData;
+                    break;
+                case "2":
+                    urlString = url.getData;
+                    break;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: obj,
+                url: urlString
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    createJqgrid("list1", "pager1", title);
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        //listId (Jqgrid產生table的ID)
+        //pagerId (下方產生筆數的ID)
+        //title (標題)
+        function createJqgrid(listId, pagerId, title) {
+            var colModelArray = [
+                                    { name: "act", index: "act", width: 100, sortable: false },
+                                    { name: "Year_Quartly", index: "Year_Quartly", align: 'left'},
+                                    { name: "Consumer_Price_Index", index: "Consumer_Price_Index", align: 'left' },
+                                    { name: "Consumer_Price_Index_Pre_Ind", index: "Consumer_Price_Index_Pre_Ind", width: 200 },
+                                    { name: "Unemployment_Rate", index: "Unemployment_Rate", align: 'left' },
+                                    { name: "Unemployment_Rate_Pre_Ind", index: "Unemployment_Rate_Pre_Ind", align: 'left' }
+                                ];
+
+            var colNameArray = [
+                                'Actions',
+                                '資料(季)',
+                                '消費者物價指數',
+                                '是否為消費者物價指數預測值',
+                                '失業率',
+                                '是否為失業率預測值'
+                               ];
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                height: jqgridCustom.getHeight(),
+                sortorder: "desc",
+                caption: title, //標題
+                resizable: false,
+                width: jqgridCustom.getwidth(),
+                shrinkToFit: false,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    jqgridCustom.randerAction(listId, 'GridData', actfun);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+        //#region AddData
+        function AddData() {
+            SetAction("Add", null, "新增");
+        }
+        //#endregion
+
+        var actfun = {};
+        actfun.Edit = function(i)
+        {
+            SetAction("Modify", i, "修改");
+        }
+        actfun.View = function(i)
+        {
+            SetAction("View", i, "檢視");
+        }
+        actfun.Dele = function(i)
+        {
+            SetAction("Delete", i, "刪除");
+        }
+
+        //#region SetAction
+        function SetAction(actionType, rowid, dialogTitle) {
+            $("#actionType").val(actionType);
+
+            $("#dialogEdit").dialog({
+                title: dialogTitle,
+                position: { my: "center", at: "center", of: window },
+            });
+
+            if (actionType == "Add") {
+                $('#editYear').val("");
+                $('#editQuartly').val("");
+                $('#editConsumer_Price_Index').val("");
+                $('#editConsumer_Price_Index_Pre_Ind').val("");
+                $('#editUnemployment_Rate').val("");
+                $('#editUnemployment_Rate_Pre_Ind').val("");
+            }
+            else {
+                var data = $("#list1").getRowData(rowid);
+
+                var year = data.Year_Quartly.substr(0, data.Year_Quartly.length - 2);
+                var quartly = data.Year_Quartly.substr(data.Year_Quartly.length - 2, 2);
+
+                $('#editYear').val(year);
+                $('#editQuartly').val(quartly);
+                $('#editConsumer_Price_Index').val(data.Consumer_Price_Index);
+                $('#editConsumer_Price_Index_Pre_Ind').val(data.Consumer_Price_Index_Pre_Ind);
+                $('#editUnemployment_Rate').val(data.Unemployment_Rate);
+                $('#editUnemployment_Rate_Pre_Ind').val(data.Unemployment_Rate_Pre_Ind);
+            }
+
+            $('#editYear').prop('disabled', true);
+            $('#editQuartly').prop('disabled', true);
+            $('#editConsumer_Price_Index').prop('disabled', true);
+            $('#editConsumer_Price_Index_Pre_Ind').prop('disabled', true);
+            $('#editUnemployment_Rate').prop('disabled', true);
+            $('#editUnemployment_Rate_Pre_Ind').prop('disabled', true);
+
+            switch (actionType) {
+                case "Add":
+                case "Modify":
+                    $('#editYear').prop('disabled', false);
+                    $('#editQuartly').prop('disabled', false);
+                    $('#editConsumer_Price_Index').prop('disabled', false);
+                    $('#editConsumer_Price_Index_Pre_Ind').prop('disabled', false);
+                    $('#editUnemployment_Rate').prop('disabled', false);
+                    $('#editUnemployment_Rate_Pre_Ind').prop('disabled', false);
+
+                    if (actionType == "Modify") {
+                        $('#editYear').prop('disabled', true);
+                        $('#editQuartly').prop('disabled', true);
+                    }
+
+                    $('#btnSave').show();
+                    $('#btnDelete').hide();
+                    break;
+                case "View":
+                    $('#btnSave').hide();
+                    $('#btnDelete').hide();
+
+                    break;
+                case "Delete":
+                    $('#btnSave').hide();
+                    $('#btnDelete').show();
+
+                    break;
+            }
+
+            $("#dialogEdit").dialog("open");
+        }
+        //#endregion
+
+        //#region 取得全部資料
+        function GetAllData() {
+            var obj = null;
+
+            showJqgrid("1", obj);
+        }
+        //#endregion
+
+        //#region dialogEdit
+        $("#dialogEdit").dialog({
+            autoOpen: false,
+            resizable: true,
+            height: 'auto',
+            width: 'auto',
+            modal: true,
+            title: '',
+            position: { my: "center", at: "center", of: window },
+            closeText: "取消",
+            resizable: true,
+        });
+        //#endregion
+
+        //#region SaveData
+        function SaveData() {
+            var actionType = $('#actionType').val();
+
+            var year = $('#editYear').val().trim();
+            var quartly = $('#editQuartly').val().trim();
+            var consumerPriceIndex = $('#editConsumer_Price_Index').val().trim();
+            var consumerPriceIndexPreInd = $('#editConsumer_Price_Index_Pre_Ind').val().trim();
+            var unemploymentRate = $('#editUnemployment_Rate').val().trim();
+            var unemploymentRatePreInd = $('#editUnemployment_Rate_Pre_Ind').val().trim();
+
+
+            if (year == "") {
+                alert("年度 必填");
+                return false;
+            }
+
+            if (quartly == "") {
+                alert("季別 必填");
+                return false;
+            }
+
+            if (consumerPriceIndex == "") {
+                alert("消費者物價指數 必填");
+                return false;
+            }
+            else {
+                if (isNaN(consumerPriceIndex)) {
+                    alert("消費者物價指數 必須為數字");
+                    return false;
+                }
+            }
+
+            if (consumerPriceIndexPreInd == "") {
+                alert("是否為消費者物價指數預測值 必填");
+                return false;
+            }
+
+            if (unemploymentRate == "") {
+                alert("失業率 必填");
+                return false;
+            }
+            else {
+                if (isNaN(unemploymentRate)) {
+                    alert("失業率 必須為數字");
+                    return false;
+                }
+            }
+
+            if (unemploymentRatePreInd == "") {
+                alert("是否為失業率預測值 必填");
+                return false;
+            }
+
+            var obj = {
+                Year_Quartly: year + quartly,
+                Consumer_Price_Index: consumerPriceIndex,
+                Consumer_Price_Index_Pre_Ind: consumerPriceIndexPreInd,
+                Unemployment_Rate: unemploymentRate,
+                Unemployment_Rate_Pre_Ind: unemploymentRatePreInd
+            };
+
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
+                    alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                    alert(result.DESCRIPTION);
+                }
+            });
+        }
+        //#endregion
+
+        //#region DeleteData
+        function DeleteData() {
+            if (confirm("確定刪除？")) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        yearQuartly: $('#editYear').val() + $('#editQuartly').val()
+                    }),
+                    dataType: "json",
+                    url: url.deleteData,
+                    contentType: 'application/json'
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        alert(result.DESCRIPTION);
+                        $("#dialogEdit").dialog("close");
+                        SearchReset();
+                        GetAllData();
+                    }
+                    else {
+                        alert(result.DESCRIPTION);
+                    }
+                });
+            }
+        }
+        //#endregion
+    });
+</script>
