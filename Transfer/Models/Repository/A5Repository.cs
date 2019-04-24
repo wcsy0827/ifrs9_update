@@ -595,9 +595,11 @@ namespace Transfer.Models.Repository
                 DataTable dttempIFRS9 = new DataTable();
                 List<A59ViewModel> A59dataIFRS = new List<A59ViewModel>();
                 //"Data Source=10.42.71.139,3301;Initial Catalog=IFRS9;User ID=FBLKRISK;Password=Password1"
+                //190419測試使用Webconfig參數來設定SP
+                string GetCreditRating = System.Configuration.ConfigurationManager.AppSettings["GetCounterPartyCreditRatingForIFRS9"];
                 using (SqlConnection ConnIFRS9 = new SqlConnection(ConfigurationManager.ConnectionStrings["Apex"].ConnectionString))
                 {
-                    using (SqlCommand cmdIFRS9 = new SqlCommand($"exec [FBL_DB].[FBL_DB_SIT].dbo.GetCounterPartyCreditRatingForIFRS9 '{reportdate.Replace("/", "-")}'", ConnIFRS9))
+                    using (SqlCommand cmdIFRS9 = new SqlCommand($"{GetCreditRating} '{reportdate.Replace("/", "-")}'", ConnIFRS9))
                     {
                         using (SqlDataAdapter adaptIFRS9 = new SqlDataAdapter(cmdIFRS9))
                         {
