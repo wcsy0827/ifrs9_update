@@ -21,8 +21,7 @@
 bld/
 [Bb]in/
 [Oo]bj/
-FileDownloads/
-FileUploads/
+
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -242,3 +241,7 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# upload and download file 
+FileDownloads/*
+FileUploads/*
