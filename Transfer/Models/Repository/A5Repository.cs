@@ -3058,7 +3058,9 @@ select
                                 var Bondstr = RatingObject.Bonds.GetDescription();
                                 List<string> ISSUERs = new List<string>() { "GOV-TW-CEN", "GOV-Kaohsiung", "GOV-TAIPEI" };
                                 StringBuilder sb2 = new StringBuilder();
-                                
+
+                                //190510  此段複製的邏輯改成只有報導日信評，原始信評則不適用這段邏輯
+                                var RatingType_repo = Rating_Type.B.GetDescription();
                                 var A57ISSUERs =
                                     db.Bond_Rating_Info.AsNoTracking().Where(x =>
                                      x.Report_Date == dt &&
@@ -3066,13 +3068,15 @@ select
                                      x.Grade_Adjust != null &&
                                      x.PD_Grade != null &&
                                      ISSUERs.Contains(x.ISSUER) &&
-                                     x.Rating_Object == ISSUERstr).ToList();
+                                     x.Rating_Object == ISSUERstr &&
+                                     x.Rating_Type == RatingType_repo).ToList();
                                 var A57Bonds =
                                      db.Bond_Rating_Info.AsNoTracking().Where(x =>
                                      x.Report_Date == dt &&
                                      x.Version == version &&
                                      ISSUERs.Contains(x.ISSUER) &&
-                                     x.Rating_Object == Bondstr).ToList();
+                                     x.Rating_Object == Bondstr &&
+                                     x.Rating_Type == RatingType_repo).ToList();
                                 foreach (var A57group in A57ISSUERs.GroupBy(x => new
                                 {
                                     x.Reference_Nbr,
