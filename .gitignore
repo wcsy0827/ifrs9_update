@@ -241,6 +241,3 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 
-#Upload and Download File
-FileDownloads/
-FileUploads/
