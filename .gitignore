@@ -240,4 +240,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-
+/Transfer/FileUploads
+/Transfer/App_Data
