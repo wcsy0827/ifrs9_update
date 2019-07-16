@@ -7,7 +7,7 @@ namespace Transfer.Models.Repository
     public class DefaultCacheProvider : ICacheProvider
     {
         public ObjectCache Cache { get { return MemoryCache.Default; } }
-
+       
         private string _key = Controllers.AccountController.CurrentUserInfo.Name;
 
         public object Get(string key)

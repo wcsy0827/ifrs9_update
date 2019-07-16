@@ -1,4 +1,5 @@
-﻿using NPOI.HSSF.UserModel;
+﻿using Excel;
+using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System;
@@ -10,6 +11,8 @@ using System.Data.SqlClient;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Transactions;
 using Transfer.Models.Interface;
 using Transfer.Utility;
 using Transfer.ViewModels;
@@ -20,6 +23,11 @@ namespace Transfer.Models.Repository
     public class C0Repository : IC0Repository
     {
         #region 其他
+        protected Common.User _UserInfo
+        {
+            get;
+            private set;
+        }
         protected Common common
         {
             get;
@@ -28,6 +36,7 @@ namespace Transfer.Models.Repository
         public C0Repository()
         {
             this.common = new Common();
+            this._UserInfo = new Common.User();
         }
         #endregion 其他
 
@@ -83,7 +92,7 @@ namespace Transfer.Models.Repository
                         if (items.Any())
                         {
                             result.AddRange(
-                                items.OrderByDescending(x=>x.Create_date).ThenByDescending(x => x.Create_time)
+                                items.OrderByDescending(x => x.Create_date).ThenByDescending(x => x.Create_time)
                                 .Select(x =>
                                 {
                                     return string.Format("{0}    轉檔日期：{1}    轉檔時間：{2}    基準日：{3}    版本：{4}    結果：{5}",
@@ -209,7 +218,7 @@ namespace Transfer.Models.Repository
                     dataModel = dt.AsEnumerable()
                         .Select((x, y) =>
                         {
-                            return getC01ViewModelInExcel(x,version);
+                            return getC01ViewModelInExcel(x, version);
                         }
                     ).ToList();
                 }
@@ -224,7 +233,7 @@ namespace Transfer.Models.Repository
 
         #region Excel 組成 C01ViewModel
 
-        private C01ViewModel getC01ViewModelInExcel(DataRow item,string version)
+        private C01ViewModel getC01ViewModelInExcel(DataRow item, string version)
         {
             string reportDate = TypeTransfer.objToString(item[0]);
             reportDate = reportDate.Substring(0, 4) + "/" + reportDate.Substring(4, 2) + "/" + reportDate.Substring(6, 2);
@@ -393,14 +402,14 @@ namespace Transfer.Models.Repository
 
                 using (IFRS9DBEntities db = new IFRS9DBEntities())
                 {
-                    if (db.Transfer_CheckTable.Any(x => x.File_Name == fileName 
-                                                       && x.ReportDate == reportDate 
-                                                       && x.Version == verInt 
+                    if (db.Transfer_CheckTable.Any(x => x.File_Name == fileName
+                                                       && x.ReportDate == reportDate
+                                                       && x.Version == verInt
                                                        && x.TransferType == "Y") == true)
                     {
                         result.RETURN_FLAG = false;
                         result.DESCRIPTION = string.Format("{0}、{1}、版本：{2}，在 Transfer_CheckTable 已有轉檔成功的紀錄",
-                                                           fileName,reportDate.ToString("yyyy/MM/dd"),version);
+                                                           fileName, reportDate.ToString("yyyy/MM/dd"), version);
                         return result;
                     }
 
@@ -416,7 +425,7 @@ namespace Transfer.Models.Repository
                     if (existData.Any())
                     {
                         result.RETURN_FLAG = false;
-                        result.DESCRIPTION = string.Format("基準日：{0}，案件編號：{1}，版本：{2}，資料重複。", 
+                        result.DESCRIPTION = string.Format("基準日：{0}，案件編號：{1}，版本：{2}，資料重複。",
                                                            existData[0].Report_Date.ToString("yyyy/MM/dd"),
                                                            existData[1].Reference_Nbr,
                                                            existData[2].Version.ToString());
@@ -443,7 +452,7 @@ namespace Transfer.Models.Repository
                     else if (country == "VN")
                     {
                         new BondsCheckRepository<EL_Data_In>(edi, Check_Table_Type.Bonds_C01_VN_Transfer_Check);
-                    }                 
+                    }
                 }
             }
             catch (DbUpdateException ex)
@@ -536,7 +545,7 @@ namespace Transfer.Models.Repository
                         query = query.Where(x => x.Report_Date == reportDate || x.Report_Date == reportDate2);
                     }
 
-                    List<string> data = query.AsEnumerable().OrderBy(x=>x.Version)
+                    List<string> data = query.AsEnumerable().OrderBy(x => x.Version)
                                                             .Select(x => x.Version.ToString()).Distinct()
                                                             .ToList();
                     return data;
@@ -581,6 +590,22 @@ namespace Transfer.Models.Repository
                                                      .Where(x => x.Group_Product_Code == groupProductCode)
                                                      .Where(x => x.Apply_Off_Date == null)
                                                      .ToList();
+                    #region 190510 PG&E需求，排除A41註記為N的部位
+                    DateTime reportDate3 = DateTime.Parse(reportDate);
+                    List<Bond_Account_Info> AssessmentCheckList = db.Bond_Account_Info.AsNoTracking()
+                                                                     .Where(x => x.Report_Date == reportDate3)
+                                                                     .Where(x => x.Version.ToString() == version)
+                                                                     .Where(x => x.Assessment_Check != "N")
+                                                                     .ToList();
+                    query = (
+                        from a in query
+                        join b in AssessmentCheckList
+                        on a.Reference_Nbr equals b.Reference_Nbr
+                        select a
+                        ).ToList();
+
+
+                    #endregion                    
                     query = (
                                 from a in query
                                 join b in flowInfoList
@@ -599,7 +624,7 @@ namespace Transfer.Models.Repository
                         DateTime dtReportDate = DateTime.Parse(reportDate);
                         List<Bond_Account_Info> A41s = db.Bond_Account_Info.Where(x => x.Report_Date == dtReportDate).ToList();
 
-                        for (int i=0;i < C07s.Count;i++)
+                        for (int i = 0; i < C07s.Count; i++)
                         {
                             var referenceNbr = C07s[i].Reference_Nbr;
                             var A41 = A41s.Where(x => x.Reference_Nbr == referenceNbr).FirstOrDefault();
@@ -669,7 +694,7 @@ namespace Transfer.Models.Repository
 
             if (dbDatas.Any())
             {
-                DataTable datas = getC07ModelFromDb(type,dbDatas).Item1;
+                DataTable datas = getC07ModelFromDb(type, dbDatas).Item1;
 
                 if (Excel_DownloadName.C07Mortgage.ToString().Equals(type))
                 {
@@ -694,6 +719,18 @@ namespace Transfer.Models.Repository
 
         #endregion 下載 Excel
 
+        #region 下載C10 Excel
+        public MSGReturnModel DownLoadExcelC10(string type, string path, List<C10DetailViewModel>data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.DESCRIPTION = FileRelated.DataTableToExcel(data.Cast<C10DetailViewModel>().ToList().ToDataTable(), path, Excel_DownloadName.C10);
+            result.RETURN_FLAG = string.IsNullOrWhiteSpace(result.DESCRIPTION);
+
+
+            return result;
+        }
+        #endregion
+
         #region DB EL_Data_Out 組成 DataTable
 
         /// <summary>
@@ -701,7 +738,7 @@ namespace Transfer.Models.Repository
         /// </summary>
         /// <param name="dbDatas"></param>
         /// <returns></returns>
-        private Tuple<DataTable> getC07ModelFromDb(string type,List<C07ViewModel> dbDatas)
+        private Tuple<DataTable> getC07ModelFromDb(string type, List<C07ViewModel> dbDatas)
         {
             DataTable dt = new DataTable();
 
@@ -785,7 +822,7 @@ namespace Transfer.Models.Repository
                                             .Where(x => x.Assessment_Sub_Kind.ToString() != "")
                                             .Select(x => x.Assessment_Sub_Kind)
                                             .Distinct()
-                                            .ToList();                              
+                                            .ToList();
                     return data;
                 }
             }
@@ -849,7 +886,7 @@ namespace Transfer.Models.Repository
                                                                           && productCode.Contains(x.Product_Code))
                                                                  .ToList();
                     List<Flow_Info> D01Data = db.Flow_Info.AsNoTracking()
-                                                .Where(x => x.Group_Product_Code == groupProductCode 
+                                                .Where(x => x.Group_Product_Code == groupProductCode
                                                          && x.Apply_Off_Date.ToString() == "")
                                                 .ToList();
                     //D01Data = (
@@ -859,6 +896,22 @@ namespace Transfer.Models.Repository
                     //              equals new { b.Group_Product_Code }
                     //              select a
                     //          ).ToList();
+                    #region 190510 PG&E需求，排除A41註記為N的部位
+                    DateTime reportDate3 = DateTime.Parse(reportDate);
+                    List<Bond_Account_Info> AssessmentCheckList = db.Bond_Account_Info.AsNoTracking()
+                                                                     .Where(x => x.Report_Date == reportDate3)
+                                                                     .Where(x => x.Version.ToString() == version)
+                                                                     .Where(x => x.Assessment_Check != "N")
+                                                                     .ToList();
+                    C07Data = (
+                        from a in C07Data
+                        join b in AssessmentCheckList
+                        on a.Reference_Nbr equals b.Reference_Nbr
+                        select a
+                        ).ToList();
+
+
+                    #endregion                    
 
                     C07Data = (
                                   from a in C07Data
@@ -917,7 +970,7 @@ namespace Transfer.Models.Repository
 
                     List<Group_Product> GroupProductData = db.Group_Product.ToList();
                     List<C07AdvancedViewModel> c07AdvancedList = new List<C07AdvancedViewModel>();
-                    for (int i=0;i< C07Data.Count;i++)
+                    for (int i = 0; i < C07Data.Count; i++)
                     {
                         string Product_Code = C07Data[i].Product_Code;
                         string Group_Product_Code = "";
@@ -1018,7 +1071,7 @@ namespace Transfer.Models.Repository
                         }
                         if (!watchIND.IsNullOrWhiteSpace())
                         {
-                            if(c07Advanced.Watch_IND == watchIND)
+                            if (c07Advanced.Watch_IND == watchIND)
                                 c07AdvancedList.Add(c07Advanced);
                         }
                         else
@@ -1048,7 +1101,7 @@ namespace Transfer.Models.Repository
 
                 if (Excel_DownloadName.C07Advanced.ToString().Equals(type))
                 {
-                    result.DESCRIPTION = FileRelated.DataTableToExcel(datas, path, Excel_DownloadName.C07Advanced,new C07AdvancedViewModel().GetFormateTitles());
+                    result.DESCRIPTION = FileRelated.DataTableToExcel(datas, path, Excel_DownloadName.C07Advanced, new C07AdvancedViewModel().GetFormateTitles());
                     result.RETURN_FLAG = string.IsNullOrWhiteSpace(result.DESCRIPTION);
                 }
 
@@ -1064,7 +1117,7 @@ namespace Transfer.Models.Repository
         #endregion
 
         #region getC07AdvancedSum
-        public Tuple<bool, List<C07AdvancedSumViewModel>> getC07AdvancedSum(string reportDate, string version, string groupProductCode, string groupProductName, string referenceNbr,string assessmentSubKind, string watchIND,string productCode)
+        public Tuple<bool, List<C07AdvancedSumViewModel>> getC07AdvancedSum(string reportDate, string version, string groupProductCode, string groupProductName, string referenceNbr, string assessmentSubKind, string watchIND, string productCode)
         {
             List<C07AdvancedSumViewModel> c07AdvancedSumList = new List<C07AdvancedSumViewModel>();
 
@@ -1078,14 +1131,14 @@ namespace Transfer.Models.Repository
                 if (referenceNbr == "All")
                 {
                     A41s = db.Bond_Account_Info.AsNoTracking().Where(x => x.Report_Date == _reportDate && x.Version == _version)
-                        .Where(x=>x.Assessment_Sub_Kind == assessmentSubKind, !assessmentSubKind.IsNullOrWhiteSpace())
+                        .Where(x => x.Assessment_Sub_Kind == assessmentSubKind, !assessmentSubKind.IsNullOrWhiteSpace())
                         .ToList();
                     //C01s = db.EL_Data_In.AsNoTracking().Where(x => x.Report_Date == _reportDate && x.Version == _version).ToList();
                     C07s = db.EL_Data_Out.AsNoTracking().Where(x => x.Report_Date == reportDate && x.Version == _version).ToList();
 
                     if (!watchIND.IsNullOrWhiteSpace())
                     {
-                        var refs = getC07Advanced(groupProductCode, productCode, reportDate, version, assessmentSubKind, watchIND).Item2.Select(x=>x.Reference_Nbr).ToList();
+                        var refs = getC07Advanced(groupProductCode, productCode, reportDate, version, assessmentSubKind, watchIND).Item2.Select(x => x.Reference_Nbr).ToList();
                         A41s = A41s.Where(x => refs.Contains(x.Reference_Nbr)).ToList();
                     }
                 }
@@ -1120,7 +1173,7 @@ namespace Transfer.Models.Repository
                     .Join(C07s,
                     A41 => A41.Reference_Nbr,
                     C07 => C07.Reference_Nbr,
-                    (A41, C07) => new 
+                    (A41, C07) => new
                     {
                         Assessment_Sub_Kind = A41.Assessment_Sub_Kind,
                         Exposure_EX = TypeTransfer.doubleNToDecimal(A41.Amort_Amt_Tw) + TypeTransfer.doubleNToDecimal(A41.Interest_Receivable_Tw),
@@ -1137,7 +1190,7 @@ namespace Transfer.Models.Repository
                                 Group_Product_Code = groupProductCode,
                                 Group_Product_Name = groupProductName,
                                 Assessment_Sub_Kind = x.Key,
-                                Exposure_EX = x.Sum(y=>y.Exposure_EX).Normalize().ToString(),
+                                Exposure_EX = x.Sum(y => y.Exposure_EX).Normalize().ToString(),
                                 Y1_EL_EX = x.Sum(y => y.Y1_EL_EX).Normalize().ToString(),
                                 Lifetime_EL_EX = x.Sum(y => y.Lifetime_EL_EX).Normalize().ToString()
                             });
@@ -1248,12 +1301,12 @@ namespace Transfer.Models.Repository
         /// <param name="de">截止季別</param>
         /// <param name="lastFlag">僅顯示最近更新資料</param>
         /// <returns></returns>
-        public List<C04ViewModel> GetC04(string ds, string de,bool lastFlag = false)
+        public List<C04ViewModel> GetC04(string ds, string de, bool lastFlag = false)
         {
             List<C04ViewModel> result = new List<C04ViewModel>();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                var C04ViewPros = new C04ViewModel().GetType().GetProperties().ToList(); 
+                var C04ViewPros = new C04ViewModel().GetType().GetProperties().ToList();
                 var C04Pros = new Econ_F_YYYYMMDD().GetType().GetProperties().ToList();
                 var _MAxProcessing_Date = string.Empty;
                 if (lastFlag)
@@ -1337,7 +1390,7 @@ namespace Transfer.Models.Repository
             List<ExpandoObject> result = new List<ExpandoObject>();
             var _from = TypeTransfer.stringToIntN(from);
             var _to = TypeTransfer.stringToIntN(to);
-            List<C04ViewModel> _allData = GetC04(null,null,false);
+            List<C04ViewModel> _allData = GetC04(null, null, false);
 
             _allData.ForEach(x =>
             {
@@ -1352,7 +1405,7 @@ namespace Transfer.Models.Repository
                 {
                     if (_data.Original_Factor == "Y")
                     {
-                        item.Add(_data.Table_Property, GetPeriods(_allData, x.Year_Quartly, _data.Table_Property, 0));              
+                        item.Add(_data.Table_Property, GetPeriods(_allData, x.Year_Quartly, _data.Table_Property, 0));
                     }
                     if (_data.Derivative == "Y")
                     {
@@ -1362,13 +1415,13 @@ namespace Transfer.Models.Repository
                             var _tv = _to.Value;
                             for (var i = _fv; _tv >= i; i++)
                             {
-                                if(i != 0)
-                                   item.Add($"{_data.Table_Property}_L{i}", GetPeriods(_allData, x.Year_Quartly, _data.Table_Property, -i));
+                                if (i != 0)
+                                    item.Add($"{_data.Table_Property}_L{i}", GetPeriods(_allData, x.Year_Quartly, _data.Table_Property, -i));
                             }
                         }
                         else if (_from != null)
                         {
-                            if(_from != 0)
+                            if (_from != 0)
                                 item.Add($"{_data.Table_Property}_L{_from.Value}", GetPeriods(_allData, x.Year_Quartly, _data.Table_Property, -_from.Value));
                         }
                         else if (_to != null)
@@ -1381,7 +1434,7 @@ namespace Transfer.Models.Repository
                 result.Add(d);
             });
             return result;
-        } 
+        }
         #endregion
 
         #endregion
@@ -1406,7 +1459,7 @@ namespace Transfer.Models.Repository
                 .GetDescription(type, Message_Type.not_Find_Any.GetDescription());
             if (Excel_DownloadName.C04_1.ToString().Equals(type))
             {
-                result.DESCRIPTION = FileRelated.DataTableToExcel(data.Cast<C04ViewModel>().ToList().ToDataTable(), path, Excel_DownloadName.C04_1,new C04ViewModel().GetFormateTitles());
+                result.DESCRIPTION = FileRelated.DataTableToExcel(data.Cast<C04ViewModel>().ToList().ToDataTable(), path, Excel_DownloadName.C04_1, new C04ViewModel().GetFormateTitles());
                 result.RETURN_FLAG = string.IsNullOrWhiteSpace(result.DESCRIPTION);
             }
             if (Excel_DownloadName.C04_Transfer.ToString().Equals(type))
@@ -1420,9 +1473,9 @@ namespace Transfer.Models.Repository
 
         #region Private function
         private string GetPeriods(
-            List<C04ViewModel> _allData, 
+            List<C04ViewModel> _allData,
             string Year_Quartly,
-            string Table_Property, 
+            string Table_Property,
             int Number_Period)
         {
             string result = string.Empty;
@@ -1471,5 +1524,595 @@ namespace Transfer.Models.Repository
             return result;
         }
         #endregion
+
+        #region Excel 資料轉成 C10ViewModel
+        /// <summary>
+        /// Excel 資料轉成 C10ViewModel
+        /// </summary>
+        /// <param name="pathType">Excel 副檔名</param>
+        /// <param name="stream"></param>
+        /// <param name="reportDate"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+
+        public Tuple<string, List<C10ViewModel>> getExcel(
+            string pathType,
+            Stream stream,
+            DateTime reportDate
+            )
+        {
+            string message = string.Empty;
+            DataSet resultData = new DataSet();
+            List<C10ViewModel> dataModel = new List<C10ViewModel>();
+            try
+            {
+                IExcelDataReader reader = null;
+                switch (pathType) //判斷型別
+                {
+                    case "xls":
+                        reader = ExcelReaderFactory.CreateBinaryReader(stream);
+                        break;
+
+                    case "xlsx":
+                        reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+                        break;
+                }
+                reader.IsFirstRowAsColumnNames = true;
+                resultData = reader.AsDataSet();
+                reader.Close();
+
+                if (resultData.Tables[0].Rows.Count > 0) //判斷有無資料
+                {
+                    //檢查資料內重要欄位是否為空值，若為空值則不進行上傳
+                    var dataCheckParameter = resultData.Tables[0].AsEnumerable().Where(
+                        x => (string.Join("", x.ItemArray).Trim() != "") &&
+                        (x.Field<object>("債券編號") == null ||
+                        x.Field<object>("債券編號").ToString().IsNullOrWhiteSpace() ||
+                        x.Field<object>("Lots") == null ||
+                        x.Field<object>("Lots").ToString().IsNullOrWhiteSpace() ||
+                        x.Field<object>("Portfolio") == null ||
+                        x.Field<object>("Portfolio").ToString().IsNullOrWhiteSpace())
+                        ).IsNullOrEmpty();
+
+                    if (dataCheckParameter == true)
+                    {
+                        //重要資料檢驗:Bond_Number檢驗(篩出符合的資料)
+                        var data = resultData.Tables[0].AsEnumerable().Where(x => (
+                           x.Field<object>("債券編號") != null &&
+                           !x.Field<object>("債券編號").ToString().IsNullOrWhiteSpace() &&
+                           x.Field<object>("Lots") != null &&
+                           !x.Field<object>("Lots").ToString().IsNullOrWhiteSpace() &&
+                           x.Field<object>("Portfolio") != null &&
+                           !x.Field<object>("Portfolio").ToString().IsNullOrWhiteSpace()
+                           ));
+
+                        //轉換EXCEL titles 
+                        List<string> titles = resultData.Tables[0].Columns
+                                                         .Cast<DataColumn>()
+                                                         .Select(x => x.ColumnName.Trim().Replace("\t", string.Empty))
+                                                         .ToList();
+
+                        dataModel = data //第二行開始
+                            .Select((x, y) =>
+                            {
+                                return getC10Model(x, reportDate,
+                                    //(y + 1 + idNum).ToString().PadLeft(10, '0'),
+                                    titles);
+                            }
+                            ).ToList();
+                    }
+                    else {
+                        message = "上傳資料重要參數有缺漏(債券編號、Lots、Portfolio Name)";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                message = ex.exceptionMessage();
+            }
+            return new Tuple<string, List<C10ViewModel>>(message, dataModel);
+        }
+
+        #endregion Excel 資料轉成 C10ViewModel
+
+        #region datarow 組成 C10ViewModel
+
+        /// <summary>
+        /// datarow 組成 C10ViewModel
+        /// </summary>
+        /// <param name="item">每一行excel</param>
+        /// <param name="titles"></param>
+        /// <param name="reportDate"></param>
+        /// <returns></returns>
+        private C10ViewModel getC10Model(
+            DataRow item,
+            DateTime reportDate,
+            List<string> titles)
+        {
+            if (!titles.Any())
+                return new C10ViewModel();
+            var C10 = new C10ViewModel();
+            var C10pro = C10.GetType().GetProperties();
+            var a = C10pro[0].GetCustomAttributesData()[0].ConstructorArguments[0].Value;
+
+            for (int i = 0; i < titles.Count; i++) //每一行所有資料
+            {
+                if (item[i] != null)
+                {
+                    string data = null;
+                    if (item[i].GetType().Name.Equals("DateTime"))
+                        data = TypeTransfer.objDateToString(item[i]);
+                    else
+                        data = TypeTransfer.objToString(item[i]).Trim();
+                    if (!data.IsNullOrWhiteSpace()) //資料有值
+                    {
+                        var C10PInfo = C10pro.Where(x => x.GetCustomAttributesData()[0].ConstructorArguments[0].Value.ToString().Trim().ToLower() == (titles[i].ToString().Trim().ToLower()))
+                                             .FirstOrDefault();  //對照類別的Description
+                        if (C10PInfo != null)
+                            C10PInfo.SetValue(C10, data);
+                    }
+                }
+            }
+            C10.Report_Date = reportDate.ToString("yyyy/MM/dd");
+            return C10;
+        }
+
+        #endregion datarow 組成 C10ViewModel
+
+        #region SaveC10
+
+        /// <summary>
+        ///  C10 save db
+        /// </summary>
+        /// <param name="dataModel"></param>
+        /// <param name="reportDate"></param>
+        /// <returns></returns>
+        public MSGReturnModel saveC10(List<C10ViewModel> dataModel, string reportDate)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            DateTime start = DateTime.Now;
+            _UserInfo._date = start.Date;
+            _UserInfo._time = start.TimeOfDay;
+            int version_ = 0;  ///上傳版本皆為0
+
+            string type = Table_Type.C10.ToString();
+
+            DateTime dt = TypeTransfer.stringToDateTime(reportDate);
+           
+
+            if (!dataModel.Any())
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription();
+                return result;
+            }
+
+            try
+            {
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    using (TransactionScope transaction = new TransactionScope())
+                    {
+                        #region 刪除相同報導日C10資料 ，參數version統一設為0
+                        if (!GetC10(dt,version_).IsNullOrEmpty())
+                        {
+                            var query = db.Bond_Account_AssessmentCheck.AsEnumerable().Where(x => x.Report_Date == dt && x.Version == 0);
+                            db.Bond_Account_AssessmentCheck.RemoveRange(query);
+                            db.SaveChanges();
+                        }
+                        #endregion delete C10
+
+                        #region 找出A41需補上傳的資料名單
+                        //取最大version
+                        var version = db.Bond_Account_Info.AsNoTracking()
+                                     .Where(e => e.Report_Date == dt)
+                                     .Select(e => e.Version).Max();
+
+                        //同期A41的資料
+                        var A41Data = db.Bond_Account_Info.AsNoTracking()
+                                        .Where(p => p.Report_Date == dt &&
+                                        p.Assessment_Check == "N" &&
+                                        p.Version == version
+                                        ).ToList();
+
+                        #endregion 找出A41需補上傳的資料名單
+
+                        #region 查看有無沒有對應到A41的項目
+                        //190618 user需求: 與A41最大版本部位或是資料有問題的話就整份不能上傳
+                        var CheckDataA41 = A41Data.Where(
+                            a => !dataModel.Exists(t =>
+                            a.Bond_Number != null &&
+                            a.Lots != null &&
+                            a.Portfolio_Name != null &&
+                            (a.Bond_Number == t.Bond_Number) &&
+                            (a.Lots == t.Lots) &&
+                            (a.Portfolio_Name == t.Portfolio_Name)
+                            )).ToList();
+
+                        if (CheckDataA41.Count() > 0)
+                            throw (new Exception("尚有缺漏資料未上傳"));
+
+                        var CheckDataC10_notmatch = dataModel.Where(
+                            a => !A41Data.Exists(t => (a.Bond_Number == t.Bond_Number) && (
+                            a.Lots == t.Lots) && (a.Portfolio_Name == t.Portfolio_Name))
+                            ).ToList();
+
+                        if (CheckDataC10_notmatch.Count() > 0)
+                            throw (new Exception("上傳資料有非本次對應之資料"));
+
+                        #endregion
+
+                        #region 濾除C10不在A41的名單內的項目
+                        var CheckDataC10 = dataModel.Where(
+                                       a => A41Data.Exists(t =>
+                                       a.Bond_Number != null &&
+                                       a.Lots != null &&
+                                       a.Portfolio_Name != null &&
+                                       (a.Bond_Number == t.Bond_Number) &&
+                                       (a.Lots == t.Lots) &&
+                                       (a.Portfolio_Name == t.Portfolio_Name)
+                                       )).ToList();
+                        #endregion
+
+                        #region 逐筆讀取資料
+                        List<C10ViewModel_1> C10Data = new List<C10ViewModel_1>();
+                        if (CheckDataC10.Count > 0)
+                        {
+                            foreach (var item in CheckDataC10)
+                            {
+                                //判斷資料是否在A41對應名單之中
+                                #region 檢核資料是否空值(不包含本金利息各自資料)
+                                StringBuilder sb = new StringBuilder();
+                                if (item.LGD_import == null)
+                                    sb.Append("LGD資料遺漏");
+                                if (item.Lifetime_EL_Import == null)
+                                    sb.Append("LT EL(原幣)資料遺漏");
+                                if (item.Y1_EL_Import == null)
+                                    sb.Append("EL(原幣)資料遺漏");
+                                if (item.PD_import == null)
+                                    sb.Append("最近一次評等PD資料遺漏");
+                                if (item.Maturity_Date == null)
+                                    sb.Append("債券到期日資料遺漏");
+                                if (!sb.ToString().IsNullOrEmpty())
+                                    throw (new Exception(sb.ToString()));
+                                #endregion 檢核資料是否空值(不包含本金利息各自資料)
+
+
+                                //判斷其屬於本金還是利息資料
+                                C10DataType C10Type = C10CheckData(item);
+                                Bond_Account_AssessmentCheck C10data;
+
+                                //找尋是否已經有此筆資料寫入
+                                int index = C10Data.FindIndex(x => x.Data.Bond_Number == item.Bond_Number &&
+                                                                   x.Data.Lots == item.Lots &&
+                                                                   x.Data.Portfolio_Name == item.Portfolio_Name);
+                                //若index為-1表示目前沒有相同之債劵資料(同Bond_Number,Lots,Portfolio_Name)，直接寫進
+                                #region 合併本金跟利息資料
+                                if (index == -1)
+                                {
+                                    switch (C10Type)
+                                    {
+                                        case C10DataType.Amort:
+                                            C10data = new Bond_Account_AssessmentCheck
+                                            {
+                                                Bond_Number = item.Bond_Number,
+                                                Lots = item.Lots,
+                                                Report_Date = dt,
+                                                Maturity_Date = TypeTransfer.stringToDateTime(item.Maturity_Date),
+                                                Version = version_,
+                                                Portfolio_Name = item.Portfolio_Name,
+                                                Portfolio = item.Portfolio,
+                                                Amort_Amt_import = TypeTransfer.stringToDouble(item.Amort_Amt_import),
+                                                Amort_Amt_import_TW = TypeTransfer.stringToDouble(item.Amort_Amt_import_TW),
+                                                PD_Amort_import = TypeTransfer.stringToDouble(item.PD_import),
+                                                LGD_Amort_import = TypeTransfer.stringToDouble(item.LGD_import),
+                                                EL_import_Principle = TypeTransfer.stringToDouble(item.EL_import_Principle),
+                                                Create_User = _UserInfo._user,
+                                                Create_Date = _UserInfo._date,
+                                                Create_Time = _UserInfo._time,
+                                                Lifetime_EL_Import = TypeTransfer.stringToDouble(item.Lifetime_EL_Import),
+                                                Y1_EL_Import = TypeTransfer.stringToDouble(item.Y1_EL_Import)
+                                            };
+
+                                            C10Data.Add(
+                                            new C10ViewModel_1()
+                                            {
+                                                Data = C10data,
+                                                Amort = true
+                                            });
+                                            break;
+
+                                        case C10DataType.Interest:
+
+                                            C10data = new Bond_Account_AssessmentCheck
+                                            {
+                                                Bond_Number = item.Bond_Number,
+                                                Lots = item.Lots,
+                                                Report_Date = dt,
+                                                Maturity_Date = TypeTransfer.stringToDateTime(item.Maturity_Date),
+                                                Version = version_,
+                                                Portfolio_Name = item.Portfolio_Name,
+                                                Portfolio = item.Portfolio,
+                                                Interest_Receivable_import = TypeTransfer.stringToDouble(item.Interest_Receivable_import),
+                                                Interest_Receivable_import_TW = TypeTransfer.stringToDouble(item.Interest_Receivable_import_TW),
+                                                PD_Interest_Receivable_import = TypeTransfer.stringToDouble(item.PD_import),
+                                                LGD_Interest_Receivable_import = TypeTransfer.stringToDouble(item.LGD_import),
+                                                EL_import_Int = TypeTransfer.stringToDouble(item.EL_import_Int),
+                                                Create_User = _UserInfo._user,
+                                                Create_Date = _UserInfo._date,
+                                                Create_Time = _UserInfo._time,
+                                                Lifetime_EL_Import = TypeTransfer.stringToDouble(item.Lifetime_EL_Import),
+                                                Y1_EL_Import = TypeTransfer.stringToDouble(item.Y1_EL_Import)
+                                            };
+
+                                            C10Data.Add(
+                                            new C10ViewModel_1()
+                                            {
+                                                Data = C10data,
+                                                Interest = true
+                                            });
+                                            break;
+
+                                        case C10DataType.Amort_Interest:
+                                            C10data = new Bond_Account_AssessmentCheck
+                                            {
+                                                Bond_Number = item.Bond_Number,
+                                                Lots = item.Lots,
+                                                Report_Date = dt,
+                                                Maturity_Date = TypeTransfer.stringToDateTime(item.Maturity_Date),
+                                                Version = version_,
+                                                Portfolio_Name = item.Portfolio_Name,
+                                                Portfolio = item.Portfolio,
+                                                Amort_Amt_import = TypeTransfer.stringToDouble(item.Amort_Amt_import),
+                                                Amort_Amt_import_TW = TypeTransfer.stringToDouble(item.Amort_Amt_import_TW),
+                                                Interest_Receivable_import = TypeTransfer.stringToDouble(item.Interest_Receivable_import),
+                                                Interest_Receivable_import_TW = TypeTransfer.stringToDouble(item.Interest_Receivable_import_TW),
+                                                PD_Amort_import = TypeTransfer.stringToDouble(item.PD_import),
+                                                PD_Interest_Receivable_import = TypeTransfer.stringToDouble(item.PD_import),
+                                                LGD_Interest_Receivable_import = TypeTransfer.stringToDouble(item.LGD_import),
+                                                LGD_Amort_import = TypeTransfer.stringToDouble(item.LGD_import),
+                                                EL_import_Principle = TypeTransfer.stringToDouble(item.EL_import_Principle),
+                                                EL_import_Int = TypeTransfer.stringToDouble(item.EL_import_Int),
+                                                Create_User = _UserInfo._user,
+                                                Create_Date = _UserInfo._date,
+                                                Create_Time = _UserInfo._time,
+                                                Lifetime_EL_Import = TypeTransfer.stringToDouble(item.Lifetime_EL_Import),
+                                                Y1_EL_Import = TypeTransfer.stringToDouble(item.Y1_EL_Import)
+                                            };
+
+                                            C10Data.Add(
+                                            new C10ViewModel_1()
+                                            {
+                                                Data = C10data,
+                                                Amort = true,
+                                                Interest = true
+                                            });
+                                            break;
+
+                                        default:
+                                            string msg = Message_Type.Check_TypeFail.GetDescription() + item.Bond_Number;
+                                            throw (new Exception(msg));
+                                    }
+                                }
+                                else
+                                {
+                                    if (C10Data[index].CheckDataRedundancy(C10Type)) //檢驗有無重複寫入，發生則回報錯誤
+                                    {
+                                        string msg = Message_Type.Check_Redundancy.GetDescription() + C10Data[index].Data.Bond_Number;
+                                        throw (new Exception(msg));
+                                    }
+
+                                    switch (C10Type)
+                                    {
+                                        case C10DataType.Amort:
+                                            C10Data[index].Data.Amort_Amt_import = TypeTransfer.stringToDouble(item.Amort_Amt_import);
+                                            C10Data[index].Data.Amort_Amt_import_TW = TypeTransfer.stringToDouble(item.Amort_Amt_import_TW);
+                                            C10Data[index].Data.PD_Amort_import = TypeTransfer.stringToDouble(item.PD_import);
+                                            C10Data[index].Data.LGD_Amort_import = TypeTransfer.stringToDouble(item.LGD_import);
+                                            C10Data[index].Data.EL_import_Principle = TypeTransfer.stringToDouble(item.EL_import_Principle);
+                                            C10Data[index].Data.Lifetime_EL_Import += TypeTransfer.stringToDouble(item.Lifetime_EL_Import);
+                                            C10Data[index].Data.Y1_EL_Import += TypeTransfer.stringToDouble(item.Y1_EL_Import);
+                                            C10Data[index].Amort = true;
+                                            break;
+
+                                        case C10DataType.Interest:
+                                            C10Data[index].Data.Interest_Receivable_import = TypeTransfer.stringToDouble(item.Interest_Receivable_import);
+                                            C10Data[index].Data.Interest_Receivable_import_TW = TypeTransfer.stringToDouble(item.Interest_Receivable_import_TW);
+                                            C10Data[index].Data.LGD_Interest_Receivable_import = TypeTransfer.stringToDouble(item.LGD_import);
+                                            C10Data[index].Data.PD_Interest_Receivable_import = TypeTransfer.stringToDouble(item.PD_import);
+                                            C10Data[index].Data.EL_import_Int = TypeTransfer.stringToDouble(item.EL_import_Int);
+                                            C10Data[index].Data.Lifetime_EL_Import += TypeTransfer.stringToDouble(item.Lifetime_EL_Import);
+                                            C10Data[index].Data.Y1_EL_Import += TypeTransfer.stringToDouble(item.Y1_EL_Import);
+                                            C10Data[index].Interest = true;
+                                            break;
+
+                                        default:
+                                            string msg = Message_Type.Check_TypeFail.GetDescription() + item.Bond_Number;
+                                            throw (new Exception(msg));
+
+                                    }
+
+                                }
+                                #endregion 合併本金跟利息資料
+                            }
+                        }
+                        else {
+                            string msg = Message_Type.DataNoneCorrespond.GetDescription();
+                            throw (new Exception(msg));
+                        }
+                        #endregion 逐筆讀取資料
+                   
+
+                        #region 將C10存入DB
+                        foreach (var item in C10Data)
+                        {
+                            if (item.Amort && item.Interest) {
+                                db.Bond_Account_AssessmentCheck.Add(item.Data);
+                            }
+                            else {
+                                string msg = Message_Type.DataLostFail.GetDescription() + item.Data.Bond_Number;
+                                throw (new Exception(msg));
+                            }
+                        }
+
+                        //注意資料不能重複
+                        db.SaveChanges();
+                      
+                        transaction.Complete();
+                        result.RETURN_FLAG = true;
+                        #endregion C10存入資料
+                    }
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.Message;
+            }
+
+            SaveC10TransLog(result,reportDate,start,version_);
+
+            return result;
+        }
+        #endregion
+
+        #region C10轉檔前確認
+        /// <summary>
+        /// 確認C10之指定reportdata有無資料
+        /// </summary>
+        /// <returns>C10ViewModel</returns>
+        public List<Bond_Account_AssessmentCheck> getC10Data(string reportdate)
+        {
+            List<Bond_Account_AssessmentCheck> result = new List<Bond_Account_AssessmentCheck>();
+
+            DateTime dt = TypeTransfer.stringToDateTime(reportdate);
+
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                result = db.Bond_Account_AssessmentCheck.AsNoTracking()
+                    .Where(x => x.Report_Date != null && x.Report_Date == dt).ToList();
+            }
+
+            return result;
+        }
+        #endregion
+
+        #region C10本金利息判斷
+        private C10DataType C10CheckData(C10ViewModel C10)
+        {
+            C10DataType c10 ;
+            bool C10_Amort= false;
+            bool C10_Interest = false;
+            bool ErrorData = false;
+
+            //檢查資料本金欄位是否為空值，若填寫不齊全則報錯
+            if (!C10.Amort_Amt_import.IsNullOrZero() || !C10.Amort_Amt_import_TW.IsNullOrZero() || !C10.EL_import_Principle.IsNullOrZero() )
+            {
+                if(!C10.Amort_Amt_import.IsNullOrZero() && !C10.Amort_Amt_import_TW.IsNullOrZero() && !C10.EL_import_Principle.IsNullOrZero())
+                    C10_Amort = true;
+                else
+                    ErrorData = true;
+            }
+
+            //檢查資料利息欄位是否為空值，若填寫不齊全則報錯
+            if (!C10.Interest_Receivable_import.IsNullOrZero() || !C10.Interest_Receivable_import_TW.IsNullOrZero() || !C10.EL_import_Int.IsNullOrZero())
+            {
+                if (!C10.Interest_Receivable_import.IsNullOrZero() && !C10.Interest_Receivable_import_TW.IsNullOrZero() && !C10.EL_import_Int.IsNullOrZero())
+                    C10_Interest = true;
+                else
+                    ErrorData = true;
+            }
+
+            if (C10_Amort && C10_Interest)
+                c10 = C10DataType.Amort_Interest;
+            else if (C10_Interest && (C10_Amort ==false) && (ErrorData !=true))
+                c10 = C10DataType.Interest;
+            else if (C10_Amort && (C10_Interest == false) && (ErrorData !=true))
+                c10 = C10DataType.Amort;
+            else
+                c10 = C10DataType.Error_Data;
+
+            return c10;
+        }
+        #endregion
+
+        #region C10Save結果寫入Log功能拉出來
+        public void SaveC10TransLog(MSGReturnModel result_autotrasfer, string datepicker, DateTime starttime, int ver)
+        {
+            DateTime reportdate = DateTime.MinValue;
+            DateTime.TryParse(datepicker, out reportdate);
+            if (result_autotrasfer.RETURN_FLAG)
+            {
+
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    string sql = string.Empty;
+                    sql += $@"UPDATE Transfer_CheckTable Set TransferType = 'R' 
+                    WHERE ReportDate = '{datepicker.Replace("/", "-")}'
+                    AND Version ={ver}
+                    AND TransferType = 'Y'
+                    AND File_Name ='{Table_Type.C10.ToString()}' ;";
+                    db.Database.ExecuteSqlCommand(sql);
+                }
+            }
+            common.saveTransferCheck(Table_Type.C10.ToString(), result_autotrasfer.RETURN_FLAG, reportdate, ver, starttime, DateTime.Now, result_autotrasfer.DESCRIPTION);
+        }
+        #endregion
+
+        #region  get C10 data
+        /// <summary>
+        /// get C10 data
+        /// </summary>
+        /// <param name="ReportDate">報導日</param>
+        /// <param name="Version">版本</param>
+        /// <returns></returns>
+        public List<C10DetailViewModel> GetC10(DateTime ReportDate, int Version)
+        {
+            string resultMessage = string.Empty;
+            List<C10DetailViewModel> data = new List<C10DetailViewModel>();
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                data = db.Bond_Account_AssessmentCheck.AsNoTracking()
+                    .Where(x => x.Report_Date == ReportDate &&
+                                x.Version != null &&
+                                x.Version == Version)
+                    .AsEnumerable()
+                    .OrderBy(x => Convert.ToInt32(x.Id))
+                    .Select(x => DbToC10Model(x)).ToList();
+            }
+            return data;
+        }
+        #endregion
+
+        private C10DetailViewModel DbToC10Model(Bond_Account_AssessmentCheck data)
+        {
+            return new C10DetailViewModel()
+            {
+                Bond_Number = data.Bond_Number,
+                Lots = data.Lots,
+                Portfolio = data.Portfolio,
+                Portfolio_Name = data.Portfolio_Name,
+                Version = data.Version.ToString(),
+                Report_Date = TypeTransfer.dateTimeNToString(data.Report_Date),
+                Maturity_Date = TypeTransfer.dateTimeNToString(data.Maturity_Date),
+                Amort_Amt_import = data.Amort_Amt_import.ToString(),
+                Amort_Amt_import_TW = data.Amort_Amt_import_TW.ToString(),
+                Interest_Receivable_import = data.Interest_Receivable_import.ToString(),
+                Interest_Receivable_import_TW = data.Interest_Receivable_import_TW.ToString(),
+                PD_Amort_import = data.PD_Amort_import.ToString(),
+                PD_Interest_Receivable_import = data.PD_Interest_Receivable_import.ToString(),
+                LGD_Amort_import = data.LGD_Amort_import.ToString(),
+                LGD_Interest_Receivable_import = data.LGD_Interest_Receivable_import.ToString(),
+                Lifetime_EL_Import = data.Lifetime_EL_Import.ToString(),
+                Y1_EL_Import = data.Y1_EL_Import.ToString(),
+                EL_import_Principle = data.EL_import_Principle.ToString(),
+                EL_import_Int = data.EL_import_Int.ToString()
+            };
+        }
     }
 }

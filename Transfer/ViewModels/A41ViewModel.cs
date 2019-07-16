@@ -197,5 +197,8 @@ namespace Transfer.ViewModels
         /// </summary>
         [Description("原始購入日_舊")]
         public string Origination_Date_Old { get; set; }
+
+        [Description("是否進行基本要件評估")]
+        public string Assessment_Check { get; set; }
     }
 }

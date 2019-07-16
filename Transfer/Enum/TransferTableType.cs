@@ -91,6 +91,15 @@ namespace Transfer.Enum
             /// </summary>
             [Description("EL_Data_Out")]
             C07,
+
+            [Description("Bond_Account_AssessmentCheck")]
+            C10,
+
+            /// <summary>
+            /// EL_Data_Out
+            /// </summary>
+            [Description("Bond_Account_Test")]
+            E01,
         }
     }
 }

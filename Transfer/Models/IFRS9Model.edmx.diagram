@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="54f7a7fcf94d4a65a6e3add9113726b1" Name="Diagram1" ZoomLevel="25">
+      <Diagram DiagramId="54f7a7fcf94d4a65a6e3add9113726b1" Name="Diagram1" ZoomLevel="71">
         <EntityTypeShape EntityType="IFRS9Model.Econ_Domestic" Width="1.5" PointX="6" PointY="0.75" />
         <EntityTypeShape EntityType="IFRS9Model.Group_Product" Width="1.5" PointX="0.75" PointY="12.875" />
         <EntityTypeShape EntityType="IFRS9Model.IFRS9_Main" Width="1.5" PointX="9.75" PointY="19.875" />
@@ -105,6 +105,7 @@
         <EntityTypeShape EntityType="IFRS9Model.Loan_Report_Info" Width="1.5" PointX="14.375" PointY="14.75" />
         <EntityTypeShape EntityType="IFRS9Model.Bond_Assessment_Parm" Width="1.5" PointX="16.375" PointY="24.75" />
         <EntityTypeShape EntityType="IFRS9Model.IFRS9_RE_EL" Width="1.5" PointX="9.375" PointY="16.75" />
+        <EntityTypeShape EntityType="IFRS9Model.Bond_Account_AssessmentCheck" Width="1.5" PointX="32.375" PointY="32.75" />
         </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

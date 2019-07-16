@@ -70,6 +70,9 @@ namespace Transfer.Utility
                     case "ne": //不等於
                         data = data.Where(x =>
                                 typeof(T).GetProperty(jdata.searchField)
+                                .GetValue(x, null) != null).ToList();
+                        data = data.Where(x =>
+                                typeof(T).GetProperty(jdata.searchField)
                                 .GetValue(x, null).ToString()
                                  != jdata.searchString).ToList();
                         break;
@@ -95,10 +98,17 @@ namespace Transfer.Utility
                     //    break;
                     case "eq": //等於
                     default:
+
                         data = data.Where(x =>
                                 typeof(T).GetProperty(jdata.searchField)
-                                .GetValue(x, null).ToString()
+                                .GetValue(x, null) !=null).ToList();
+
+                        data = data.Where(x =>
+                                typeof(T).GetProperty(jdata.searchField)
+                                .GetValue(x, null)
                                 .Equals(jdata.searchString)).ToList();
+
+                      
                         break;
                 }
             }

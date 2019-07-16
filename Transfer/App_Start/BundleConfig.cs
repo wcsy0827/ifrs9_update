@@ -2,11 +2,14 @@
 
 namespace Transfer
 {
+
     public class BundleConfig
     {
+        
         // 如需「搭配」的詳細資訊，請瀏覽 http://go.microsoft.com/fwlink/?LinkId=301862
         public static void RegisterBundles(BundleCollection bundles)
         {
+            BundleTable.EnableOptimizations = false;//190610修正debug與releas引用.js檔有差異的問題
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js",
                         "~/Scripts/jquery.blockUI.js",

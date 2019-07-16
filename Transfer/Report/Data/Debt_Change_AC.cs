@@ -251,6 +251,7 @@ Select
                     cmd.Parameters.Add(_Initial); //期初 
                     cmd.Parameters.Add(_Final); //期末
                     cmd.Parameters.Add(IAS39_CATEGORY);
+                    cmd.CommandTimeout = 0; //190624 USER產報表跳出逾時訊息
                     //cmd.Parameters.Add(new SqlParameter("Initial", Initial)); //期初 
                     //cmd.Parameters.Add(new SqlParameter("Final", Final)); //期末
                     //cmd.Parameters.Add(new SqlParameter("IAS39_CATEGORY", _IAS39_CATEGORY));

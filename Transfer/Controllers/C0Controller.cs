@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web.Mvc;
 using Transfer.Infrastructure;
+using Transfer.Models;
 using Transfer.Models.Interface;
 using Transfer.Models.Repository;
 using Transfer.Utility;
@@ -16,18 +18,23 @@ namespace Transfer.Controllers
     [LogAuth]
     public class C0Controller : CommonController
     {
-        private A4Repository A4Repository;
         private IKriskRepository KriskRepository;
-        private C0Repository C0Repository;
+        private IC0Repository C0Repository;
         private List<SelectOption> actions = null;
         DateTime startTime = DateTime.MinValue;
 
+        protected Common common
+        {
+            get;
+            private set;
+        }
+
         public C0Controller()
         {
-            this.A4Repository = new A4Repository();
             this.KriskRepository = new KriskRepository();
             this.C0Repository = new C0Repository();
             startTime = DateTime.Now;
+            this.common = new Common();
         }
 
         // GET: C0
@@ -152,11 +159,130 @@ namespace Transfer.Controllers
             return View();
         }
 
+        public ActionResult C10()
+        {
+            var jqgridInfo = C10GridData();
+            ViewBag.jqgridColNames = jqgridInfo.colNames;
+            ViewBag.jqgridColModel = jqgridInfo.colModel;
+            return View();
+        }
+
+        #region C10Detail
+        [UserAuth]
+        public ActionResult C10Detail()
+        {
+            var jqgridInfo = C10DetailGridData();
+            ViewBag.jqgridColNames = jqgridInfo.colNames;
+            ViewBag.jqgridColModel = jqgridInfo.colModel;
+            return View();
+        }
+        #endregion
+
+
         [UserAuth]
         public ActionResult C04_1()
         {
             return View();
         }
+
+        #region 轉檔把Excel 資料存到 DB
+        /// <summary>
+        /// 轉檔把Excel 資料存到 DB
+        /// </summary>
+        /// <returns></returns>
+        [BrowserEvent("C10 Excel檔存到DB")]
+        [HttpPost]
+        public JsonResult TransferC10(string reportDate)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            try
+            {
+                #region 抓Excel檔案 轉成 model
+
+                // Excel 檔案位置
+
+                string projectFile = Server.MapPath("~/" + SetFile.FileUploads);
+
+                string fileName = string.Empty;
+                if (Cache.IsSet(CacheList.C10ExcelName))
+                    fileName = (string)Cache.Get(CacheList.C10ExcelName);  //從Cache 抓資料Name
+
+                if (fileName.IsNullOrWhiteSpace())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.time_Out.GetDescription();
+                    return Json(result);
+                }
+
+                string path = Path.Combine(projectFile, fileName);
+
+                List<C10ViewModel> dataModel = new List<C10ViewModel>();
+
+                DateTime dt = DateTime.MinValue;
+                DateTime.TryParse(reportDate, out dt);
+
+                string errorMessage = string.Empty;
+
+                using (FileStream stream = System.IO.File.Open(path, FileMode.Open, FileAccess.Read))
+                {
+                    string pathType = path.Split('.')[1]; //抓副檔名
+                    var data = C0Repository.getExcel(pathType, stream, dt);
+                    dataModel = data.Item2;
+                    errorMessage = data.Item1;
+                }
+                if (!errorMessage.IsNullOrWhiteSpace())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = errorMessage;
+                    return Json(result);
+                }
+                #endregion 抓Excel檔案 轉成 model
+
+                #region txtlog 檔案名稱
+
+                
+                string txtpath = SetFile.C10TransferTxtLog; //預設txt名稱
+                string configTxtName = ConfigurationManager.AppSettings["txtLogC0Name"];
+                if (!string.IsNullOrWhiteSpace(configTxtName))
+                    txtpath = configTxtName; //有設定webConfig且不為空就取代
+                
+
+                #endregion txtlog 檔案名稱
+
+                #region save C10
+
+
+
+                MSGReturnModel resultC10 = C0Repository.saveC10(dataModel, reportDate); //save to DB
+
+                int v = 0; ///上傳檔案，版本皆為0
+                
+                bool C10Log = CommonFunction.saveLog(Table_Type.C10,
+                    fileName, SetFile.ProgramName, resultC10.RETURN_FLAG,
+                    Debt_Type.B.ToString(), startTime, DateTime.Now, AccountController.CurrentUserInfo.Name, v, dt); //寫sql Log
+                TxtLog.txtLog(Table_Type.C10, resultC10.RETURN_FLAG, startTime, txtLocation(txtpath)); //寫txt Log
+                
+                #endregion save C10
+
+                result.RETURN_FLAG = resultC10.RETURN_FLAG;
+                result.DESCRIPTION = Message_Type.save_Success.GetDescription(Table_Type.C10.ToString());
+
+                if (!result.RETURN_FLAG)
+                {
+                    
+                    result.DESCRIPTION = Message_Type.save_Fail
+                        .GetDescription(Table_Type.C10.ToString(), resultC10.DESCRIPTION);
+                        
+                }
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.Message;
+            }
+            return Json(result);
+        }
+        #endregion
 
         #region GetC01Version
         [HttpPost]
@@ -684,6 +810,127 @@ namespace Transfer.Controllers
 
         #endregion
 
+        #region UploadC10
+        [BrowserEvent("Upload C10")]
+        [HttpPost]
+        public JsonResult UploadC10()
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            try
+            {
+                #region 前端無傳送檔案進來
+
+                if (!Request.Files.AllKeys.Any())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.upload_Not_Find.GetDescription();
+                    return Json(result);
+                }
+
+                #endregion 前端無傳送檔案進來
+
+                #region 前端檔案大小不符或不為Excel檔案(驗證)
+
+                var FileModel = Request.Files["UploadedFile"];
+                string reportDate = Request.Form["reportDate"];
+                DateTime dt = DateTime.MinValue;
+                DateTime.TryParse(reportDate, out dt);
+
+                string pathType = Path.GetExtension(FileModel.FileName)
+                       .Substring(1); //上傳的檔案類型
+
+                List<string> pathTypes = new List<string>()
+                {
+                    "xlsx","xls"
+                };
+                if (!pathTypes.Contains(pathType.ToLower()))
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.excel_Validate.GetDescription();
+                    return Json(result);
+                }
+
+                #endregion 前端檔案大小不符或不為Excel檔案(驗證)
+
+                #region 上傳檔案
+
+                var fileName = string.Format("{0}.{1}",
+                    Excel_UploadName.C10.GetDescription(),
+                    pathType); //固定轉成此名稱
+
+                Cache.Invalidate(CacheList.C10ExcelName); //清除 Cache
+                Cache.Set(CacheList.C10ExcelName, fileName); //把Excel_name存到 Cache
+
+                #region 檢查是否有FileUploads資料夾,如果沒有就新增 並加入 excel 檔案
+
+                string projectFile = Server.MapPath("~/" + SetFile.FileUploads); //專案資料夾
+                string path = Path.Combine(projectFile, fileName);
+
+                FileRelated.createFile(projectFile); //檢查是否有FileUploads資料夾,如果沒有就新增
+
+                //呼叫上傳檔案 function
+                result = FileRelated.FileUpLoadinPath(path, FileModel);
+                if (!result.RETURN_FLAG)
+                    return Json(result);
+
+                #endregion 檢查是否有FileUploads資料夾,如果沒有就新增 並加入 excel 檔案
+
+                #region 讀取Excel資料 使用ExcelDataReader 並且組成 json
+
+                var stream = FileModel.InputStream;
+                var data = C0Repository.getExcel(pathType, stream, dt);
+                if (!data.Item1.IsNullOrWhiteSpace())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = data.Item1;
+                    return Json(result);
+                }
+                List<C10ViewModel> dataModel = data.Item2;
+                if (dataModel.Count > 0)
+                {
+                    result.RETURN_FLAG = true;
+                    Cache.Invalidate(CacheList.C10ExcelfileData); //清除 Cache
+                    Cache.Set(CacheList.C10ExcelfileData, dataModel); //把資料存到 Cache
+                    new BondsCheckRepository<C10ViewModel>(dataModel, Check_Table_Type.Bonds_C10_UpLoad_Check);
+                }
+                else
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.data_Not_Compare.GetDescription();
+                }
+
+                #endregion 讀取Excel資料 使用ExcelDataReader 並且組成 json
+
+                #endregion 上傳檔案
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.exceptionMessage();
+            }
+            return Json(result);
+        }
+        #endregion
+
+        #region C10 jqGrid欄位大小配置
+        private jqGridData<C10ViewModel> C10GridData()
+        {
+            return new C10ViewModel().TojqGridData(new int[] {
+               120, 50, 165, 140, 160, 80, 170, 130, 125, 160, 140, 130, 120, 135, 140, 90, 80, 90, 80,
+                135, 150, 150, 150, 150, 215, 150, 150, 150, 130, 180, 70, 125, 150, 110, 100, 90, 160
+            });
+        }
+        #endregion
+
+        #region C10Detail jqGrid欄位大小配置
+        private jqGridData<C10DetailViewModel> C10DetailGridData()
+        {
+            return new C10DetailViewModel().TojqGridData(new int[] {
+               120, 50, 165, 220, 60, 100, 150, 130, 125, 160, 140, 130, 120, 135, 140, 90, 80, 90, 120
+            });
+        }
+        #endregion
+
         #region C04前瞻性資料
         [BrowserEvent("查詢C04檔案")]
         [HttpPost]
@@ -775,6 +1022,7 @@ namespace Transfer.Controllers
             }
             return Json(result);
         }
+        
 
         [HttpPost]
         public ActionResult GetCacheData(jqGridParam jdata, string type)
@@ -786,9 +1034,135 @@ namespace Transfer.Controllers
                         return Content((jdata.dynToJqgridResult(
                          (List<System.Dynamic.ExpandoObject>)Cache.Get(CacheList.C04TransferData))));
                     break;
-                
             }
             return null;
+        }
+        #endregion
+
+        #region GetCacheC10Data
+        [HttpPost]
+        public ActionResult GetCacheC10Data(jqGridParam jdata, string type)
+        {
+            switch (type)
+            {
+                case "C10_Excel":
+                    if (Cache.IsSet(CacheList.C10ExcelfileData))
+                        //從Cache 抓資料
+                        return Json(jdata.modelToJqgridResult((List<C10ViewModel>)Cache.Get(CacheList.C10ExcelfileData), true));
+                    break;
+
+                case "C10_Db":
+                    if (Cache.IsSet(CacheList.C10DbfileData))
+                        return Json(jdata.modelToJqgridResult((List<C10DetailViewModel>)Cache.Get(CacheList.C10DbfileData), true));
+                    break;
+            }
+            return null;
+        }
+        #endregion
+
+        #region 查詢C10資料
+        /// <summary>
+        /// 前端抓資料時呼叫
+        /// </summary>
+        /// <param name="ReportDate">報導日</param>
+        /// <param name="Version">版本</param>
+        /// <param name="BondNumber">債券編號</param>
+        /// <returns></returns>
+        [BrowserEvent("查詢C10資料")]
+        [HttpPost]
+        public JsonResult GetData(string ReportDate, string Version)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.A41.tableNameGetDescription());
+
+            DateTime _ReportDate = new DateTime();
+            int _Version = 0;
+            DateTime _OriginationDate = DateTime.MinValue;
+            if (!DateTime.TryParse(ReportDate, out _ReportDate) ||
+                !Int32.TryParse(Version, out _Version))
+            {
+                result.DESCRIPTION = Message_Type.parameter_Error.GetDescription();
+                return Json(result);
+            }
+            try
+            {
+                var resultData = C0Repository.GetC10(_ReportDate, _Version);
+                
+
+                if (resultData.Any())
+                {
+                    Cache.Invalidate(CacheList.C10DbfileData); //清除
+                    Cache.Set(CacheList.C10DbfileData, resultData); //把資料存到 Cache
+                    result.RETURN_FLAG = true;
+                }
+                else
+                {
+                    result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.C10.tableNameGetDescription());
+                }
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.exceptionMessage();
+            }
+            return Json(result);
+        }
+        #endregion
+
+        #region 下載C10 Excel
+        /// <summary>
+        /// 下載C10 Excel
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        [BrowserEvent("下載C10Excel檔案")]
+        [HttpPost]
+        public JsonResult GetC10Excel(string type)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+
+            if (Cache.IsSet(CacheList.C10DbfileData))
+            {
+                var C10 = Excel_DownloadName.C10.ToString();
+                var C10Data = (List<C10DetailViewModel>)Cache.Get(CacheList.C10DbfileData);  //從Cache 抓資料
+                result = C0Repository.DownLoadExcelC10(type, ExcelLocation(type.GetExelName()), C10Data);
+
+
+            }
+            return Json(result);
+        }
+        #endregion
+
+
+        #region 轉檔前檢核
+        [BrowserEvent("回傳資料表C10有無資料")]
+        [HttpPost]
+        public JsonResult TransferConfirmC10(string reportDate) {
+
+            #region 回傳C10有無相同reportdate的資料
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            int version = 0;
+            DateTime dt = TypeTransfer.stringToDateTime(reportDate);
+            string filename = Table_Type.C10.ToString();
+
+            
+            var queryData = C0Repository.GetC10(dt, version);
+            
+
+            if (common.checkTransferCheck(filename,"C10", dt, version) && queryData != null && queryData.Count> 0)
+            {
+                result.RETURN_FLAG = true;
+                result.DESCRIPTION = Message_Type.Uplaod_data_Overwrite_File.GetDescription();
+            }
+            else
+            {
+                result.RETURN_FLAG = false;
+            }
+            return Json(result);
+            #endregion 回傳C10有無相同reportdate的資料
         }
         #endregion
     }

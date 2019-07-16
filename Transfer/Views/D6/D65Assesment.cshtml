@@ -12,13 +12,13 @@
             <form id="myForm">
                 <table>
                     <tr>
-                        <td style="width:550px;" >
+                        <td style="width:550px;">
                             <label>選擇動作 : </label>
                             @Html.DropDownList("action",
                            (SelectList)ViewBag.action,
                             new { @class = "form-control", @style = "display:inline-block;" })
                         </td>
-                        <td class="action search" >
+                        <td class="action search">
                             <label>評估次分類 : </label>
                             @Html.DropDownList("assessmentSubKind",
                             (SelectList)ViewBag.assessmentSubKinds,
@@ -53,7 +53,7 @@
                             <input type="button" class="btn btn-primary" value="下載Excel" id="btnD65DlExcel" style="margin-right:10px;margin-left:30px;" />
                         </td>
                     </tr>
-                    <tr class="action transfer"  style="display:none">
+                    <tr class="action transfer" style="display:none">
                         <td style="padding-top:5px;" colspan="2">
                             <input type="button" class="btn btn-primary" value="執行" id="btnD65Transfer" style="margin-right:10px;" />
                         </td>
@@ -61,6 +61,7 @@
                     <tr class="action case" style="display:none">
                         <td style="padding-top:5px;" colspan="2">
                             <input type="button" class="btn btn-primary" value="新增個案" id="btnD65InsertCase" style="margin-right:10px;" />
+                            <input type="button" class="btn btn-primary" value="一鍵新增註記個案" id="btnD65AutoInsertCase" style="margin-right:10px;" /><!--190619 PGE需求新增-->
                         </td>
                     </tr>
                 </table>
@@ -69,6 +70,7 @@
                alt="說明：
 1.擁有評估權限者(呈送複核者),且未選擇最終版本時才可執行評估!
 2.擁有評估權限者(呈送複核者),才可以上傳檔案&修改註解
+3.一鍵新增註記個案為將最大版本A41註記為N的部位全部新增，若要刪除請至查詢頁面操作
 "></i>
         </div>
     </div>
@@ -107,7 +109,7 @@
             </tr>
             <tr style="display:none">
                 <td colspan="2">
-                    <input type="hidden" id="D65Check_Reference"/>
+                    <input type="hidden" id="D65Check_Reference" />
                 </td>
             </tr>
         </table>
@@ -116,7 +118,7 @@
         <table style="width:100%">
             <tr>
                 <td colspan="2">
-                    <textarea id="D65TextArea" maxlength="255" style="overflow-y: scroll; white-space:pre-wrap;max-width:100%;width:100%;height:200px;"  ></textarea>
+                    <textarea id="D65TextArea" maxlength="255" style="overflow-y: scroll; white-space:pre-wrap;max-width:100%;width:100%;height:200px;"></textarea>
                 </td>
             </tr>
             <tr>
@@ -127,7 +129,7 @@
                     <input type="button" class="btn btn-primary" value="取消" id="btnD65TextAreaCancel" style="" />
                 </td>
             </tr>
-        </table>     
+        </table>
     </div>
     <div id="D65Dialog5">
         <div id="jqgridDiv4" class="jqd">
@@ -157,7 +159,7 @@
                         <label>債券編號 : </label>
                     </td>
                     <td>
-                        <input type="text" id="ExtraBondNumber" name="ExtraBondNumber"/>
+                        <input type="text" id="ExtraBondNumber" name="ExtraBondNumber" />
                     </td>
                 </tr>
                 <tr>
@@ -188,7 +190,45 @@
         </form>
     </div>
 </div>
-
+<!--190619 PGE需求新增-->
+<div id="D65Dialog7" style="display:none">
+    <form id="ExtraForm2">
+        <table>
+            <tr>
+                <td>
+                    <label>評估基準日/報導日 : </label>
+                </td>
+                <td>
+                    <label id="ExtraReportDate2"></label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>資料版本 : </label>
+                </td>
+                <td>
+                    <label id="ExtraVersion2"></label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>A41註記為N部位筆數 : </label>
+                </td>
+                <td>
+                    <label id="A41AssessmentCheckNumber" />
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top:10px;">
+                    <input type="button" class="btn btn-primary" value="存檔" id="btnExtraAutoSave" style="" />
+                </td>
+                <td style="padding-top:10px;float:right;">
+                    <input type="button" class="btn btn-primary" value="取消" id="btnExtraAutoCancel" style="" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
 <script type="text/javascript">
     $(function () {
         //#region 註冊URL
@@ -209,7 +249,9 @@
         url.getD65Excel = '@Url.Action("GetD65Excel", "D6")';
         url.delQualitativeFile = '@Url.Action("DelFile", "D6")';
         url.getA41Verison = '@Url.Action("GetA41Version","D6")';
+        url.getA41Assessment = '@Url.Action("GetA41AssessmentCheck", "D6")'; //190619 PGE需求新增
         url.AddExtraCase = '@Url.Action("AddExtraCase","D6")';
+        url.AutoAddExtraCase = '@Url.Action("AutoAddExtraCase","D6")' //190619 PGE需求新增
         url.DelExtraCase = '@Url.Action("DelExtraCase","D6")';
         //#endregion 註冊URL
 
@@ -223,6 +265,8 @@
         var dialogId3 = 'D65Dialog3';
         var dialogId4 = 'D65Dialog4';
         var dialogId5 = 'D65Dialog5';
+        var dialogId6 = 'D65Dialog6';
+        var dialogId7 = 'D65Dialog7';//190619 PGE需求新增
         var dialogformId = dialogId + 'Form';
         var Assessment_Sub_KindId = dialogId + 'Assessment_Sub_Kind';
         var AuditorId = dialogId + 'Auditor';
@@ -340,6 +384,9 @@
                 case 'btnD65InsertCase':
                     $('#' + id).on('click', function () { D65InsertCase() });
                     break;
+                case 'btnD65AutoInsertCase':
+                    $('#' + id).on('click', function () { D65AutoInsertCase() });
+                    break;
             }
         })
         //#endregion 註冊click事件
@@ -352,6 +399,81 @@
             $('.' + opencls).show();
         });
         //#endregion 切換動作
+        function D65AutoInsertCase() {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    date: $('#datepicker').val()
+                }),
+                dataType: "json",
+                url: url.getA41Verison,
+                contentType: 'application/json',
+            })
+                .done(function (result) {
+                    if (result == 0) {
+                        customerUtility.alert('A41無該報導日資料', 'e');
+                    }
+
+                    else {
+                        $('#ExtraVersion2').text(result);
+                        $('#ExtraReportDate2').text($('#datepicker').val());
+                        $.ajax({
+                            type: "POST",
+                            data: JSON.stringify({
+                                date: $('#ExtraReportDate2').text(),
+                                version: $('#ExtraVersion2').text(),
+                            }),
+                            dataType: "json",
+                            url: url.getA41Assessment,
+                            contentType: 'application/json',
+                        }).done(function (result2) {
+                            if (result2 == 0) {
+                                customerUtility.alert('該報導日最大版本無註記為N的資料', 'e');
+                            }
+                            else {
+
+                                $('#A41AssessmentCheckNumber').text(result2);
+                                $("#" + dialogId7).dialog({
+                                    title: "一鍵新增A41註記部位質化評估個案",
+                                    position: { my: "left+70% top+10%", at: "left+10% top", of: window },
+                                    width: 'auto',
+                                    autoOpen: false,
+                                    resizable: false,
+                                    closeText: "取消",
+                                });
+                                $("#D65Dialog7").dialog("open");
+                                $('#btnExtraAutoCancel').off('click');
+                                $('#btnExtraAutoCancel').on('click', function () {
+                                    $("#" + dialogId7).dialog("close");
+                                });
+
+                                $('#btnExtraAutoSave').off('click');
+                                $('#btnExtraAutoSave').on('click', function () {
+                                    $.ajax({
+                                        type: "POST",
+                                        data: JSON.stringify({
+                                            reportDate: $('#ExtraReportDate2').text(),
+                                            version: $('#ExtraVersion2').text(),
+                                        }),
+                                        dataType: "json",
+                                        url: url.AutoAddExtraCase,
+                                        contentType: 'application/json',
+
+                                    }).done(function (result3) {
+                                        if (result3.RETURN_FLAG) {
+                                            customerUtility.alert(result3.DESCRIPTION, 's');
+                                            $("#D65Dialog7").dialog("close");
+                                        }
+                                        else
+                                            customerUtility.alert(result3.DESCRIPTION, 'e');
+                                    });
+                                });
+                            }
+                        })
+                    }
+                })
+        }
+
 
         function D65InsertCase(){
             $.ajax({
@@ -376,7 +498,7 @@
                     $('#ExtraLots').val('');
                     $('#ExtraProtfolioName').val('');
                     $('#ExtraForm').validate().resetForm();
-                    $("#D65Dialog6").dialog({
+                    $("#" + dialogId6).dialog({
                         title: "新增質化評估個案",
                         position:  { my: "left+70% top+10%", at: "left+10% top", of: window},
                         width : 'auto',

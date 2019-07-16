@@ -149,6 +149,14 @@ namespace Transfer.Enum
             [Description("C07AdvancedSum")]
             C07AdvancedSum,
 
+            //190625 PGE需求新增
+            /// <summary>
+            /// C10
+            /// </summary>
+            [Description("C10")]
+            C10,
+
+
             /// <summary>
             /// C13
             /// </summary>

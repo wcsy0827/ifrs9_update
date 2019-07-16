@@ -242,7 +242,8 @@
                         Key: key
                     }),
                 })
-                .done(function (result) {
+                    .done(function (result) {
+                        
                     _message = result.message;
                     let _title = result.title;
                     checkDataDialog(divId, dialogId, id, _message, _title, key);

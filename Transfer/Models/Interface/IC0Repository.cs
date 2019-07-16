@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Transfer.Utility;
 using Transfer.ViewModels;
 using static Transfer.Enum.Ref;
@@ -36,6 +37,16 @@ namespace Transfer.Models.Interface
         /// <param name="dbDatas"></param>
         /// <returns></returns>
         MSGReturnModel DownLoadExcel(string type, string path, List<C07ViewModel> dbDatas);
+
+        /// <summary>
+        /// 下載C10Excel
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="path">下載位置</param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        MSGReturnModel DownLoadExcelC10(string type, string path, List<C10DetailViewModel> data); //190625 PGE需求新增
+
 
         List<string> getA41AdvancedAssessment_Sub_Kind();
 
@@ -81,5 +92,11 @@ namespace Transfer.Models.Interface
         /// <param name="data"></param>
         /// <returns></returns>
         List<System.Dynamic.ExpandoObject> C04Transfer(string from, string to, List<C04ProViewModel> data);
+
+        Tuple<string, List<C10ViewModel>> getExcel(string pathType, Stream stream, DateTime reportDate);
+
+        MSGReturnModel saveC10(List<C10ViewModel> dataModel, string reportDate);
+
+        List<C10DetailViewModel> GetC10(DateTime ReportDate, int Version);
     }
 }

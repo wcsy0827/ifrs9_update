@@ -352,6 +352,11 @@ namespace Transfer.Models.Interface
 
         int GetA41Version(string reportDate);
 
+        //190619 PGE需求新增
+        List<Bond_Account_Info> GetA41AssessmentCheck(string reportDate, int version);
+        //190619 PGE需求新增
+        MSGReturnModel AutoInsertD65ExtraCase(List<Bond_Account_Info> A41Data,string reportDate);
+
         MSGReturnModel DeleteD65ByExtraCase(string referenceNbr, int version);
 
         MSGReturnModel InsertD65ByExtraCase(string reportDate, int version, string bondNumber, string Lots, string portfolio_Name);
