@@ -1623,6 +1623,7 @@ from D54Temp ;";
                 Lots = data.Lots,
                 Ori_Ex_rate = TypeTransfer.doubleNToString(data.Ori_Ex_rate),
                 PD = TypeTransfer.doubleNToString(data.PD),
+                PD_Int= TypeTransfer.doubleNToString(data.PD_Int),
                 Portfolio_Name = data.Portfolio_Name,
                 PRJID = data.PRJID,
                 Processing_Date = data.Processing_Date,

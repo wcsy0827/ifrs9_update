@@ -43,6 +43,9 @@ namespace Transfer.ViewModels
         [Description("第一年違約率")]
         public string PD { get; set; }
 
+        [Description("第一年違約率_應收利息")]
+        public string PD_Int { get; set; }
+
         [Description("存續期間預期信用損失(原幣)")]
         public string Lifetime_EL { get; set; }
 

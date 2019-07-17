@@ -1204,6 +1204,11 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
             if (_data.Any())
             {
                 var data = _data.Cast<C10ViewModel>().ToList();
+                Tuple<List<C10DetailViewModel>, List<C10ViewModel>> C10MergeResult = GetMergeC10(_data);
+                List<C10DetailViewModel> C10MergeData = new List<C10DetailViewModel>();
+                List<C10ViewModel> C10ErrorData = new List<C10ViewModel>();
+                C10MergeData = C10MergeResult.Item1;
+                C10ErrorData = C10MergeResult.Item2;
 
                 //(1)檢查是否有  到期日(#16Maturity_Date)小於報導日的情況
                 messageTable C10ViewModel_1 = new messageTable()
@@ -1217,7 +1222,7 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                     title = @"B.檢查下面欄位原始上傳資料是否有空值資料 (C10:Excel)",
                     successStr = @"來源資料內重要欄位皆非空值"
                 };
-
+                /*
                 //設一個字典 債券編號&Lots&Portfolio、 狀態
                 Dictionary<string, C10DataType> C10Dictionary = new Dictionary<string, C10DataType>();
 
@@ -1239,10 +1244,11 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                     else
                         C10Dictionary.Add(C10key, C10CheckData(SingleC10Data));
                 }
+                */
 
-                data.ForEach(x =>
+                C10MergeData.ForEach(x =>
                 {
-                    string C10key = x.Bond_Number + x.Lots + x.Portfolio_Name;
+                    //string C10key = x.Bond_Number + x.Lots + x.Portfolio_Name;
                     var _parameter = $@"Bond_Number : {x.Bond_Number} , Lots : {x.Lots} ,  : Portfolio_Name : {x.Portfolio_Name}";
 
                     //到期日小於報導日
@@ -1251,7 +1257,9 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                         _parameter,
                         checkStringToDateTime(x.Maturity_Date) ||
                         TypeTransfer.stringToDateTime(x.Maturity_Date) < TypeTransfer.stringToDateTime(x.Report_Date));
+                    #region 缺漏檢核邏輯(Old)
 
+                    /*
                     if (C10Dictionary[C10key] == C10DataType.Amort_Interest && C10CheckData(x) == C10DataType.Interest)
                     {
                     }
@@ -1285,17 +1293,51 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                             _parameter,
                             checkStringToDouble(x.Interest_Receivable_import_TW)); // Interest_Receivable_import_TW
                     }
+                    */
+                    #endregion
+                    #region 缺漏檢核邏輯
+                    //#7 攤銷後之成本數(原幣) Amort_Amt_import 
+                    setCheckMsg(C10ViewModel_2,
+                        @"#7 金融資產餘額攤銷後之成本數(原幣) Amort_Amt_import",
+                        _parameter,
+                        checkStringToDouble(x.Amort_Amt_import)); //Amount_AMT_import
+
+                    //#8 金融資產餘額(台幣)攤銷後之成本數(台幣) Amort_Amt_import_TW
+                    setCheckMsg(C10ViewModel_2,
+                        @"#8 金融資產餘額(台幣)攤銷後之成本數(台幣) Amort_Amt_import_TW",
+                        _parameter,
+                        checkStringToDouble(x.Amort_Amt_import_TW)); //Amort_Amt_import_TW
+                    //#9 應收利息(原幣) Interest_Receivable_import
+                    setCheckMsg(C10ViewModel_2,
+                        @"#9 應收利息(原幣) Interest_Receivable_import",
+                        _parameter,
+                        checkStringToDouble(x.Interest_Receivable_import)); //Interest_Receivable_import
+
+                    //#10 應收利息(台幣) Interest_Receivable_import_TW
+                    setCheckMsg(C10ViewModel_2,
+                        @"#10 應收利息(台幣) Interest_Receivable_import_TW",
+                        _parameter,
+                        checkStringToDouble(x.Interest_Receivable_import_TW)); // Interest_Receivable_import_TW
+                    #endregion
                     //#34 最近一次評等PD PD_import
                     setCheckMsg(C10ViewModel_2,
-                        @"#34 最近一次評等PD  PD_import",
+                         @"#34 最近一次評等PD  PD_Amort_import",
                         _parameter,
-                        checkStringToDouble(x.PD_import)); // PD_import
+                        checkStringToDouble(x.PD_Amort_import)); // PD_Amort_import
+                    setCheckMsg(C10ViewModel_2,
+                        @"#34 最近一次評等PD  PD_Interest_Receivable_import",
+                        _parameter,
+                        checkStringToDouble(x.PD_Interest_Receivable_import)); // PD_Interest_Receivable_import
 
                     //#35 LGD LGD_import LGD
                     setCheckMsg(C10ViewModel_2,
-                        @"#35 LGD LGD_import",
+                        @"#35 LGD LGD_Amort_import",
                         _parameter,
-                        checkStringToDouble(x.LGD_import)); // LGD
+                        checkStringToDouble(x.LGD_Amort_import)); // LGD_Amort_import
+                    setCheckMsg(C10ViewModel_2,
+                        @"#35 LGD LGD_Interest_Receivable_import",
+                        _parameter,
+                        checkStringToDouble(x.LGD_Interest_Receivable_import)); // LGD_Interest_Receivable_import
 
                     //#47 EL_本金(原幣) EL_import_Principle
                     setCheckMsg(C10ViewModel_2,
@@ -1308,17 +1350,18 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                         @"#48 EL_利息(原幣)  EL_import_Int",
                         _parameter,
                         checkStringToDouble(x.EL_import_Int)); // EL_import_Int
+
                 });
                 result.Add(C10ViewModel_1);
                 result.Add(C10ViewModel_2);
 
-                var _bondNumber_Count = data.Select(x => x.Bond_Number).Distinct().Count();
-                var _Report_Date = TypeTransfer.stringToDateTime(data.First().Report_Date);
+                var _bondNumber_Count = C10MergeData.Select(x => x.Bond_Number).Distinct().Count();
+                var _Report_Date = TypeTransfer.stringToDateTime(C10MergeData.First().Report_Date);
                 var _year = _Report_Date.Year;
                 var _month = _Report_Date.Month;
-                var _Origination_Date_Count =
-                    data.Select(x => TypeTransfer.stringToDateTimeN(x.Origination_Date))
-                    .Where(x => x != null && x.Value.Year == _year && x.Value.Month == _month).Count();
+                //var _Origination_Date_Count =
+                //    data.Select(x => TypeTransfer.stringToDateTimeN(x.Origination_Date))
+                //    .Where(x => x != null && x.Value.Year == _year && x.Value.Month == _month).Count();
 
 
                 StringBuilder sb = new StringBuilder();
@@ -1364,7 +1407,7 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                         if (A41_data.Count() > 0)
                         {
                             sb.AppendLine($@"基本要件評估債券ISIN&Lots&Portfolio尚未補齊");
-                            sb.AppendLine($@"尚有{A41_data.Count()}筆資料未上傳，以下為尚未補齊之資料");
+                            sb.AppendLine($@"尚有{A41_data.Count()}筆資料未上傳，以下為尚未補齊之資料:");
                             if (A41_data.Count() > 0)
                             {
                                 foreach (var item in A41_data)
@@ -1385,7 +1428,7 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                     sb.AppendLine(string.Empty);
 
                     //上傳檔案多補的檢核
-                    var C10_data = data.Where(
+                    var C10_data = C10MergeData.Where(
                                    a => !A41data_Assessment_Check.Exists(t => (a.Bond_Number == t.Bond_Number) && (
                                    a.Lots == t.Lots) && (a.Portfolio_Name == t.Portfolio_Name))
                                    ).ToList();
@@ -1409,9 +1452,9 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                 }
                 sb.AppendLine(string.Empty);
                 sb.AppendLine(@"D.資料群組統計(內容分類筆數統計) (C10)");
-                sb.AppendLine($@"1.總資料筆數 : {data.Count} 筆");
+                sb.AppendLine($@"1.總資料筆數 : {_data.Count()} 筆");
                 sb.AppendLine($@"2.總債券資料數 : {_bondNumber_Count} 筆");
-                sb.AppendLine($@"3.總資料筆數(Group By ISIN & Lots & Portfolio)： {C10Dictionary.Count}筆");
+                sb.AppendLine($@"3.總資料筆數(Group By ISIN & Lots & Portfolio)： {C10MergeData.Count()}筆");
 
                 _customerStr_End = sb.ToString();
             }
@@ -1419,6 +1462,219 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
         }
         #endregion
 
+
+
+        #region PrivateFuncion
+        private Tuple<List<C10DetailViewModel>, List<C10ViewModel>> GetMergeC10(IEnumerable<T> data)
+        {
+            List<C10DetailViewModel> C10Merge = new List<C10DetailViewModel>();
+            List<C10ViewModel> C10Raw = data.Cast<C10ViewModel>().ToList();
+            List<C10ViewModel> ErrorC10Data = new List<C10ViewModel>();
+
+
+            foreach (var item in C10Raw)
+            {
+                //判斷其屬於本金還是利息資料
+                C10DataType C10Type = C10CheckData(item);
+                if (C10Type == C10DataType.Error_Data) //判斷不出型別的錯誤資料就寫進ErrorList
+                {
+                    ErrorC10Data.Add(new C10ViewModel
+                    {
+                        Bond_Number = item.Bond_Number,
+                        Lots = item.Lots,
+                        Report_Date = item.Report_Date,
+                        Maturity_Date = item.Maturity_Date,
+                        Portfolio_Name = item.Portfolio_Name,
+                        Portfolio = item.Portfolio,
+                        Amort_Amt_import = item.Amort_Amt_import,
+                        Amort_Amt_import_TW = item.Amort_Amt_import_TW,
+                        Interest_Receivable_import = item.Interest_Receivable_import,
+                        Interest_Receivable_import_TW = item.Interest_Receivable_import_TW,
+                        PD_import = item.PD_import,
+                        LGD_import = item.LGD_import,
+                        EL_import_Principle = item.EL_import_Principle,
+                        EL_import_Int = item.EL_import_Int
+                    });
+                    continue;
+                }
+
+                //找尋是否已經有此筆資料寫入
+                bool Flag = C10Merge.Where(x => x.Bond_Number == item.Bond_Number && x.Lots == item.Lots && x.Portfolio_Name == item.Portfolio_Name).Any();
+                if (!Flag)
+                {
+                    switch (C10Type)
+                    {
+                        case C10DataType.Amort:
+                            {
+                                C10Merge.Add(new C10DetailViewModel
+                                {
+                                    Bond_Number = item.Bond_Number,
+                                    Lots = item.Lots,
+                                    Report_Date = item.Report_Date,
+                                    Maturity_Date = item.Maturity_Date,
+                                    Portfolio_Name = item.Portfolio_Name,
+                                    Portfolio = item.Portfolio,
+                                    Amort_Amt_import = item.Amort_Amt_import,
+                                    Amort_Amt_import_TW = item.Amort_Amt_import_TW,
+                                    PD_Amort_import = item.PD_import,
+                                    LGD_Amort_import = item.LGD_import,
+                                    EL_import_Principle = item.EL_import_Principle,
+
+                                });
+                                break;
+                            }
+                        case C10DataType.Interest:
+                            {
+                                C10Merge.Add(new C10DetailViewModel
+                                {
+                                    Bond_Number = item.Bond_Number,
+                                    Lots = item.Lots,
+                                    Report_Date = item.Report_Date,
+                                    Maturity_Date = item.Maturity_Date,
+                                    Portfolio_Name = item.Portfolio_Name,
+                                    Portfolio = item.Portfolio,
+                                    Interest_Receivable_import = item.Interest_Receivable_import,
+                                    Interest_Receivable_import_TW = item.Interest_Receivable_import_TW,
+                                    PD_Interest_Receivable_import = item.PD_import,
+                                    LGD_Interest_Receivable_import = item.LGD_import,
+                                    EL_import_Int = item.EL_import_Int,
+
+                                });
+                                break;
+                            }
+                        case C10DataType.Amort_Interest:
+                            {
+                                C10Merge.Add(new C10DetailViewModel
+                                {
+                                    Bond_Number = item.Bond_Number,
+                                    Lots = item.Lots,
+                                    Report_Date = item.Report_Date,
+                                    Maturity_Date = item.Maturity_Date,
+                                    Portfolio_Name = item.Portfolio_Name,
+                                    Portfolio = item.Portfolio,
+                                    Amort_Amt_import = item.Amort_Amt_import,
+                                    Amort_Amt_import_TW = item.Amort_Amt_import_TW,
+                                    Interest_Receivable_import = item.Interest_Receivable_import,
+                                    Interest_Receivable_import_TW = item.Interest_Receivable_import_TW,
+                                    PD_Amort_import = item.PD_import,
+                                    PD_Interest_Receivable_import = item.PD_import,
+                                    LGD_Interest_Receivable_import = item.LGD_import,
+                                    LGD_Amort_import = item.LGD_import,
+                                    EL_import_Principle = item.EL_import_Principle,
+                                    EL_import_Int = item.EL_import_Int,
+
+                                });
+                                break;
+                            }
+                        default:
+                            string msg = Message_Type.Check_TypeFail.GetDescription() + item.Bond_Number;
+                            throw (new Exception(msg));
+                    }
+
+                }
+                else  //有相同債券資料的狀況
+                {
+                    //檢驗有無重複寫入，發生則回報錯誤
+                    switch (C10Type)
+                    {
+                        case C10DataType.Amort:
+                            {
+                                C10Merge.Where(x => x.Bond_Number == item.Bond_Number && x.Lots == item.Lots && x.Portfolio_Name == item.Portfolio_Name)
+                                    .Select(y => {
+                                        y.Amort_Amt_import = item.Amort_Amt_import;
+                                        y.Amort_Amt_import_TW = item.Amort_Amt_import_TW;
+                                        y.PD_Amort_import = item.PD_import;
+                                        y.LGD_Amort_import = item.LGD_import;
+                                        y.EL_import_Int = item.EL_import_Principle;
+
+                                        return y;
+                                    }).ToList();
+
+                                break;
+                            }
+                        case C10DataType.Interest:
+                            {
+                                C10Merge.Where(x => x.Bond_Number == item.Bond_Number && x.Lots == item.Lots && x.Portfolio_Name == item.Portfolio_Name)
+                                    .Select(y => {
+                                        y.Interest_Receivable_import = item.Interest_Receivable_import;
+                                        y.Interest_Receivable_import_TW = item.Interest_Receivable_import_TW;
+                                        y.PD_Interest_Receivable_import = item.PD_import;
+                                        y.LGD_Interest_Receivable_import = item.LGD_import;
+                                        y.EL_import_Int = item.EL_import_Int;
+                                        return y;
+                                    }).ToList();
+
+                                break;
+                            }
+                        default:
+                            string msg = Message_Type.Check_TypeFail.GetDescription() + item.Bond_Number;
+                            throw (new Exception(msg));
+
+                    }
+                }
+            }
+            //處理判斷不出類型的資料
+            foreach (var errordata in ErrorC10Data)
+            {
+                bool checkflag = C10Merge.Where(x => x.Bond_Number == errordata.Bond_Number && x.Lots == errordata.Lots && x.Portfolio_Name == errordata.Portfolio_Name).Any();
+                if (checkflag)
+                {
+                    C10DetailViewModel _C10Merge = C10Merge.Where(x => x.Bond_Number == errordata.Bond_Number && x.Lots == errordata.Lots && x.Portfolio_Name == errordata.Portfolio_Name).FirstOrDefault();
+                    //判斷C10Merge中的類別
+                    C10DataType C10MergeType = C10CheckData(_C10Merge);
+
+                    switch (C10MergeType)
+                    {
+                        case C10DataType.Amort:    //已在MergeList中的是本金資料
+                            {
+                                C10Merge.Where(x => x.Bond_Number == _C10Merge.Bond_Number && x.Lots == _C10Merge.Lots && x.Portfolio_Name == _C10Merge.Portfolio_Name)
+                                    .Select(y =>
+                                    {
+                                        y.Interest_Receivable_import = errordata.Interest_Receivable_import;
+                                        y.Interest_Receivable_import_TW = errordata.Interest_Receivable_import_TW;
+                                        y.PD_Interest_Receivable_import = errordata.PD_import;
+                                        y.LGD_Interest_Receivable_import = errordata.LGD_import;
+                                        y.EL_import_Int = errordata.EL_import_Int;
+                                        return y;
+
+                                    }).ToList();
+
+                                break;
+                            }
+                        case C10DataType.Interest:  //已在MergeList中的是利息資料
+                            {
+                                C10Merge.Where(x => x.Bond_Number == _C10Merge.Bond_Number && x.Lots == _C10Merge.Lots && x.Portfolio_Name == _C10Merge.Portfolio_Name)
+                                    .Select(y =>
+                                    {
+                                        y.Amort_Amt_import = errordata.Amort_Amt_import;
+                                        y.Amort_Amt_import_TW = errordata.Amort_Amt_import_TW;
+                                        y.PD_Amort_import = errordata.PD_import;
+                                        y.LGD_Amort_import = errordata.LGD_import;
+                                        y.EL_import_Principle = errordata.EL_import_Principle;
+                                        return y;
+                                    }).ToList();
+
+                                break;
+                            }
+                        case C10DataType.Amort_Interest:
+                            {
+                                continue;
+
+                            }
+                        default:
+                            string msg = Message_Type.Check_TypeFail.GetDescription() + errordata.Bond_Number;
+                            throw (new Exception(msg));
+                    }
+
+                }
+                else //C10Merge找不到資料
+                {
+                    continue;
+                }
+            }
+
+            return new Tuple<List<C10DetailViewModel>, List<C10ViewModel>>(C10Merge, ErrorC10Data);
+        }
         #region C10本金利息判斷
         private C10DataType C10CheckData(C10ViewModel C10)
         {
@@ -1449,6 +1705,42 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
 
             return c10;
         }
+        #endregion
+
+        #region C10Merge本金利息判斷
+        private C10DataType C10CheckData(C10DetailViewModel C10)
+        {
+            C10DataType c10;
+            bool C10_Amort = false;
+            bool C10_Interest = false;
+
+            //檢查資料本金欄位是否為空值，若填寫不齊全則報錯
+            if (!C10.Amort_Amt_import.IsNullOrZero() || !C10.Amort_Amt_import_TW.IsNullOrZero() || !C10.EL_import_Principle.IsNullOrZero())
+            {
+                C10_Amort = true;
+            }
+
+            //檢查資料利息欄位是否為空值，若填寫不齊全則報錯
+            if (!C10.Interest_Receivable_import.IsNullOrZero() || !C10.Interest_Receivable_import_TW.IsNullOrZero() || !C10.EL_import_Int.IsNullOrZero())
+            {
+                C10_Interest = true;
+            }
+
+            if (C10_Amort && C10_Interest)
+                c10 = C10DataType.Amort_Interest;
+            else if (C10_Interest && (C10_Amort == false))
+                c10 = C10DataType.Interest;
+            else if (C10_Amort && (C10_Interest == false))
+                c10 = C10DataType.Amort;
+            else
+                c10 = C10DataType.Error_Data;
+
+            return c10;
+        }
+        #endregion
+
+
+
         #endregion
     }
 }
