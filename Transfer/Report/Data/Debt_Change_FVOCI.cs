@@ -47,7 +47,7 @@ TEMPI AS --表3
       THEN T1.Principal_EL_Ex
 	  ELSE 0
    END AS Excluding_Monetary_Assets_ECL_Ex_3, --除列之金融資產ECL(期初報表日匯率台幣)(表3-AN)
-   CASE WHEN (T1.Ori_Amount > 0 AND (T.Ori_Amount - T1.Ori_Amount) < 0)
+   CASE WHEN (T.Ori_Amount > 0 AND (T.Ori_Amount - T1.Ori_Amount) < 0)
       THEN  T1.Principal_EL_Ex * ABS( (T.Ori_Amount - T1.Ori_Amount) /  T1.Ori_Amount )
 	  ELSE 0
    END AS Section_Excluding_Monetary_Assets_ECL_Ex_3 --部分除列之金融資產ECL(報表日匯率台幣)(表3-AP)
