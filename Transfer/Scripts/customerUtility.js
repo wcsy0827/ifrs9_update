@@ -273,7 +273,7 @@
             if (key != '')
             {
                 str += '<tr>';
-                str += '<td style="width:100px">';
+                str += '<td style="width:120px">';
                 str += '<label>下載訊息檔 : </label>';
                 str += '</td>';
                 str += '<td>';
