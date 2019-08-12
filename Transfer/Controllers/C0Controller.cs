@@ -811,7 +811,7 @@ namespace Transfer.Controllers
         #endregion
 
         #region UploadC10
-        [BrowserEvent("Upload C10")]
+        [BrowserEvent("上傳C10 Excel檔")]
         [HttpPost]
         public JsonResult UploadC10()
         {
@@ -1137,7 +1137,6 @@ namespace Transfer.Controllers
 
 
         #region 轉檔前檢核
-        [BrowserEvent("回傳資料表C10有無資料")]
         [HttpPost]
         public JsonResult TransferConfirmC10(string reportDate) {
 

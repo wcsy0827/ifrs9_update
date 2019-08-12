@@ -2051,13 +2051,17 @@ namespace Transfer.Models.Repository
 
                 using (IFRS9DBEntities db = new IFRS9DBEntities())
                 {
-                    string sql = string.Empty;
-                    sql += $@"UPDATE Transfer_CheckTable Set TransferType = 'R' 
-                    WHERE ReportDate = '{datepicker.Replace("/", "-")}'
-                    AND Version ={ver}
-                    AND TransferType = 'Y'
-                    AND File_Name ='{Table_Type.C10.ToString()}' ;";
-                    db.Database.ExecuteSqlCommand(sql);
+                    if (db.Transfer_CheckTable.Any(x =>
+                    x.ReportDate == reportdate &&
+                    x.Version == ver &&
+                    x.File_Name == Table_Type.C10.ToString() &&
+                    x.TransferType == "Y"))
+                    {
+                        string sql = string.Empty;
+                        sql += $@"UPDATE Transfer_CheckTable Set TransferType = 'R' WHERE ReportDate = '{datepicker.Replace("/", "-")}' AND Version ={ver} AND TransferType = 'Y' AND File_Name ='{Table_Type.C10.ToString()}' ;";
+                        db.Database.ExecuteSqlCommand(sql);
+                    }
+                        
                 }
             }
             common.saveTransferCheck(Table_Type.C10.ToString(), result_autotrasfer.RETURN_FLAG, reportdate, ver, starttime, DateTime.Now, result_autotrasfer.DESCRIPTION);
