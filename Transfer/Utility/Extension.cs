@@ -165,6 +165,12 @@ namespace Transfer.Utility
             return string.IsNullOrEmpty(str);
         }
 
+        public static bool IsNullOrZero
+        (this string str)
+        {
+            return string.IsNullOrWhiteSpace(str) || (str.Equals("0"));
+        }
+
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
         {
             return enumerable == null || !enumerable.Any();

@@ -45,5 +45,6 @@ namespace Transfer.Models
         public string LastUpdate_User { get; set; }
         public Nullable<System.DateTime> LastUpdate_Date { get; set; }
         public Nullable<System.TimeSpan> LastUpdate_Time { get; set; }
+        public Nullable<double> PD_Int { get; set; }
     }
 }

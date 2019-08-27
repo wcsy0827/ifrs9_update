@@ -2148,12 +2148,13 @@ namespace Transfer.Controllers
             List<D54ViewModel> D54s = D5Repository.getD54InsertSearch(dt);
             List<D54Group> D54g = new List<D54Group>();
             Cache.Invalidate(CacheList.D54InsertSearchData); //清除
+
             if (D54s.Any())
             {
                 if (D54s.First().Bond_Number == null)
                 {
                     result.RETURN_FLAG = false;
-                    result.DESCRIPTION = $@"以下帳戶編號未選擇最後版本:{string.Join(",", D54s.Select(x => x.Reference_Nbr))}";
+                    result.DESCRIPTION = $@"以下帳戶編號:{string.Join(",", D54s.Select(x => x.Reference_Nbr))}，落入觀察名單或於質化評估手動新增，但未經過D63量化評估覆核通過或D65質化評估覆核通過，最後減損階段未確認";//PGE需求，修改提示訊息
                     return Json(result);
                 }
                 else
@@ -2199,6 +2200,22 @@ namespace Transfer.Controllers
             return Json(result);
         }
         #endregion
+        #region PGE需求延伸，調整查詢預計調整資料時的檢核
+        [HttpPost]
+        public JsonResult TransferD54Check(string dt)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D5Repository.checkD54(dt);
+            return Json(result);
+        }
+        [HttpPost]
+        public JsonResult CheckC10(string dt)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D5Repository.CheckC10data(dt);
+            return Json(result);
+        }
+        #endregion      
 
         #region 減損階段確認
         /// <summary>
@@ -2207,12 +2224,13 @@ namespace Transfer.Controllers
         /// <param name="dt"></param>
         /// <returns></returns>
         [HttpPost]
-        [BrowserEvent("減損階段確認")]
+        [BrowserEvent("最終減損階段確認")]
         public JsonResult TransferD54(string dt)
         {
             MSGReturnModel result = new MSGReturnModel();
             result = D5Repository.SaveD54(dt);
             return Json(result);
+
         }
         #endregion
 
@@ -3411,6 +3429,23 @@ namespace Transfer.Controllers
             version = D6Repository.GetA41Version(date);
             return Json(version); 
         }
+
+
+        #region 190619 PGE需求新增
+        public JsonResult GetA41AssessmentCheck(string date, int version)
+        {
+            int number = 0;
+            number= D6Repository.GetA41AssessmentCheck(date, version).Count();
+            return Json(number);
+        }
+        public JsonResult AutoAddExtraCase(string reportDate, int version)
+        {
+            var ExtraCase = D6Repository.GetA41AssessmentCheck(reportDate, version);       
+            MSGReturnModel result = new MSGReturnModel();            
+            result = D6Repository.AutoInsertD65ExtraCase(ExtraCase,reportDate);
+            return Json(result);
+        }
+        #endregion
 
         public JsonResult AddExtraCase(string reportDate, int version, string bondNumber, string Lots, string portfolio_Name)
         {

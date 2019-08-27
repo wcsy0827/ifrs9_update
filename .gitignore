@@ -246,3 +246,6 @@ ModelManifest.xml
 FileDownloads/*
 FileUploads/*
 /Transfer/Properties/PublishProfiles
+/Transfer/App_Data/Logs/2019-07-15
+/Transfer/App_Data/Logs
+/Transfer/FileUploads

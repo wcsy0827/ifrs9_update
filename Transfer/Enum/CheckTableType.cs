@@ -117,6 +117,12 @@ namespace Transfer.Enum
             /// </summary>
             [Description("(房貸) C02 轉檔完成驗證")]
             Mortgage_C02_Transfer_Check,
+
+            /// <summary>
+            ///  (債券) 要件評估Excel上傳驗證
+            /// </summary>
+            [Description("(債券) C10上傳驗證")]
+            Bonds_C10_UpLoad_Check,
         }
     }
 }

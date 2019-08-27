@@ -37,6 +37,21 @@ namespace Transfer.Models.Interface
         /// <returns></returns>
         List<D54ViewModel> getD54InsertSearch(string dt);
 
+
+        //PGE需求延伸，調整查詢預計調整資料時的檢核
+        /// <summary>
+        /// 減損階段確認前檢核
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        MSGReturnModel checkD54(string dt);
+        /// <summary>
+        /// 確認報導日有無C10上傳檔案
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        MSGReturnModel CheckC10data(string dt);
+
         /// <summary>
         /// 減損階段確認
         /// </summary>

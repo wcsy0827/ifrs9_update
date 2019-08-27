@@ -689,6 +689,7 @@ namespace Transfer.Models.Repository
            ,[Create_User]
            ,[Create_Date]
            ,[Create_Time]
+           ,[Assessment_Check]
 )
      VALUES
            (
@@ -752,7 +753,8 @@ namespace Transfer.Models.Repository
            {item.Origination_Date_Old.stringToDtSql()},
            {_UserInfo._user.stringToStrSql()},
            {_UserInfo._date.dateTimeToStrSql()},
-           {_UserInfo._time.timeSpanToStrSql()}
+           {_UserInfo._time.timeSpanToStrSql()},
+           {item.Assessment_Check.stringToStrSql()}
 ); ");
                     #endregion
                     #region insert A95
@@ -3117,7 +3119,7 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                 Principal = TypeTransfer.doubleNToString(data.Principal),
                 Amort_Amt_Tw = TypeTransfer.doubleNToString(data.Amort_Amt_Tw),
                 Interest_Receivable = TypeTransfer.doubleNToString(data.Interest_Receivable),
-                Int_Receivable_Tw = TypeTransfer.doubleNToString(data.Interest_Receivable_Tw),              
+                Int_Receivable_Tw = TypeTransfer.doubleNToString(data.Interest_Receivable_Tw),
                 Interest_Rate_Type = data.Interest_Rate_Type,
                 Impair_Yn = data.IMPAIR_YN,
                 Eir = TypeTransfer.doubleNToString(data.EIR),
@@ -3148,7 +3150,8 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                 Lots_Old = data.Lots_Old,
                 Portfolio_Name_Old = data.Portfolio_Name_Old,
                 Security_Name = data.Security_Name,
-                Origination_Date_Old = TypeTransfer.dateTimeNToString(data.Origination_Date_Old)
+                Origination_Date_Old = TypeTransfer.dateTimeNToString(data.Origination_Date_Old),
+                Assessment_Check = data.Assessment_Check
             };
         }
 
@@ -4027,5 +4030,6 @@ order by temp2.Report_Date desc
             return result;
         }
         #endregion
+
     }
 }

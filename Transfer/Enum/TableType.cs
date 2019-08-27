@@ -307,6 +307,14 @@ namespace Transfer.Enum
             C09,
 
             /// <summary>
+            /// 減損計算補上傳要件評估資料
+            /// </summary>
+            [Description("Bond_Account_AssessmentCheck")]
+            [Name("減損計算補上傳要件評估資料")]
+            C10,
+
+
+            /// <summary>
             /// 報表需求資訊
             /// </summary>
             [Description("IFRS9_Bond_Report")]
@@ -450,6 +458,7 @@ namespace Transfer.Enum
             [Description("IFRS9Log")]
             [Name("執行紀綠")]
             IFRS9Log,
+
         }
     }
 }

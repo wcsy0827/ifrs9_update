@@ -69,6 +69,8 @@ Principal_EL_Ex, --累計減損-本金(報表日匯率台幣)
 Principal_Diff_Tw, --累計減損匯兌損益-本金(台幣)
 Interest_Receivable_EL_Ori, --累計減損-利息(原幣)
 Interest_Receivable_EL_Ex, --累計減損-利息(報表日匯率台幣)
+LGD_Int,    --違約損失率
+PD_Int,     --第一年違約率 
 CASE WHEN Maturity_Date is not null
      THEN (
 	 CASE WHEN (DATEDIFF(MONTH,Report_Date,Maturity_Date)/CAST(12 AS float)) > 1

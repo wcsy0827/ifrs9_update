@@ -251,6 +251,7 @@
     <Compile Include="Controllers\TickerRatingController.cs" />
     <Compile Include="Enum\Authority.cs" />
     <Compile Include="Enum\ActionType.cs" />
+    <Compile Include="Enum\C10DataType.cs" />
     <Compile Include="Enum\Nlog.cs" />
     <Compile Include="Enum\ImpairmentOperations.cs" />
     <Compile Include="Enum\EvaluationStatusType.cs" />
@@ -294,6 +295,9 @@
       <DependentUpon>IFRS9Model.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Bond_Accounting_EL.cs">
+      <DependentUpon>IFRS9Model.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Bond_Account_AssessmentCheck.cs">
       <DependentUpon>IFRS9Model.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Bond_Account_Info.cs">
@@ -698,6 +702,9 @@
     <Compile Include="ViewModels\C04ViewModel.cs" />
     <Compile Include="ViewModels\C07AdvancedSumViewModel.cs" />
     <Compile Include="ViewModels\C07AdvancedViewModel.cs" />
+    <Compile Include="ViewModels\C10DetailViewModel.cs" />
+    <Compile Include="ViewModels\C10ViewModel.cs" />
+    <Compile Include="ViewModels\C10ViewModel_1.cs" />
     <Compile Include="ViewModels\C13ViewModel.cs" />
     <Compile Include="ViewModels\C23ViewModel.cs" />
     <Compile Include="ViewModels\ChgInSpreadViewModel.cs" />
@@ -1092,6 +1099,8 @@
     <Content Include="Views\A4\A47.cshtml" />
     <Content Include="Views\A4\A48.cshtml" />
     <Content Include="Views\D6\ReEL.cshtml" />
+    <Content Include="Views\C0\C10.cshtml" />
+    <Content Include="Views\C0\C10Detail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

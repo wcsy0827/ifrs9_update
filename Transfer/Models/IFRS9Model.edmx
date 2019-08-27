@@ -39,6 +39,34 @@
           <Property Name="Ori_Rating_Missing_Ind" Type="varchar" MaxLength="1" />
           <Property Name="IsActive" Type="varchar" MaxLength="1" Nullable="false" />
         </EntityType>
+        <EntityType Name="Bond_Account_AssessmentCheck">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Bond_Number" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Lots" Type="varchar" MaxLength="4" Nullable="false" />
+          <Property Name="Portfolio_Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Portfolio" Type="varchar" MaxLength="100" />
+          <Property Name="Maturity_Date" Type="date" />
+          <Property Name="Version" Type="int" />
+          <Property Name="Report_Date" Type="date" />
+          <Property Name="Amort_Amt_import" Type="float" />
+          <Property Name="Amort_Amt_import_TW" Type="float" />
+          <Property Name="Interest_Receivable_import" Type="float" />
+          <Property Name="Interest_Receivable_import_TW" Type="float" />
+          <Property Name="PD_Interest_Receivable_import" Type="float" />
+          <Property Name="PD_Amort_import" Type="float" />
+          <Property Name="LGD_Amort_import" Type="float" />
+          <Property Name="LGD_Interest_Receivable_import" Type="float" />
+          <Property Name="Lifetime_EL_Import" Type="float" />
+          <Property Name="Y1_EL_Import" Type="float" />
+          <Property Name="EL_import_Principle" Type="float" />
+          <Property Name="EL_import_Int" Type="float" />
+          <Property Name="Create_User" Type="varchar" MaxLength="50" />
+          <Property Name="Create_Date" Type="date" />
+          <Property Name="Create_Time" Type="time" Precision="7" />
+        </EntityType>
         <EntityType Name="Bond_Account_Info">
           <Key>
             <PropertyRef Name="Reference_Nbr" />
@@ -107,6 +135,7 @@
           <Property Name="LastUpdate_User" Type="varchar" MaxLength="50" />
           <Property Name="LastUpdate_Date" Type="date" />
           <Property Name="LastUpdate_Time" Type="time" Precision="7" />
+          <Property Name="Assessment_Check" Type="nchar" MaxLength="1" />
         </EntityType>
         <EntityType Name="Bond_Accounting_EL">
           <Key>
@@ -1274,6 +1303,7 @@
           <Property Name="LastUpdate_User" Type="varchar" MaxLength="50" />
           <Property Name="LastUpdate_Date" Type="date" />
           <Property Name="LastUpdate_Time" Type="time" Precision="7" />
+          <Property Name="PD_Int" Type="float" />
         </EntityType>
         <EntityType Name="IFRS9_Event_Log">
           <Key>
@@ -2212,6 +2242,7 @@
         <EntityContainer Name="IFRS9ModelStoreContainer">
           <EntitySet Name="Assessment_Sub_Kind_Ticker" EntityType="Self.Assessment_Sub_Kind_Ticker" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Basic_Assessment_Parm" EntityType="Self.Basic_Assessment_Parm" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Bond_Account_AssessmentCheck" EntityType="Self.Bond_Account_AssessmentCheck" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Bond_Account_Info" EntityType="Self.Bond_Account_Info" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Bond_Accounting_EL" EntityType="Self.Bond_Accounting_EL" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Bond_Assessment_Parm" EntityType="Self.Bond_Assessment_Parm" Schema="dbo" store:Type="Tables" />
@@ -2516,6 +2547,7 @@
           <EntitySet Name="Loan_Report_Info" EntityType="IFRS9Model.Loan_Report_Info" />
           <EntitySet Name="Bond_Assessment_Parm" EntityType="IFRS9Model.Bond_Assessment_Parm" />
           <EntitySet Name="IFRS9_RE_EL" EntityType="IFRS9Model.IFRS9_RE_EL" />
+          <EntitySet Name="Bond_Account_AssessmentCheck" EntityType="IFRS9Model.Bond_Account_AssessmentCheck" />
           </EntityContainer>
         <EntityType Name="Econ_Domestic">
           <Key>
@@ -3311,6 +3343,7 @@
           <Property Name="LastUpdate_User" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="LastUpdate_Date" Type="DateTime" Precision="0" />
           <Property Name="LastUpdate_Time" Type="Time" Precision="7" />
+          <Property Name="PD_Int" Type="Double" />
         </EntityType>
         <EntityType Name="SMF_Group">
           <Key>
@@ -4588,6 +4621,7 @@
           <Property Name="LastUpdate_User" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="LastUpdate_Date" Type="DateTime" Precision="0" />
           <Property Name="LastUpdate_Time" Type="Time" Precision="7" />
+          <Property Name="Assessment_Check" Type="String" MaxLength="1" FixedLength="true" Unicode="true" />
         </EntityType>
         <EntityType Name="Loan_Account_Info">
           <Key>
@@ -4672,6 +4706,34 @@
           <Property Name="Create_User" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="Create_Date" Type="DateTime" Nullable="false" Precision="0" />
           <Property Name="Create_Time" Type="Time" Nullable="false" Precision="7" />
+        </EntityType>
+        <EntityType Name="Bond_Account_AssessmentCheck">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Bond_Number" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Lots" Type="String" Nullable="false" MaxLength="4" FixedLength="false" Unicode="false" />
+          <Property Name="Portfolio_Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Portfolio" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Maturity_Date" Type="DateTime" Precision="0" />
+          <Property Name="Version" Type="Int32" />
+          <Property Name="Report_Date" Type="DateTime" Precision="0" />
+          <Property Name="Amort_Amt_import" Type="Double" />
+          <Property Name="Amort_Amt_import_TW" Type="Double" />
+          <Property Name="Interest_Receivable_import" Type="Double" />
+          <Property Name="Interest_Receivable_import_TW" Type="Double" />
+          <Property Name="PD_Interest_Receivable_import" Type="Double" />
+          <Property Name="PD_Amort_import" Type="Double" />
+          <Property Name="LGD_Amort_import" Type="Double" />
+          <Property Name="LGD_Interest_Receivable_import" Type="Double" />
+          <Property Name="Lifetime_EL_Import" Type="Double" />
+          <Property Name="Y1_EL_Import" Type="Double" />
+          <Property Name="EL_import_Principle" Type="Double" />
+          <Property Name="EL_import_Int" Type="Double" />
+          <Property Name="Create_User" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Create_Date" Type="DateTime" Precision="0" />
+          <Property Name="Create_Time" Type="Time" Precision="7" />
         </EntityType>
         </Schema>
     </edmx:ConceptualModels>
@@ -5369,6 +5431,7 @@
           <EntitySetMapping Name="IFRS9_EL">
             <EntityTypeMapping TypeName="IFRS9Model.IFRS9_EL">
               <MappingFragment StoreEntitySet="IFRS9_EL">
+                <ScalarProperty Name="PD_Int" ColumnName="PD_Int" />
                 <ScalarProperty Name="LastUpdate_Time" ColumnName="LastUpdate_Time" />
                 <ScalarProperty Name="LastUpdate_Date" ColumnName="LastUpdate_Date" />
                 <ScalarProperty Name="LastUpdate_User" ColumnName="LastUpdate_User" />
@@ -6487,6 +6550,7 @@
           <EntitySetMapping Name="Bond_Account_Info">
             <EntityTypeMapping TypeName="IFRS9Model.Bond_Account_Info">
               <MappingFragment StoreEntitySet="Bond_Account_Info">
+                <ScalarProperty Name="Assessment_Check" ColumnName="Assessment_Check" />
                 <ScalarProperty Name="LastUpdate_Time" ColumnName="LastUpdate_Time" />
                 <ScalarProperty Name="LastUpdate_Date" ColumnName="LastUpdate_Date" />
                 <ScalarProperty Name="LastUpdate_User" ColumnName="LastUpdate_User" />
@@ -6636,6 +6700,35 @@
                 <ScalarProperty Name="Message" ColumnName="Message" />
                 <ScalarProperty Name="FLOWID" ColumnName="FLOWID" />
                 <ScalarProperty Name="Report_Date" ColumnName="Report_Date" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Bond_Account_AssessmentCheck">
+            <EntityTypeMapping TypeName="IFRS9Model.Bond_Account_AssessmentCheck">
+              <MappingFragment StoreEntitySet="Bond_Account_AssessmentCheck">
+                <ScalarProperty Name="Create_Time" ColumnName="Create_Time" />
+                <ScalarProperty Name="Create_Date" ColumnName="Create_Date" />
+                <ScalarProperty Name="Create_User" ColumnName="Create_User" />
+                <ScalarProperty Name="EL_import_Int" ColumnName="EL_import_Int" />
+                <ScalarProperty Name="EL_import_Principle" ColumnName="EL_import_Principle" />
+                <ScalarProperty Name="Y1_EL_Import" ColumnName="Y1_EL_Import" />
+                <ScalarProperty Name="Lifetime_EL_Import" ColumnName="Lifetime_EL_Import" />
+                <ScalarProperty Name="LGD_Interest_Receivable_import" ColumnName="LGD_Interest_Receivable_import" />
+                <ScalarProperty Name="LGD_Amort_import" ColumnName="LGD_Amort_import" />
+                <ScalarProperty Name="PD_Amort_import" ColumnName="PD_Amort_import" />
+                <ScalarProperty Name="PD_Interest_Receivable_import" ColumnName="PD_Interest_Receivable_import" />
+                <ScalarProperty Name="Interest_Receivable_import_TW" ColumnName="Interest_Receivable_import_TW" />
+                <ScalarProperty Name="Interest_Receivable_import" ColumnName="Interest_Receivable_import" />
+                <ScalarProperty Name="Amort_Amt_import_TW" ColumnName="Amort_Amt_import_TW" />
+                <ScalarProperty Name="Amort_Amt_import" ColumnName="Amort_Amt_import" />
+                <ScalarProperty Name="Report_Date" ColumnName="Report_Date" />
+                <ScalarProperty Name="Version" ColumnName="Version" />
+                <ScalarProperty Name="Maturity_Date" ColumnName="Maturity_Date" />
+                <ScalarProperty Name="Portfolio" ColumnName="Portfolio" />
+                <ScalarProperty Name="Portfolio_Name" ColumnName="Portfolio_Name" />
+                <ScalarProperty Name="Lots" ColumnName="Lots" />
+                <ScalarProperty Name="Bond_Number" ColumnName="Bond_Number" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

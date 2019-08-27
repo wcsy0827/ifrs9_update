@@ -1875,7 +1875,8 @@ namespace Transfer.Models.Repository
 
                     var addData = db.Bond_Account_Info.AsNoTracking().Where(x => x.Report_Date == dateReportDate
                                                                               && x.Version == intVersion
-                                                                              && x.IAS39_CATEGORY.StartsWith("FVPL") == false)
+                                                                              && x.IAS39_CATEGORY.StartsWith("FVPL") == false
+                                                                              && x.Assessment_Check!="N") //190510 PG&E需求，排除A41註記為N的部位
                                                                      .ToList();
                     if (addData.Any() == false)
                     {
@@ -4169,7 +4170,21 @@ AND Version = @Version ; ";
             return ver;
         }
         #endregion
+        #region 抓取A41 該基準日Assessment_Check為N的部位(190619 PGE需求新增)
+        public List<Bond_Account_Info> GetA41AssessmentCheck(string reportDate, int version)
+        {
+            List<Bond_Account_Info> A41AssessmentCheck = new List<Bond_Account_Info>();
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                DateTime _reportDate = DateTime.Parse(reportDate);
+                A41AssessmentCheck = db.Bond_Account_Info.AsNoTracking()
+                    .Where(x => x.Report_Date == _reportDate && x.Version == version && (x.Assessment_Check == "N" || x.Assessment_Check == "n"))
+                    .ToList();
 
+            }
+            return A41AssessmentCheck;
+        }
+        #endregion
         #region get EL FLOW_ID
 
         /// <summary>
@@ -5773,6 +5788,83 @@ FROM TEMP ";
         }
         #endregion
 
+        public MSGReturnModel AutoInsertD65ExtraCase(List<Bond_Account_Info>A41Datas,string reportdate)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            int _A41Ver = A41Datas.Max(x => x.Version).Value ;
+            DateTime _ReportDate = new DateTime();
+            DateTime.TryParse(reportdate, out _ReportDate);
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "一鍵新增作業有誤";
+            int num_insert = 0;
+            int num_repeated = 0;
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                var _D62 = db.Bond_Basic_Assessment.Where(x => x.Report_Date == _ReportDate);               
+                if(_D62.Any()&&_A41Ver==_D62.Max(x=>x.Version))
+                {
+
+                    foreach (var item in A41Datas)
+                    {
+                        if (db.Bond_Qualitative_Assessment.AsNoTracking().Any(
+                            x => x.Reference_Nbr == item.Reference_Nbr &&
+                            x.Report_Date == item.Report_Date &&
+                            x.Bond_Number == item.Bond_Number &&
+                            x.Lots == item.Lots &&
+                            x.Portfolio_Name == item.Portfolio_Name
+                            ))
+                        {
+                            num_repeated++;
+                            continue;
+                        }
+                        else
+                        {
+                            db.Bond_Qualitative_Assessment.Add(
+                                new Bond_Qualitative_Assessment()
+                                {
+                                    Reference_Nbr = item.Reference_Nbr,
+                                    Version = item.Version.Value,
+                                    Report_Date = item.Report_Date.Value,
+                                    Assessment_Sub_Kind = item.Assessment_Sub_Kind,
+                                    Bond_Number = item.Bond_Number,
+                                    Lots = item.Lots,
+                                    Portfolio = item.Portfolio,
+                                    Origination_Date = item.Origination_Date,
+                                    Portfolio_Name = item.Portfolio_Name,
+                                    Assessment_Result_Version = 1,
+                                    Assessment_Kind = "質化衡量",
+                                    Extra_Case = "Y",
+                                    Create_User = _UserInfo._user,
+                                    Create_Date = _UserInfo._date,
+                                    Create_Time = _UserInfo._time
+                                }
+                                );
+                            num_insert++;
+                        }
+
+                    }
+                    try
+                    {
+                        db.SaveChanges();
+                        result.RETURN_FLAG = true;
+                        result.DESCRIPTION = Message_Type.save_Success.GetDescription(null, $"重複個案{num_repeated}筆，新增個案{num_insert}筆，請自查詢頁面查詢內容。");
+                    }
+                    catch (Exception ex)
+                    {
+                        result.DESCRIPTION = ex.exceptionMessage();
+                    }
+                }
+                else
+                {
+                    result.DESCRIPTION = "A41最大版本與基本要件評估最大版本不符";
+                }
+            }
+
+
+            return result;
+        }
+
+
         /// <summary>
         /// 新增D65 特殊案例
         /// </summary>
@@ -5860,15 +5952,12 @@ FROM TEMP ";
             {
                 var datas = db.Bond_Qualitative_Assessment
                      .Where(x => x.Reference_Nbr == referenceNbr &&
-                     x.Version == version).ToList();
+                     x.Version == version);
                 if (datas.Any())
                 {
                     foreach (var data in datas)
                     {
-                        data.Extra_Case = "D";
-                        data.LastUpdate_User = _UserInfo._user;
-                        data.LastUpdate_Date = _UserInfo._date;
-                        data.LastUpdate_Time = _UserInfo._time;
+                        db.Bond_Qualitative_Assessment.Remove(data); //190621 PGE需求發現BUG所作修改
                     }
                     try
                     {
@@ -5910,6 +5999,7 @@ FROM TEMP ";
             }
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
+                var ver = db.IFRS9_EL.Where(x=>x.Report_Date==_reportDate).Max(x => x.Version).ToString();
                 string sql = string.Empty;
                 sql = $@"
                 delete IFRS9_EL
@@ -5919,7 +6009,12 @@ FROM TEMP ";
                 delete IFRS9_Bond_Report
                 where Report_Date =  {_reportDate.stringToStrSql()}
                 and FLOWID = {flowId.stringToStrSql()} ;
-";
+ 
+                delete Bond_Account_AssessmentCheck
+                where Report_Date={_reportDate.stringToStrSql()}
+                and Version={Convert.ToInt16(ver)};"; //190527 PGEv需求新增刪除C10 鎖定版本內容
+
+
                 try
                 {
                     using (var dbContextTransaction = db.Database.BeginTransaction())
@@ -5945,7 +6040,9 @@ FROM TEMP ";
                         {
                             result.DESCRIPTION = "刪除筆數為0";
                         }
-                }
+                    }
+                 ModC10Log(result, reportDate, Convert.ToInt16(ver)); //190620 PGE需求新增
+
                 }
                 catch (Exception ex)
                 {
@@ -6015,6 +6112,31 @@ FROM TEMP ";
         #endregion
 
         #region private function
+
+        #region SaveModC10Log(190620 PGE需求新增)
+        public void ModC10Log(MSGReturnModel result, string reportDt, int ver)
+        {
+            //DateTime reportdate = reportDt;
+            if (result.RETURN_FLAG)
+            {
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    string sql = string.Empty;
+                    sql += $@"UPDATE Transfer_CheckTable
+
+                    Set TransferType = 'D',Error_Msg='減損報表資料刪除作業' 
+                    WHERE ReportDate = '{reportDt.Replace("/", "-")}'
+                    AND Version ={ver}
+                    AND TransferType = 'Y'
+                    AND File_Name ='{Table_Type.C10.ToString()}' ;";
+                    db.Database.ExecuteSqlCommand(sql);
+                }
+            }
+        }
+
+
+
+        #endregion
 
         /// <summary>
         /// D6 複核系列程式

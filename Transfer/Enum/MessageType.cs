@@ -10,6 +10,13 @@ namespace Transfer.Enum
         public enum Message_Type
         {
 
+            //增加C10覆蓋轉檔資料前提醒，
+            /// <summary>
+            /// 已經有上傳資料，請問要進行上傳並覆蓋資料?
+            /// </summary>
+            [Description("已經有上傳資料，請問要進行上傳並覆蓋資料?")]
+            Uplaod_data_Overwrite_File,
+
             //190222 增加接不到A59資料錯誤訊息
             /// <summary>
             /// 沒有找到寶碩原始信評資料
@@ -101,7 +108,7 @@ namespace Transfer.Enum
             not_Find_Data,
 
             /// <summary>
-            /// 沒有找到缺漏資料
+            /// 沒有找到資料
             /// </summary>
             [Description("沒有找到資料!")]
             not_Find_Any,
@@ -290,7 +297,57 @@ namespace Transfer.Enum
             /// 檢核錯誤!
             /// </summary>
             [Description("檢核錯誤!")]
-            Check_Fail
+            Check_Fail,
+
+            /// <summary>
+            /// 資料重複輸入!，請檢查資料:
+            /// </summary>
+            [Description("資料重複輸入!，請檢查資料:")]
+            Check_Redundancy,
+
+
+            /// <summary>
+            /// 無法辨認資料為本金還是利息，請檢查資料格式，錯誤資料:
+            /// </summary>
+            [Description("無法辨認資料為本金還是利息，請檢查資料格式，錯誤資料:")]
+            Check_TypeFail,
+
+
+
+            /// <summary>
+            /// 資料的本金或利息有缺漏，缺漏資料
+            /// </summary>
+            [Description("資料的本金或利息有缺漏，缺漏資料:")]
+            DataLostFail,
+
+            /// <summary>
+            ///補上傳之資料皆無對應之部位
+            /// </summary>
+            [Description("補上傳之資料皆無對應之部位")]
+            DataNoneCorrespond,
+
+            #region PGE需求延伸，D54Insert中投會要求客製訊息
+            /// <summary>
+            /// 選擇的報導日無A41部位上傳
+            /// </summary>
+            [Description("選擇的報導日無A41部位上傳")]
+            A41NotFind,
+            /// <summary>
+            /// 選擇的報導日無C10風控上傳excel計算檔
+            /// </summary>
+            [Description("選擇的報導日無C10風控上傳excel計算檔")]
+            C10NotFind,
+            /// <summary>
+            /// A41註記部位與C10上傳檔部位不符
+            /// </summary>
+            [Description("此版本A41註記為”N”毋須進行評估部位與C10 風控上傳檔部位不相符。 請聯繫投資風控確認C10上傳檔")]
+            A41C10NotMatch
+            #endregion
+
+
+
+
+
         }
     }
 }

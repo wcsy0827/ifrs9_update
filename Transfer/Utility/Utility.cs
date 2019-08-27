@@ -31,6 +31,7 @@ namespace Transfer.Utility
             A95_1TransferTxtLog = @"A95_1Transfer.txt"; //A59_1上傳Txtlog檔名
             A96TransferTxtLog = @"A96TransferTxtLog"; //A96上傳Txtlog檔名
             C01TransferTxtLog = @"C01Transfer.txt"; //C01上傳Txtlog檔名
+            C10TransferTxtLog = @"C10Transfer.txt"; //C10上傳Txtlog檔名
             D53TransferTxtLog = @"D53Transfer.txt"; //D53上傳Txtlog檔名
             D72TransferTxtLog = @"D72Transfer.txt"; //D72上傳Txtlog檔名
         }
@@ -56,6 +57,7 @@ namespace Transfer.Utility
         public static string QualitativeFile { get; private set; }
         public static string ProgramName { get; private set; }
         public static string C01TransferTxtLog { get; private set; }
+        public static string C10TransferTxtLog { get; private set; }
         public static string D53TransferTxtLog { get; private set; }
         public static string D72TransferTxtLog { get; private set; }
     }

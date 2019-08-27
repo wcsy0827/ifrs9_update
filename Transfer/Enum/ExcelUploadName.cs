@@ -113,6 +113,13 @@ namespace Transfer.Enum
             C01,
 
             /// <summary>
+            /// C10
+            /// </summary>
+            [Description("C10")]
+            C10,
+
+
+            /// <summary>
             /// D53
             /// </summary>
             [Description("D53")]

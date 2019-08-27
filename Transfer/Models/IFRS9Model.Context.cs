@@ -110,5 +110,6 @@ namespace Transfer.Models
         public virtual DbSet<Loan_Report_Info> Loan_Report_Info { get; set; }
         public virtual DbSet<Bond_Assessment_Parm> Bond_Assessment_Parm { get; set; }
         public virtual DbSet<IFRS9_RE_EL> IFRS9_RE_EL { get; set; }
+        public virtual DbSet<Bond_Account_AssessmentCheck> Bond_Account_AssessmentCheck { get; set; }
     }
 }

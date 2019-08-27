@@ -1,11 +1,15 @@
-﻿@using Transfer.Utility;
+﻿
+@using Transfer.Utility;
 @using Transfer.Enum;
+
 @{
-    ViewBag.Menu = "A4Main";
-    ViewBag.SubMenu = "A40Sub";
-    ViewBag.Title = "A4";
+
+    ViewBag.Menu = "C0Main";
+    ViewBag.SubMenu = "C10Sub";
+    ViewBag.Title = "C10";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <div class="container" id="main">
     <div class="row main_hand">
         <div class="col-md-12 main_hand_div">
@@ -16,33 +20,17 @@
                             <label>日期 : </label>
                             <input type="text" id="datepicker" name="datepicker">
                         </td>
-                        <td style="width:500px; padding-top:8px">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <label>版本 : </label>
-                                    </td>
-                                    <td>
-                                        <div class="select-editable">
-                                            <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
-                                            <input type="text" name="version" id="version" value="" />
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                            </table>
-                        </td>
                     </tr>
                 </table>
             </form>
             <table>
                 <tr>
                     <td style="padding-top:10px">
-                        @using (Ajax.BeginForm("Upload", "A4",
+                        @using (Ajax.BeginForm("UploadC10", "C0",
 new AjaxOptions { HttpMethod = "POST" },
 new { enctype = "multipart/form-data", @id = "form0" }))
                         {
-                        <input type="file" id="file" name="file" class="filestyle" data-buttonName="btn-primary" data-buttonText="轉檔檔案" />
+                            <input type="file" id="file" name="file" class="filestyle" data-buttonName="btn-primary" data-buttonText="轉檔檔案" />
                         }
                     </td>
                     <td style="padding-top:10px">
@@ -53,8 +41,7 @@ new { enctype = "multipart/form-data", @id = "form0" }))
             </table>
             <i class="fa fa-exclamation-circle title" style="font-size:24px;"
                alt="說明：
-1. 日期欄位，選擇 '基準日'。
-2. 版本輸入格式，1、2、3……，依此類推，輸入版本不可重複。"></i>
+1. 要件評估"></i>
         </div>
     </div>
     <div class="row main_body" style="overflow:auto;height:100%">
@@ -66,6 +53,7 @@ new { enctype = "multipart/form-data", @id = "form0" }))
         </div>
     </div>
 </div>
+
 <script type="text/javascript">
     $(function () {
 
@@ -74,12 +62,12 @@ new { enctype = "multipart/form-data", @id = "form0" }))
         var version = '';
         //#endregion 共用參數
 
+
         //#region 註冊URL
         var url = {};
-        url.transfer = '@Url.Action("Transfer", "A4")';
-        url.getExcelData = '@Url.Action("GetCacheData", "A4")';
-        url.setReportDate = '@Url.Action("SetA41ReportDate","A4")';
-        url.getReportDataVersion = '@Url.Action("GetVersion", "A4")';
+        url.transfer = '@Url.Action("TransferC10", "C0")';
+        url.getExcelData = '@Url.Action("GetCacheC10Data", "C0")';
+        url.transferConfirm  = '@Url.Action("TransferConfirmC10", "C0")';
         //#endregion 註冊URL
 
         //#region 選擇reportDate 後要觸發的動作
@@ -88,53 +76,53 @@ new { enctype = "multipart/form-data", @id = "form0" }))
             '@Ref.Transfer_Table_Type.A41.ToString()',
             url.getReportDataVersion);
         //#endregion 選擇reportDate 後要觸發的動作
-        
+
         //#region 註冊datepicker
         created.createDatepicker('datepicker', true, '',versionFun);
         //#endregion 註冊datepicker
+
+
 
         //#region 註冊click事件
         $('input:button').each(function () {
             var id = $(this).attr('id');
             switch (id) {
                 case 'fileSubmit':
-                    $("#" + id).on('click', function () { vaildate()});
+                    $("#" + id).on('click', function () { vaildate() });
                     break;
+
                 case 'btnTransfer':
-                    $("#" + id).click(transfer);
+                    $("#" + id).on('click',function () { transferConfirm() });
                     break;
             }
         })
         //#endregion 註冊click事件
 
-        //#region 驗證
+        //#region 驗證(保留)
         function vaildate() {
             var date = $('#datepicker').val();
             verified.datepicker("myForm", "datepicker", true, date);
-            verified.required('myForm', 'version', message.required(message.version));
-            verified.number('myForm', 'version');
             if ($('#myForm').valid()) {
                 fileSubmitFunction();
             }
         }
         //#endregion
 
-        //#region fileSubmitFunction (把檔案上傳到指定資料夾)
-        function fileSubmitFunction() {
+         function fileSubmitFunction() {
             var dataString;
-            var action = $("#form0").attr("action");
-            if ($("#form0").attr("enctype") == "multipart/form-data") {
+             var action = $("#form0").attr("action");
+
+             if ($("#form0").attr("enctype") == "multipart/form-data") {
                 dataString = new FormData();
                 dataString.append("UploadedFile", $("#file").get(0).files[0]);
-                dataString.append("reportDate",$('#datepicker').val());
-                dataString.append("version",$('#version').val());
+                dataString.append("reportDate", $('#datepicker').val());
             }
             else {
                 // regular form, do your own thing if you need it
             }
-            clearJqgrid();
-            reportDate = $('#datepicker').val();
-            version = $('#version').val();
+             clearJqgrid();
+             reportDate = $('#datepicker').val();
+
             $.ajax({
                 type: "POST",
                 url: action,
@@ -143,52 +131,24 @@ new { enctype = "multipart/form-data", @id = "form0" }))
                 contentType: false,
                 processData: false,
                 success: function (result) {
-
                     if (result.RETURN_FLAG) {
-         
                         createJqgrid("list1", "pager1",
-                            '@Ref.Excel_UploadName.A41.GetDescription()');
+                            '@Ref.Excel_UploadName.C10.GetDescription()');
                         $('#btnTransfer').prop('disabled', false);
-                        customerUtility.checkDialog('A41View','@Ref.Check_Table_Type.Bonds_A41_UpLoad.ToString()');
+                        customerUtility.checkDialog('C10View', '@Ref.Check_Table_Type.Bonds_C10_UpLoad_Check.ToString()');
                     }
                     else {
                         customerUtility.alert(result.DESCRIPTION,'w');
                     }
                 },
                 error: function (result) {
-               
+
+
                     customerUtility.alert('格式錯誤','e');
                 }
             });
         }
         //#endregion fileSubmitFunction
-
-        //#region 資料上傳(Excel 資料寫入 local sql)
-        function transfer() {
-            if (verified.isDate(reportDate, true) &&
-                version != '' ) {
-                $.ajax({
-                    type: "POST",
-                    url: url.transfer,
-                    data: JSON.stringify({
-                        reportDate: reportDate,
-                        version : version
-                    }),
-                    contentType: 'application/json'
-                })
-                .done(function (result) {
-                    if (result.RETURN_FLAG)
-                        customerUtility.alert(result.DESCRIPTION,'s');
-                    else
-                        customerUtility.alert(result.DESCRIPTION,'e');
-                })
-            }
-            else {
-                customerUtility.alert('時間or版本不符合,請重新上傳檔案!','e');
-            }
-        }
-        //#endregion 資料上傳(Excel 資料寫入 local sql)
-
 
         //#region clearJqgrid (清除JqGrid)
         function clearJqgrid() {
@@ -202,7 +162,6 @@ new { enctype = "multipart/form-data", @id = "form0" }))
 
         //title (標題)
         function createJqgrid(listId, pagerId, title) {
-            
             $('#jqgridDiv').append('<table id="' + listId + '"></table>');
             $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
 
@@ -212,7 +171,7 @@ new { enctype = "multipart/form-data", @id = "form0" }))
                 mtype: "POST",
                 postData:
                 {
-                    type: "Excel",
+                    type: "C10_Excel",
                 },
                 jsonReader:
                 {
@@ -223,6 +182,7 @@ new { enctype = "multipart/form-data", @id = "form0" }))
                 rowNum: 30, //一頁筆數
                 rowList: [30, 50, 100], //設定一頁幾筆
                 pager: '#' + pagerId,
+                autowidth: true,
                 height: jqgridCustom.getHeight(),
                 width: jqgridCustom.getwidth(),
                 caption: title, //標題
@@ -234,10 +194,71 @@ new { enctype = "multipart/form-data", @id = "form0" }))
                 loadComplete: function () {
                     var table = $(this);
                     jqgridCustom.updatePagerIcons(table);
+                    resize();
                 }
             });
             $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
         }
         //#endregion createJqgrid
+
+        //#endregion 資料轉檔前確認
+        function transferConfirm() {
+            $.ajax({
+                type: "POST",
+                url: url.transferConfirm,
+                data: JSON.stringify({
+                    reportDate: reportDate,
+                }),
+                contentType: 'application/json'
+            })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        if (confirm(result.DESCRIPTION)) {
+                            transfer();
+                        }
+                        else {
+                            //取消上傳
+                        }
+                    }
+                    else {
+                        transfer();
+                    }
+                })
+        }
+         //#endregion fileSubmitFunction
+
+        
+        //#endregion 資料轉檔(Excel 資料寫入 local sql)
+        function transfer() {
+
+            $.ajax({
+                    type: "POST",
+                    url: url.transfer,
+                    data: JSON.stringify({
+                        reportDate: reportDate,
+                        version: version
+                    }),
+                    contentType: 'application/json'
+                })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG)
+                            customerUtility.alert(result.DESCRIPTION, 's');
+                        else
+                            customerUtility.alert(result.DESCRIPTION, 'e');
+                    })
+
+        }
+         //#endregion fileSubmitFunction
+        
     });
+
+
+    function resize() {
+        $(window).resize(function () {
+            $("#jqgridDiv").setGridWidth($(window).width());
+        });
+    };
+
 </script>
+
+

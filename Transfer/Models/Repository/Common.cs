@@ -209,6 +209,15 @@ namespace Transfer.Models.Repository
                 {
                     return true;
                 }
+                //增加判斷C10上傳記錄
+                else if (fileName == Table_Type.C10.ToString() &&
+                checkTable.Any(x => x.File_Name == fileName &&
+                x.ReportDate == reportDate &&
+                x.Version == version &&
+                x.TransferType == "Y"))
+                {
+                    return true;
+                }
             }
             return false;
         }

@@ -27,7 +27,7 @@
                             <input type="button" class="btn btn-primary" value="查詢預計調整資料" id="btnD54Search" style="margin-right:10px;" />
                         </td>
                         <td style="padding-top:10px;">
-                            <input type="button" class="btn btn-primary" value="減損階段確認" id="btnD54Transfer" style="margin-right:10px;" />
+                            <input type="button" class="btn btn-primary" value="減損階段確認" id="btnD54Transfer" style="margin-right:10px;" disabled />
                         </td>
                     </tr>
                 </table>
@@ -82,12 +82,14 @@
         url.search = '@Url.Action("D54InsertSearch", "D6")';
         url.transfer = '@Url.Action("TransferD54", "D6")';
         url.getDbData = '@Url.Action("GetCacheData", "D6")';
+        url.check = '@Url.Action("TransferD54Check", "D6")'; //PGE需求延伸，調整查詢預計調整資料時的檢核
+        url.checkC10='@Url.Action("CheckC10", "D6")';//PGE需求延伸
         //#endregion 註冊URL
 
         //#region 共用參數
 
-        //#endregion 共用參數
 
+        //#endregion 共用參數
 
         //#region 註冊datepicker
         created.createDatepicker('datepicker', true, '');
@@ -111,7 +113,6 @@
             }
         })
         //#endregion 註冊click事件
-
         //#region 查詢量化評估需求資訊檔
         function search()
         {
@@ -119,27 +120,68 @@
             clearJqgrid("jqgridDiv2");
             if($('#myForm').valid())
             {
+                var c10flag = false;
+                
                 $.ajax({
                     type: "POST",
                     data: JSON.stringify({
                         dt: $('#datepicker').val()
                     }),
                     dataType: "json",
-                    url: url.search,
+                    url: url.checkC10,
                     contentType: 'application/json',
                 })
-                .done(function(result){
-                    if(result.RETURN_FLAG)
-                    {
-                        createJqgrid("jqgridDiv", "list1", "pager1", result.Datas.Data);
-                        createJqgrid("jqgridDiv2", "list2", "pager2");
-                    }
-                    else
-                        customerUtility.alert(result.DESCRIPTION, 'e');
-                })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG)
+                        {
+                            c10flag = true;
+                        }
+                        if (c10flag && !confirm("本報導日有C10上傳，請確認於D65有執行新增質化評估個案並完成覆核!"))
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            $.ajax({
+                                type: "POST",
+                                data: JSON.stringify({
+                                    dt: $('#datepicker').val()
+                                }),
+                                dataType: "json",
+                                url: url.search,
+                                contentType: 'application/json',
+                            })
+                                .done(function (result) {
+                                    if (result.RETURN_FLAG) {
+                                        createJqgrid("jqgridDiv", "list1", "pager1", result.Datas.Data);
+                                        createJqgrid("jqgridDiv2", "list2", "pager2");
+                                        //$('#btnD54Transfer').prop('disabled', false);
+                                        $.ajax({
+                                            type: 'POST',
+                                            data: JSON.stringify({
+                                                dt: $('#datepicker').val()
+                                            }),
+                                            datatype: 'json',
+                                            url: url.check,
+                                            contentType: 'application/json'
+                                        }).done(function (result) {
+                                            if (result.RETURN_FLAG) {
+                                                customerUtility.alert(result.DESCRIPTION, 's');
+                                                $('#btnD54Transfer').prop('disabled', false);
+                                            }
+                                            else
+                                                    customerUtility.alert(result.DESCRIPTION, 'e');
+                                            })
+                                    }
+                                    else
+                                        customerUtility.alert(result.DESCRIPTION, 'e');
+                                })
+                        }
+                    })
             }
         }
         //#endregion 查詢量化評估需求資訊檔
+
 
         //#region 執行量化評估需求資訊檔轉檔
         function transfer()
@@ -160,6 +202,7 @@
                     if(result.RETURN_FLAG)
                     {
                         customerUtility.alert(result.DESCRIPTION, 's');
+                        $('#btnD54Transfer').prop('disabled', 'disabled');
                     }
                     else
                         customerUtility.alert(result.DESCRIPTION, 'e');

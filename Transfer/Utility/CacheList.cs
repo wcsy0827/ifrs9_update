@@ -41,6 +41,8 @@
         public static string C04DbfileData { get; private set; }
         public static string C04_1DbfileData { get; private set; }
         public static string C04TransferData { get; private set; }
+        public static string C10DbfileData { get; private set; }
+        public static string C10ExcelfileData { get; set; }
         public static string C13DbfileData { get; private set; }
         public static string D53DbfileData { get; private set; }
         public static string D53ExcelfileData { get; private set; }
@@ -66,6 +68,7 @@
         public static string D73DbfileData { get; private set; }
         public static string D74DbfileData { get; private set;}
         public static string D74_1DbfileData { get; private set; }
+       
         public static string CheckTableDbfileData { get; private set; }
         public static string CheckTableDbfileData2 { get; private set; }
         public static string CheckData { get; private set; }
@@ -87,6 +90,7 @@
         public static string MenuMainDbfileData { get; set; }
         public static string MenuSubDbfileData { get; set; }
         public static string ReELDbfileData { get; set; }
+
 
         #endregion 資料庫資料
 
@@ -123,6 +127,7 @@
         public static string C01ExcelName { get; private set; }
         public static string D53ExcelName { get; private set; }
         public static string D72ExcelName { get; private set; }
+        public static string C10ExcelName { get; private set; }
 
         #endregion 上傳檔名
 
@@ -165,6 +170,7 @@
             C04DbfileData = "C04DbfileData";
             C04_1DbfileData = "C04_1DbfileData";
             C04TransferData = "C04TransferData";
+            C10DbfileData = "C10DbfileData";
             C13DbfileData = "C13DbfileData";
             D03DbfileData = "D03DbfileData";
             D53DbfileData = "D53DbfileData";
@@ -190,6 +196,7 @@
             D73DbfileData = "D73DbfileData";
             D74DbfileData = "D74DbfileData";
             D74_1DbfileData = "D74_1DbfileData";
+            C10ExcelfileData = "E01ExcelfileData";
             CheckTableDbfileData = "CheckTableDbfileData";
             CheckTableDbfileData2 = "CheckTableDbfileData2";
             CheckData = "CheckData";
@@ -211,6 +218,8 @@
             MenuMainDbfileData = "MenuMainDbfileData";
             MenuSubDbfileData = "MenuSubDbfileData";
             ReELDbfileData = "ReELDbfileData";
+            
+
             #endregion 資料庫資料
 
             #region 上傳檔名
@@ -233,7 +242,7 @@
             C01ExcelName = "C01ExcelName";
             D53ExcelName = "D53ExcelName";
             D72ExcelName = "D72ExcelName";
-
+            C10ExcelName = "C10ExcelName";
             #endregion 上傳檔名
         }
     }

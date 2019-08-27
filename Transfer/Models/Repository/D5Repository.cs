@@ -185,6 +185,94 @@ namespace Transfer.Models.Repository
         }
         #endregion
 
+        #region PGE需求延伸，調整查詢預計調整資料時的檢核
+        public MSGReturnModel checkD54(string dt)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                DateTime reportDt = DateTime.MinValue;
+                DateTime startDr = DateTime.Now;
+                DateTime.TryParse(dt, out reportDt);
+                var A41s = db.Bond_Account_Info.AsNoTracking().Where(x => x.Report_Date == reportDt);
+                if (!A41s.Any())
+                {
+                    result.DESCRIPTION = Message_Type.A41NotFind.GetDescription();
+                    return result;
+                }
+
+                var ver = A41s.Max(x => x.Version).Value;
+                #region 190527 PGE需求修改
+                var A41n = A41s.Where(x => x.Version == ver && x.Assessment_Check == "N").ToList();
+                var C10s = db.Bond_Account_AssessmentCheck.AsNoTracking().Where(x => x.Report_Date == reportDt && x.Version == 0).ToList();//190527 PGE需求新增
+                if (A41n.Any())
+                {
+                    if (!C10s.Any())
+                    {
+                        result.DESCRIPTION = Message_Type.C10NotFind.GetDescription();
+                        return result;
+                    }
+                    //A41與C10數量比對           
+                    var A41check = A41n.Where(x => !C10s.Exists(y => (x.Bond_Number == y.Bond_Number) && (x.Lots == y.Lots) && (x.Portfolio == y.Portfolio))).Any();//有A41註記部位不在C10的部位
+                    if (A41check || A41n.Count() != C10s.Count())
+                    {
+                        result.DESCRIPTION = Message_Type.A41C10NotMatch.GetDescription();
+                        return result;
+                    }
+                }
+                #endregion
+                var rdt = reportDt.ToString(C07reportDateFormate);
+                var _message = $@"基準日:{rdt} 版本:{ver}";
+                if (!db.EL_Data_Out.AsNoTracking().Any(x => x.Report_Date == rdt && x.Version == ver))
+                {
+                    result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.C07.tableNameGetDescription(), _message);
+                    return result;
+                }
+                if (!db.EL_Data_In_Update.AsNoTracking().Any(x => x.Report_Date == rdt && x.Version == ver))
+                {
+                    result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.C09.tableNameGetDescription(), _message);
+                    return result;
+                }
+
+                if (db.IFRS9_EL.AsNoTracking().Any(x => x.Report_Date == rdt && x.Version == ver))
+                {
+                    result.DESCRIPTION = Message_Type.already_Save.GetDescription(Table_Type.D54.tableNameGetDescription(), _message);
+                    return result;
+                }
+
+
+                result.RETURN_FLAG = true;
+                result.DESCRIPTION = "執行減損階段確認所有檢核皆正確。";
+                return result;
+            }
+        }
+
+        public MSGReturnModel CheckC10data(string dt)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            DateTime reportDt = DateTime.MinValue;
+            DateTime startDr = DateTime.Now;
+            DateTime.TryParse(dt, out reportDt);
+            using (IFRS9DBEntities db=new IFRS9DBEntities())
+            {
+                var C10data = db.Bond_Account_AssessmentCheck.AsNoTracking().Where(x => x.Report_Date == reportDt);
+                if (C10data.Any())
+                {
+                    result.RETURN_FLAG = true;
+                    return result;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+
+        }
+        #endregion
+
         #region get D54 Group_Product_Code
         /// <summary>
         /// get D54 Group_Product_Code
@@ -331,10 +419,31 @@ INSERT INTO [SMF_Info]
                 var A41s = db.Bond_Account_Info.AsNoTracking().Where(x => x.Report_Date == reportDt);
                 if (!A41s.Any())
                 {
-                    result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.A41.tableNameGetDescription());
+                    result.DESCRIPTION = Message_Type.A41NotFind.GetDescription();
                     return result;
                 }
                 var ver = A41s.Max(x => x.Version).Value;
+
+                #region 190527 PGE需求修改
+                var A41n = A41s.Where(x => x.Version == ver && x.Assessment_Check == "N").ToList();
+                var C10s = db.Bond_Account_AssessmentCheck.AsNoTracking().Where(x => x.Report_Date == reportDt && x.Version == 0).ToList();//190527 PGE需求新增
+                if (A41n.Any())
+                {
+                    if (!C10s.Any())
+                    {
+                        result.DESCRIPTION = Message_Type.C10NotFind.GetDescription();
+                        return result;
+                    }
+                    //190527 PGE需求修改 增加A41與C10數量比對           
+                    var A41check = A41n.Where(x => !C10s.Exists(y => (x.Bond_Number == y.Bond_Number) && (x.Lots == y.Lots) && (x.Portfolio == y.Portfolio))).Any();//有A41註記部位不在C10的部位
+                    if (A41check || A41n.Count() != C10s.Count())
+                    {
+                        result.DESCRIPTION = Message_Type.A41C10NotMatch.GetDescription();//PGE需求，修改提示訊息
+                        return result;
+                    }
+
+                }
+                #endregion
                 var rdt = reportDt.ToString(C07reportDateFormate);
                 var _message = $@"基準日:{rdt} 版本:{ver}";
                 if (!db.EL_Data_Out.AsNoTracking().Any(x => x.Report_Date == rdt && x.Version == ver))
@@ -347,12 +456,15 @@ INSERT INTO [SMF_Info]
                     result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.C09.tableNameGetDescription(), _message);
                     return result;
                 }
+
                 if (db.IFRS9_EL.AsNoTracking().Any(x => x.Report_Date == rdt && x.Version == ver))
                 {
                     result.DESCRIPTION = Message_Type.already_Save.GetDescription(Table_Type.D54.tableNameGetDescription(), _message);
                     return result;
                 }
-                string sql = $@"
+                #region D54Insert SQL(沒有註記N的部位)
+                //190524 排除註記為N的部位
+                string sql1 = $@"
 WITH C07S AS
 (
      SELECT C07.PRJID AS PRJID, --專案名稱
@@ -394,6 +506,7 @@ WITH C07S AS
      FROM (SELECT * FROM Bond_Account_Info
      where Report_Date =  @Report_Date 
      and Version = @Version
+     and Assessment_Check is null
      ) AS A41 
      JOIN( 
      SELECT * 
@@ -466,6 +579,9 @@ EL * Ori_Ex_rate AS EL_Ori_Ex, --累計減損(成本匯率台幣)
 FROM C07S ;
 ";
 
+                #endregion
+                #region D52Insert SQL(沒有註記N的部位)
+                //190524 排除註記為N的部位
                 string sql2 = $@"
 WITH Temp AS
 (
@@ -497,7 +613,8 @@ FROM (
 SELECT * 
 FROM Bond_Account_Info
 WHERE Report_Date = @Report_Date
-AND Version = @Version ) AS A41 
+AND Version = @Version
+AND Assessment_Check is null) AS A41 
 JOIN( 
 SELECT * 
 FROM EL_Data_Out 
@@ -889,6 +1006,493 @@ select      [PRJID]
 from D54Temp ;
 ";
 
+                #endregion
+                #region D54Insert SQL(註記N的部位)
+                string sql3 = $@"WITH C07S AS
+(
+     SELECT C07.PRJID AS PRJID, --專案名稱
+            C07.FLOWID AS FLOWID, --流程名稱
+            C07.Report_Date AS Report_Date, --評估基準日/報導日
+            C07.Version AS Version, --資料版本
+            C07.Processing_Date AS Processing_Date, --資料處理日期
+            C07.Product_Code AS Product_Code, --產品
+            C07.Reference_Nbr AS Reference_Nbr, --案件編號/帳號
+            A41.Bond_Number AS Bond_Number, --債券編號
+            A41.Lots AS Lots, --Lots
+            A41.Portfolio_Name AS Portfolio_Name, --Portfolio英文
+            A41.Segment_Name AS Segment_Name, --債券(資產)名稱
+            CASE WHEN D66.Assessment_Stage = '2'
+                 THEN CASE WHEN D66.Qualitative_Pass_Stage2 = 'Y'
+                      THEN '1'
+                      ELSE '2'
+                 END
+                 WHEN D66.Assessment_Stage = '3'
+ 	             THEN CASE WHEN D66.Qualitative_Pass_Stage3 = 'Y'
+                      THEN '1'
+                      ELSE '3'
+                 END
+	        ELSE C07.Impairment_Stage 
+	        END AS Impairment_Stage, --減損階段
+            C10.PD_Amort_import AS PD, --第一年(本金)違約率
+			C10.PD_Interest_Receivable_import AS PD_Int,
+            C10.Lifetime_EL_Import AS Lifetime_EL, --存續期間預期信用損失(原幣)
+            C10.Y1_EL_Import AS Y1_EL, --一年期預期信用損失(原幣)
+			C10.EL_import_Principle,
+			C10.EL_import_Int,
+			(C10.EL_import_Principle+C10.EL_import_Int) AS EL,--累計減損(原幣)(最終預期信用損失)
+            A41.Ex_rate AS Ex_rate, --月底匯率(報表日匯率)
+            A41.Ori_Ex_rate AS Ori_Ex_rate --成本匯率
+     FROM 
+	 (SELECT * FROM Bond_Account_Info where Report_Date =  @Report_Date  and Version = @Version and Assessment_Check='N') AS A41 
+	 
+     JOIN
+	 (SELECT * FROM EL_Data_Out --C07
+     WHERE Report_Date = @Report_Date 
+     AND Version = @Version 
+     AND Product_Code IN ('Bond_A','Bond_B','Bond_P') ) AS C07
+     ON C07.Reference_Nbr = A41.Reference_Nbr
+
+	 --c10比對
+	JOIN(
+	Select *
+	FROM Bond_Account_AssessmentCheck
+	WHERE Report_Date = @Report_Date and Version=0  --沒確認(鎖住)的版本C10版號皆為0
+	)AS C10
+	ON A41.Report_Date=C10.Report_Date and A41.Bond_Number=C10.Bond_Number and A41.Lots=C10.Lots and A41.Portfolio_Name=C10.Portfolio_Name --因為C10沒有Refernece Number，所以要用Bond number、Lots、portfolio和report date做join
+	JOIN
+    (select * from Flow_Info where Apply_Off_Date is null) AS D01
+	ON C07.PRJID = D01.PRJID and C07.FLOWID = D01.FLOWID
+	left join 
+    (select * from Bond_Qualitative_Assessment
+    where Report_Date = @Report_Date and Version = @Version  and Assessment_Result_Version = Result_Version_Confirm
+    )AS D65
+    on A41.Reference_Nbr = D65.Reference_Nbr
+	left join 
+    (select * from Bond_Qualitative_Assessment_Result
+    where Report_Date = @Report_Date and Version = @Version  and (Check_Item_Code like 'Pass_Count%' or Check_Item_Code like 'Z%')
+	)AS D66
+	ON D66.Reference_Nbr = D65.Reference_Nbr AND D66.Assessment_Result_Version = D65.Assessment_Result_Version
+)
+
+Insert into IFRS9_EL
+            (PRJID,
+             FLOWID,
+             Report_Date,
+             Version,
+             Processing_Date,
+             Product_Code,
+             Reference_Nbr,
+             Bond_Number,
+             Lots,
+             Portfolio_Name,
+             Segment_Name,
+             Impairment_Stage,
+             PD,
+			 PD_Int,
+             Lifetime_EL,
+             Y1_EL,
+             EL,
+             Ex_rate,
+             Ori_Ex_rate,
+             Lifetime_EL_Ex,
+             Y1_EL_Ex,
+             EL_Ex,
+             Lifetime_EL_Ori_Ex,
+             Y1_EL_Ori_Ex,
+             EL_Ori_Ex,
+             Exec_Date,
+             Create_User,
+             Create_Date,
+             Create_Time
+			 )
+Select 
+PRJID,
+FLOWID,
+Report_Date,
+Version,
+Processing_Date,
+Product_Code,
+Reference_Nbr,
+Bond_Number,
+Lots,
+Portfolio_Name,
+Segment_Name,
+Impairment_Stage,
+PD,
+PD_Int, --新增欄位
+Lifetime_EL,
+Y1_EL,
+EL,
+Ex_rate,
+Ori_Ex_rate,
+Lifetime_EL * Ex_rate AS Lifetime_EL_Ex , --存續期間預期信用損失(報表日匯率台幣)
+Y1_EL * Ex_rate AS Y1_EL_Ex , --一年期預期信用損失(報表日匯率台幣)
+EL * Ex_rate AS EL_Ex, --累計減損(報表日匯率台幣)
+Lifetime_EL * Ori_Ex_rate AS Lifetime_EL_Ori_Ex, --存續期間預期信用損失(成本匯率台幣)
+Y1_EL * Ori_Ex_rate AS Y1_EL_Ori_Ex, --一年期預期信用損失(成本匯率台幣)
+EL * Ori_Ex_rate AS EL_Ori_Ex, --累計減損(成本匯率台幣)
+@Exec_Date  AS Exec_Date, --資料處理日期
+@Create_User AS Create_User,
+@Create_Date AS Create_Date,
+@Create_Time AS Create_Time
+FROM C07S ;";
+
+                #endregion
+                #region D52Insert SQL(註記N的部位)
+                string sql4 = $@"WITH Temp AS
+(
+Select 	   
+	   A41.Reference_Nbr,
+	   cast(A41.Ex_rate as decimal(30,3)) as Ex_rate,
+	   cast(A41.Ori_Ex_rate as decimal(30,3)) as Ori_Ex_rate,
+	   cast(C10.Amort_Amt_import as decimal(30,3)) as Amort_Amt_import,
+	   cast(C10.Amort_Amt_import_TW as decimal(30,3)) as Amort_Amt_import_TW,
+	   cast(C10.Interest_Receivable_import as decimal(30,3)) as Interest_Receivable_import,
+	   cast(C10.Interest_Receivable_import_TW as decimal(30,3)) as Interest_Receivable_import_TW,
+	   cast(C10.PD_Interest_Receivable_import as decimal(30,3)) as PD_Interest_Receivable_import,
+	   cast(C10.PD_Amort_import as decimal(30,3)) as PD_Amort_import,
+	   cast(C10.LGD_Amort_import as decimal(30,3)) as LGD_Amort_import,
+	   cast(C10.LGD_Interest_Receivable_import as decimal(30,3)) as LGD_Interest_Receivable_import,
+	   cast(C10.Lifetime_EL_Import as decimal(30,3)) as Lifetime_EL_Import,
+	   cast(C10.Y1_EL_Import as decimal(30,3)) as Y1_EL_Import,
+	   cast(C10.EL_import_Principle as decimal(30,3)) as EL_import_Principle,
+	   cast(C10.EL_import_Int as decimal(30,3)) as EL_import_Int,
+	   cast((C10.EL_import_Principle+C10.EL_import_Int)as decimal(30,3)) AS EL, --(PG&E需求更動累計減損(原幣)(最終預期信用損失)
+
+       CASE WHEN D66.Assessment_Stage = '2'
+            THEN CASE WHEN D66.Qualitative_Pass_Stage2 = 'Y'
+                 THEN '1'
+                 ELSE '2'
+            END
+            WHEN D66.Assessment_Stage = '3'
+	          THEN CASE WHEN D66.Qualitative_Pass_Stage3 = 'Y'
+                 THEN '1'
+                 ELSE '3'
+            END
+       ELSE C07.Impairment_Stage 
+       END AS Impairment_Stage, --減損階段
+       C07.FLOWID,
+       C07.PRJID
+FROM (SELECT * FROM Bond_Account_Info WHERE Report_Date = @Report_Date AND Version = @Version AND Assessment_Check='N') AS A41    --抓註記為N的部位、@Version已經取得該報導日最大版本
+
+JOIN( 
+SELECT * 
+FROM EL_Data_Out 
+WHERE Report_Date = @Report_Date AND Version = @Version AND Product_Code IN ('Bond_A','Bond_B','Bond_P') AND FLOWID in (select FLOWID from Flow_Info where Apply_Off_Date is null)
+) AS C07
+ON C07.Reference_Nbr = A41.Reference_Nbr
+
+--c10比對
+JOIN(
+Select *
+FROM Bond_Account_AssessmentCheck
+WHERE Report_Date = @Report_Date and Version=0  --沒確認(鎖住)的版本C10版號皆為0
+)AS C10
+ON A41.Report_Date=C10.Report_Date and A41.Bond_Number=C10.Bond_Number and A41.Lots=C10.Lots and A41.Portfolio_Name=C10.Portfolio_Name --因為C10沒有Refernece Number，所以要用Bond number、Lots、portfolio和report date做join
+
+left join 
+(select * from Bond_Qualitative_Assessment
+where Report_Date = @Report_Date and Version = @Version and Assessment_Result_Version = Result_Version_Confirm
+)AS D65
+on A41.Reference_Nbr = D65.Reference_Nbr
+
+left join 
+(select * from Bond_Qualitative_Assessment_Result
+where Report_Date = @Report_Date and Version = @Version  and (Check_Item_Code like 'Pass_Count%' or Check_Item_Code like 'Z%')) AS D66
+ON D66.Reference_Nbr = D65.Reference_Nbr AND D66.Assessment_Result_Version = D65.Assessment_Result_Version
+)
+
+
+
+,D54Temp AS
+(
+SELECT C07.PRJID AS PRJID, --專案名稱
+       C07.FLOWID AS FLOWID, --流程名稱
+       C07.Report_Date AS Report_Date, --評估基準日/報導日
+	   C07.Processing_Date AS Processing_Date, --資料處理日期
+       C07.Product_Code AS Product_Code, --產品
+       C07.Reference_Nbr AS Reference_Nbr, --案件編號/帳號
+	   t.PD_Amort_import AS PD, --(PG&E需求更動)第一年違約率
+	   t.Lifetime_EL_Import AS Lifetime_EL, --存續期間預期信用損失(原幣)
+	   t.Y1_EL_Import AS Y1_EL, --一年期預期信用損失(原幣)
+	   (t.EL_import_Principle+t.EL_import_Int) AS EL, --(PG&E需求更動)累計減損(原幣)(最終預期信用損失) 
+	   t.Impairment_Stage AS Impairment_Stage, --減損階段
+	   C07.Version AS Version, --資料版本
+	   t.Amort_Amt_import AS Principal, --(PG&E需求更動)金融資產餘額攤銷後之成本數(原幣)
+	   A41.Ori_Amount , --帳列面額(原幣)
+	   t.Interest_Receivable_import AS Interest_Receivable , --(PG&E需求更動)應收利息(原幣)
+	   A41.Amort_Amt_Ori_Tw  , --攤銷後成本(成本匯率台幣)
+	   t.Amort_Amt_import_TW AS Amort_Amt_Tw , --(PG&E需求更動)攤銷後成本(報表日匯率台幣)
+	   t.Ex_rate AS Ex_rate , --月底匯率(報表日匯率)
+	   t.Ori_Ex_rate AS Ori_Ex_rate, --成本匯率
+	   ROUND( t.Lifetime_EL_Import * t.Ex_rate ,0) AS Lifetime_EL_Ex,
+	   --Lifetime_EL_Ex float, --存續期間預期信用損失(報表日匯率台幣)
+	   ROUND( t.Y1_EL_Import * t.Ex_rate ,0) AS Y1_EL_Ex,
+	   --Y1_EL_Ex float, --一年期預期信用損失(報表日匯率台幣)
+	   ROUND( t.EL * t.Ex_rate ,0) AS EL_Ex,
+	   --EL_Ex float, --(PG&E需求更動累計減損(報表日匯率台幣)
+	   ROUND(ROUND(t.EL_import_Principle,2)*t.Ex_rate,0) AS Principal_EL_Ex,
+	   --Principal_EL_Ex float, --(PG&E需求更動)累計減損_本金(報表日匯率台幣) 
+	   ROUND(ROUND(t.EL_import_Int,2)*t.Ex_rate,0) AS Interest_Receivable_EL_Ex,
+	   --Interest_Receivable_EL_Ex float, --(PG&E需求更動)累計減損_利息(報表日匯率台幣)
+	   ROUND( t.Lifetime_EL_Import * t.Ori_Ex_rate ,0) AS Lifetime_EL_Ori_Ex,
+	   --Lifetime_EL_Ori_Ex float, --存續期間預期信用損失(成本匯率台幣)
+	   ROUND( t.Y1_EL_Import * t.Ori_Ex_rate ,0) AS Y1_EL_Ori_Ex,
+	   --Y1_EL_Ori_Ex float, --一年期預期信用損失(成本匯率台幣)
+	   ROUND( t.EL * t.Ori_Ex_rate ,0) AS EL_Ori_Ex,
+	   --EL_Ori_Ex float, --累計減損(成本匯率台幣)
+	   ROUND(ROUND(t.EL_import_Principle,2)*t.Ori_Ex_rate,0) AS Principal_EL_Ori_Ex,
+	   --Principal_EL_Ori_Ex float, --(PG&E需求更動)累計減損_本金(成本匯率台幣)	 
+       ROUND(ROUND(t.EL_import_Int,2)* t.Ori_Ex_rate,0) AS Interest_Receivable_EL_Ori_Ex,
+	   --Interest_Receivable_EL_Ori_Ex float, --(PG&E需求更動)累計減損_利息(成本匯率台幣)
+	   ROUND(t.EL * t.Ex_rate , 0) - ROUND(t.EL * t.Ori_Ex_rate , 0) AS EL_EX_Diff , --累計減損匯兌損益(台幣)
+	   A41.ISSUER , --ISSUER
+	   A41.Bond_Number , --債券編號 
+	   A41.Lots , --Lots
+       A41.Security_Name, --Security_Name
+	   A41.Segment_Name , --債券(資產)名稱
+	   A41.Origination_Date  , --債券購入(認列)日期
+	   A41.Maturity_Date  , --債券到期日
+	   A41.ISSUER_AREA , --Issuer所屬區域
+	   A41.Industry_Sector  , --對手產業別
+	   A41.IAS39_CATEGORY , --公報分類
+	   A41.Bond_Aera  , --國內\國外
+	   A41.Asset_Type , --金融商品分類
+	   A41.Currency_Code, --幣別
+	   A41.ASSET_SEG , --資產區隔
+	   A41.IH_OS , --自操\委外
+	   A41.Portfolio , --Portfolio
+       A41.PRODUCT , --SMF
+	   A41.Market_Value_Ori  , --市價(原幣)
+	   A41.Market_Value_TW , --市價(報表日匯率台幣)
+	   A41.Current_Int_Rate  , --合?利率/產品利率
+	   A41.EIR , --有效利率
+	   A41.Lien_position , --擔保順位
+	   A41.Principal_Payment_Method_Code , --現金流類型
+	   t.LGD_Amort_import AS Current_LGD, --(PG&E需求更動)違約損失率
+	   C09.Exposure , --曝險額
+	   B01.Original_External_Rating, --購買時評等(主標尺)
+	   B01.Current_External_Rating , --最近一次評等(主標尺)
+	   A41.Portfolio_Name, --Portfolio英文
+	   D62.Value_Change_Ratio ,  --未實現累計損失率
+       D62.Accumulation_Loss_last_Month  , --未實現累計損失月數_上個月狀況
+	   D62.Accumulation_Loss_This_Month  , --未實現累計損失月數_本月狀況
+	   D62.Watch_IND , --是否為觀察名單
+	   D62.Map_Rule_Id_D70 ,  --對應D70-觀察名單參數檔規則編號
+	   D62.Warning_IND , --是否為預警名單
+	   D62.Map_Rule_Id_D71  , --對應D71-預警名單參數檔規則編號
+	   cast(A41.Ori_Amount * A41.Ori_Ex_rate as decimal(30,3)) AS Ori_Amount_Ori_Ex,
+	   --Ori_Amount_Ori_Ex float , --帳列面額(成本匯率台幣)
+	   ROUND(t.EL_import_Principle,2) AS Principal_EL_Ori, 
+	   --Principal_EL_Ori float , --(PG&E需求更動)累計減損-本金(原幣)
+	   ROUND(t.EL_import_Int,2) AS Interest_Receivable_EL_Ori, 
+	   --Interest_Receivable_EL_Ori float,--(PG&E需求更動)累計減損-利息(原幣)
+	   t.Interest_Receivable_import_TW AS Interest_Receivable_tw , --(PG&E需求更動應收利息(報表日匯率台幣)
+	   ROUND(t.EL * t.Ex_rate , 0) - ROUND(t.EL * t.Ori_Ex_rate , 0)  AS Principal_Diff_Tw,
+	   --預先註記  ((t.EL - (A41.Interest_Receivable * C07.PD * C09.Current_LGD)) * (A41.Ex_rate - A41.Ori_Ex_rate)) AS Principal_Diff_Tw,
+	   --Principal_Diff_Tw float , --累計減損匯兌損益-本金(台幣)
+	   A41.ISIN_Changed_Ind, --是否為換券
+	   A41.Bond_Number_Old , --債券編號_換券前
+	   A41.Lots_Old  , --Lots_舊
+	   A41.Portfolio_Name_Old , --Portfolio英文_舊
+	   A41.Origination_Date_Old,   --舊券原始購入日
+	   t.PD_Interest_Receivable_import AS PD_Int,--(PG&E需求更動)利息第一年違約率
+	   t.LGD_Interest_Receivable_import as LGD_Int--(PG&E需求更動)利息違約損失率
+
+FROM (SELECT * FROM Bond_Account_Info WHERE Report_Date = @Report_Date AND Version = @Version  ) AS A41 
+
+JOIN( 
+SELECT * FROM EL_Data_Out WHERE Report_Date = @Report_Date AND Version = @Version AND Product_Code IN ({_Product_Codes}) ) AS C07
+ON C07.Reference_Nbr = A41.Reference_Nbr
+
+JOIN Temp t
+ON t.Reference_Nbr = C07.Reference_Nbr AND t.FLOWID = C07.FLOWID AND t.PRJID = C07.PRJID
+
+JOIN (
+SELECT * FROM EL_Data_In_Update WHERE Report_Date = @Report_Date AND Version = @Version ) AS C09
+ON C07.Reference_Nbr = C09.Reference_Nbr AND C07.PRJID = C09.PrjID AND C07.FLOWID = C09.FlowID AND C07.Product_Code = C09.Product_Code
+
+JOIN (
+SELECT * 
+FROM IFRS9_Main
+WHERE Report_Date = @Report_Date AND Version = @Version  ) AS B01
+ON A41.Reference_Nbr = B01.Reference_Nbr
+
+left JOIN(
+SELECT * 
+FROM Bond_Basic_Assessment
+WHERE Report_Date = @Report_Date
+AND Version = @Version ) AS D62
+ON A41.Reference_Nbr = D62.Reference_Nbr
+)
+
+INSERT INTO [IFRS9_Bond_Report]
+           ([PRJID]
+           ,[FLOWID]
+           ,[Report_Date]
+           ,[Processing_Date]
+           ,[Product_Code]
+           ,[Reference_Nbr]
+           ,[PD]
+		   ,[PD_Int]
+           ,[Lifetime_EL]
+           ,[Y1_EL]
+           ,[EL]
+           ,[Impairment_Stage]
+           ,[Version]
+           ,[Principal]
+           ,[Ori_Amount]
+           ,[Interest_Receivable]
+           ,[Amort_Amt_Ori_Tw]
+           ,[Amort_Amt_Tw]
+           ,[Ex_rate]
+           ,[Ori_Ex_rate]
+           ,[Lifetime_EL_Ex]
+           ,[Y1_EL_Ex]
+           ,[EL_Ex]
+           ,[Principal_EL_Ex]
+           ,[Interest_Receivable_EL_Ex]
+           ,[Lifetime_EL_Ori_Ex]
+           ,[Y1_EL_Ori_Ex]
+           ,[EL_Ori_Ex]
+           ,[Principal_EL_Ori_Ex]
+           ,[Interest_Receivable_EL_Ori_Ex]
+           ,[EL_EX_Diff]
+           ,[ISSUER]
+           ,[Bond_Number]
+           ,[Lots]
+           ,[Security_Name]
+           ,[Segment_Name]
+           ,[Origination_Date]
+           ,[Maturity_Date]
+           ,[ISSUER_AREA]
+           ,[Industry_Sector]
+           ,[IAS39_CATEGORY]
+           ,[Bond_Aera]
+           ,[Asset_Type]
+           ,[Currency_Code]
+           ,[ASSET_SEG]
+           ,[IH_OS]
+           ,[Portfolio]
+           ,[PRODUCT]
+           ,[Market_Value_Ori]
+           ,[Market_Value_TW]
+           ,[Current_Int_Rate]
+           ,[EIR]
+           ,[Lien_position]
+           ,[Principal_Payment_Method_Code]
+           ,[Current_LGD]
+		   ,[LGD_Int]
+           ,[Exposure]
+           ,[Original_External_Rating]
+           ,[Current_External_Rating]
+           ,[Portfolio_Name]
+           ,[Value_Change_Ratio]
+           ,[Accumulation_Loss_last_Month]
+           ,[Accumulation_Loss_This_Month]
+           ,[Watch_IND]
+           ,[Map_Rule_Id_D70]
+           ,[Warning_IND]
+           ,[Map_Rule_Id_D71]
+           ,[Ori_Amount_Ori_Ex]
+           ,[Principal_EL_Ori]
+           ,[Interest_Receivable_EL_Ori]
+           ,[Interest_Receivable_Tw]
+           ,[Principal_Diff_Tw]
+           ,[ISIN_Changed_Ind]
+           ,[Bond_Number_Old]
+           ,[Lots_Old]
+           ,[Portfolio_Name_Old]
+           ,[Origination_Date_Old]
+           ,[Create_User]
+           ,[Create_Date]
+           ,[Create_Time])
+select      [PRJID]
+           ,[FLOWID]
+           ,[Report_Date]
+           ,[Processing_Date]
+           ,[Product_Code]
+           ,[Reference_Nbr]
+           ,[PD]
+		   ,[PD_Int]
+           ,[Lifetime_EL]
+           ,[Y1_EL]
+           ,[EL]
+           ,[Impairment_Stage]
+           ,[Version]
+           ,[Principal]
+           ,[Ori_Amount]
+           ,[Interest_Receivable]
+           ,[Amort_Amt_Ori_Tw]
+           ,[Amort_Amt_Tw]
+           ,[Ex_rate]
+           ,[Ori_Ex_rate]
+           ,[Lifetime_EL_Ex]
+           ,[Y1_EL_Ex]
+           ,[EL_Ex]
+           ,[Principal_EL_Ex]
+           ,[Interest_Receivable_EL_Ex]
+           ,[Lifetime_EL_Ori_Ex]
+           ,[Y1_EL_Ori_Ex]
+           ,[EL_Ori_Ex]
+           ,[Principal_EL_Ori_Ex]
+           ,[Interest_Receivable_EL_Ori_Ex]
+           ,[EL_EX_Diff]
+           ,[ISSUER]
+           ,[Bond_Number]
+           ,[Lots]
+           ,[Security_Name]
+           ,[Segment_Name]
+           ,[Origination_Date]
+           ,[Maturity_Date]
+           ,[ISSUER_AREA]
+           ,[Industry_Sector]
+           ,[IAS39_CATEGORY]
+           ,[Bond_Aera]
+           ,[Asset_Type]
+           ,[Currency_Code]
+           ,[ASSET_SEG]
+           ,[IH_OS]
+           ,[Portfolio]
+           ,[PRODUCT]
+           ,[Market_Value_Ori]
+           ,[Market_Value_TW]
+           ,[Current_Int_Rate]
+           ,[EIR]
+           ,[Lien_position]
+           ,[Principal_Payment_Method_Code]
+           ,[Current_LGD]
+		   ,[LGD_Int]
+           ,[Exposure]
+           ,[Original_External_Rating]
+           ,[Current_External_Rating]
+           ,[Portfolio_Name]
+           ,[Value_Change_Ratio]
+           ,[Accumulation_Loss_last_Month]
+           ,[Accumulation_Loss_This_Month]
+           ,[Watch_IND]
+           ,[Map_Rule_Id_D70]
+           ,[Warning_IND]
+           ,[Map_Rule_Id_D71]
+           ,[Ori_Amount_Ori_Ex]
+           ,[Principal_EL_Ori]
+           ,[Interest_Receivable_EL_Ori]
+           ,[Interest_Receivable_Tw]
+           ,(Principal_EL_Ex - Principal_EL_Ori_Ex)
+           --,(ROUND(Principal_EL_Ori * Ex_rate , 0) - ROUND(Principal_EL_Ori * Ori_Ex_rate , 0))
+           --,[Principal_Diff_Tw]
+           ,[ISIN_Changed_Ind]
+           ,[Bond_Number_Old]
+           ,[Lots_Old]
+           ,[Portfolio_Name_Old]
+           ,[Origination_Date_Old]
+           ,@Create_User
+           ,@Create_Date
+           ,@Create_Time
+from D54Temp ;";
+
+                #endregion
+
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
                     var sqs1 = new List<SqlParameter>();
@@ -900,20 +1504,37 @@ from D54Temp ;
                     sqs1.Add(new SqlParameter("Create_Time", _UserInfo._time));
                     try
                     {
-                        int _D54 = db.Database.ExecuteSqlCommand(sql, sqs1.ToArray()); //saveD54
-                        System.Reflection.FieldInfo info = typeof(SqlParameter).GetField("_parent", (System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic));
-                        foreach (SqlParameter sp in sqs1)
-                        {
-                            info.SetValue(sp, null);
-                        }
-                        int _D52 = db.Database.ExecuteSqlCommand(sql2, sqs1.ToArray()); //saveD52
+                        //190527 PGE需求，增加兩段SQL Script
+                        int _D54_1 = db.Database.ExecuteSqlCommand(sql1, sqs1.ToArray()); //saveD54(沒有註記N的部位)
+                        CleanSqlPara(sqs1);
+                        int _D54_2=db.Database.ExecuteSqlCommand(sql3, sqs1.ToArray()); //saveD54(註記為N的部位)
+                        CleanSqlPara(sqs1);
+                        int _D54 = _D54_1 + _D54_2;
+                        int _D52_1 = db.Database.ExecuteSqlCommand(sql2, sqs1.ToArray()); //saveD52(沒有註記N的部位)
+                        CleanSqlPara(sqs1);
+                        int _D52_2 = db.Database.ExecuteSqlCommand(sql4, sqs1.ToArray()); //saveD52(註記為N的部位)
+                        CleanSqlPara(sqs1);
+                        int _D52 = _D52_1 + _D52_2;
                         if (_D54 == _D52)
                         {
                             if (_D52 != 0)
                             {
                                 dbContextTransaction.Commit();
+                                //190527 PGE需求 新增有版號的C10
+                                foreach(var item in C10s)
+                                {
+                                    item.Version = ver;
+                                    item.Create_User = _UserInfo._user;
+                                    item.Create_Date = _UserInfo._date;
+                                    item.Create_Time = _UserInfo._time;
+                                    Bond_Account_AssessmentCheck C10Insert = new Bond_Account_AssessmentCheck();
+                                    db.Bond_Account_AssessmentCheck.Add(item);
+
+                                }
+                                db.SaveChanges();
                                 result.RETURN_FLAG = true;
                                 result.DESCRIPTION = Message_Type.save_Success.GetDescription();
+                                SaveC10VerLog(result, reportDt, startDr, ver);
                             }
                             else
                             {
@@ -1002,6 +1623,7 @@ from D54Temp ;
                 Lots = data.Lots,
                 Ori_Ex_rate = TypeTransfer.doubleNToString(data.Ori_Ex_rate),
                 PD = TypeTransfer.doubleNToString(data.PD),
+                PD_Int= TypeTransfer.doubleNToString(data.PD_Int),
                 Portfolio_Name = data.Portfolio_Name,
                 PRJID = data.PRJID,
                 Processing_Date = data.Processing_Date,
@@ -1027,6 +1649,25 @@ from D54Temp ;
                 return "Bond_P";
             return value;
         }
+        //190527 PGE需求將SaveD52中清除SQL Parameter功能拉出來
+        private void CleanSqlPara(List<SqlParameter> sqlParameters)
+        {
+            System.Reflection.FieldInfo info = typeof(SqlParameter).GetField("_parent", (System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic));
+            foreach (SqlParameter sp in sqlParameters)
+            {
+                info.SetValue(sp, null);
+            }
+        }
+
+        #region SaveC10VerLog
+        public void SaveC10VerLog(MSGReturnModel result, DateTime reportDt, DateTime starttime, int ver)
+        {
+            DateTime reportdate = reportDt;
+
+            //DateTime.TryParse(datepicker, out reportdate);
+            common.saveTransferCheck(Table_Type.C10.ToString(), result.RETURN_FLAG, reportDt, ver, starttime, DateTime.Now);
+        }
+        #endregion
 
 
         #endregion Private Function
