@@ -590,21 +590,24 @@ namespace Transfer.Models.Repository
                                                      .Where(x => x.Group_Product_Code == groupProductCode)
                                                      .Where(x => x.Apply_Off_Date == null)
                                                      .ToList();
+
                     #region 190510 PG&E需求，排除A41註記為N的部位
-                    DateTime reportDate3 = DateTime.Parse(reportDate);
-                    List<Bond_Account_Info> AssessmentCheckList = db.Bond_Account_Info.AsNoTracking()
-                                                                     .Where(x => x.Report_Date == reportDate3)
-                                                                     .Where(x => x.Version.ToString() == version)
-                                                                     .Where(x => x.Assessment_Check != "N")
-                                                                     .ToList();
-                    query = (
-                        from a in query
-                        join b in AssessmentCheckList
-                        on a.Reference_Nbr equals b.Reference_Nbr
-                        select a
-                        ).ToList();
+                    if (debtType == "4")
+                    {
+                        DateTime reportDate3 = DateTime.Parse(reportDate);
+                        List<Bond_Account_Info> AssessmentCheckList = db.Bond_Account_Info.AsNoTracking()
+                                                                         .Where(x => x.Report_Date == reportDate3)
+                                                                         .Where(x => x.Version.ToString() == version)
+                                                                         .Where(x => x.Assessment_Check != "N")
+                                                                         .ToList();
+                        query = (
+                            from a in query
+                            join b in AssessmentCheckList
+                            on a.Reference_Nbr equals b.Reference_Nbr
+                            select a
+                            ).ToList();
 
-
+                    }
                     #endregion                    
                     query = (
                                 from a in query
