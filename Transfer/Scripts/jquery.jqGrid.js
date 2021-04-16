@@ -7630,11 +7630,8 @@ var xmlJsonClass = {
                                             postdata[n] = $.jgrid.htmlDecode(v);
                                         });
                                     }
-                                    //rp_ge[$t.p.id].reloadAfterSubmit = rp_ge[$t.p.id].reloadAfterSubmit && $t.p.datatype != "local";
-                                    // the action is add
                                     if (postdata[oper] == opers.addoper) {
                                         //id processing
-                                        // user not set the id ret[2]
                                         if (!ret[2]) { ret[2] = $.jgrid.randId(); }
                                         postdata[idname] = ret[2];
                                         if (rp_ge[$t.p.id].closeAfterAdd) {
@@ -8024,9 +8021,6 @@ var xmlJsonClass = {
                         postdata = {}; extpost = {};
                         $("#FormError", frmtb).hide();
                         // all depend on ret array
-                        //ret[0] - succes
-                        //ret[1] - msg if not succes
-                        //ret[2] - the id  that will be set if reload after submit false
                         getFormData();
                         if (postdata[$t.p.id + "_id"] == "_empty") { postIt(); }
                         else if (p.checkOnSubmit === true) {

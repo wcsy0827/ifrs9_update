@@ -26,7 +26,6 @@ namespace Transfer.Models
         }
     
         public virtual DbSet<Econ_Domestic> Econ_Domestic { get; set; }
-        public virtual DbSet<Group_Product> Group_Product { get; set; }
         public virtual DbSet<IFRS9_Main> IFRS9_Main { get; set; }
         public virtual DbSet<IFRS9_Menu_Main> IFRS9_Menu_Main { get; set; }
         public virtual DbSet<IFRS9_Menu_Sub> IFRS9_Menu_Sub { get; set; }
@@ -42,7 +41,6 @@ namespace Transfer.Models
         public virtual DbSet<IFRS9_Menu_Set> IFRS9_Menu_Set { get; set; }
         public virtual DbSet<Bond_Category_Info> Bond_Category_Info { get; set; }
         public virtual DbSet<Bond_Ticker_Info> Bond_Ticker_Info { get; set; }
-        public virtual DbSet<Flow_Info> Flow_Info { get; set; }
         public virtual DbSet<Fixed_Income_CEIC_Info> Fixed_Income_CEIC_Info { get; set; }
         public virtual DbSet<Fixed_Income_Moody_Info> Fixed_Income_Moody_Info { get; set; }
         public virtual DbSet<Gov_Info_Monthly> Gov_Info_Monthly { get; set; }
@@ -53,7 +51,6 @@ namespace Transfer.Models
         public virtual DbSet<Issuer_Ticker> Issuer_Ticker { get; set; }
         public virtual DbSet<Econ_D_YYYYMMDD> Econ_D_YYYYMMDD { get; set; }
         public virtual DbSet<EL_Data_Out> EL_Data_Out { get; set; }
-        public virtual DbSet<Group_Product_Code_Mapping> Group_Product_Code_Mapping { get; set; }
         public virtual DbSet<Rating_History> Rating_History { get; set; }
         public virtual DbSet<Bond_Rating> Bond_Rating { get; set; }
         public virtual DbSet<Guarantor_Rating> Guarantor_Rating { get; set; }
@@ -65,7 +62,6 @@ namespace Transfer.Models
         public virtual DbSet<IFRS9_EL> IFRS9_EL { get; set; }
         public virtual DbSet<SMF_Group> SMF_Group { get; set; }
         public virtual DbSet<Bond_Rating_Warning> Bond_Rating_Warning { get; set; }
-        public virtual DbSet<Bond_ISIN_Changed_Info> Bond_ISIN_Changed_Info { get; set; }
         public virtual DbSet<Bond_Rating_Info> Bond_Rating_Info { get; set; }
         public virtual DbSet<Bond_Rating_Summary> Bond_Rating_Summary { get; set; }
         public virtual DbSet<Risk_Parm> Risk_Parm { get; set; }
@@ -86,7 +82,6 @@ namespace Transfer.Models
         public virtual DbSet<Bond_Spread_Info> Bond_Spread_Info { get; set; }
         public virtual DbSet<Bond_Rating_Parm> Bond_Rating_Parm { get; set; }
         public virtual DbSet<Loan_Stage_Setting> Loan_Stage_Setting { get; set; }
-        public virtual DbSet<Econ_D_Var> Econ_D_Var { get; set; }
         public virtual DbSet<Assessment_Sub_Kind_Ticker> Assessment_Sub_Kind_Ticker { get; set; }
         public virtual DbSet<Rating_Update_Info> Rating_Update_Info { get; set; }
         public virtual DbSet<Econ_F_YYYYMMDD> Econ_F_YYYYMMDD { get; set; }
@@ -94,8 +89,6 @@ namespace Transfer.Models
         public virtual DbSet<Bond_Qualitative_Assessment> Bond_Qualitative_Assessment { get; set; }
         public virtual DbSet<Bond_Qualitative_Assessment_Result> Bond_Qualitative_Assessment_Result { get; set; }
         public virtual DbSet<Bond_Quantitative_Result_File> Bond_Quantitative_Result_File { get; set; }
-        public virtual DbSet<Bond_Quantitative_Result> Bond_Quantitative_Result { get; set; }
-        public virtual DbSet<Bond_Quantitative_Resource> Bond_Quantitative_Resource { get; set; }
         public virtual DbSet<Bond_Accounting_EL> Bond_Accounting_EL { get; set; }
         public virtual DbSet<Moody_LGD_Info> Moody_LGD_Info { get; set; }
         public virtual DbSet<IFRS9_Foward_Looking_Parm> IFRS9_Foward_Looking_Parm { get; set; }
@@ -111,5 +104,17 @@ namespace Transfer.Models
         public virtual DbSet<Bond_Assessment_Parm> Bond_Assessment_Parm { get; set; }
         public virtual DbSet<IFRS9_RE_EL> IFRS9_RE_EL { get; set; }
         public virtual DbSet<Bond_Account_AssessmentCheck> Bond_Account_AssessmentCheck { get; set; }
+        public virtual DbSet<Status_Info> Status_Info { get; set; }
+        public virtual DbSet<Version_Info> Version_Info { get; set; }
+        public virtual DbSet<Bond_Risk_Control_Result_File> Bond_Risk_Control_Result_File { get; set; }
+        public virtual DbSet<Bond_Quantitative_Resource> Bond_Quantitative_Resource { get; set; }
+        public virtual DbSet<Bond_Risk_Control_Result> Bond_Risk_Control_Result { get; set; }
+        public virtual DbSet<Bond_Quantitative_Result> Bond_Quantitative_Result { get; set; }
+        public virtual DbSet<Econ_D_Var> Econ_D_Var { get; set; }
+        public virtual DbSet<Flow_Info> Flow_Info { get; set; }
+        public virtual DbSet<Group_Product> Group_Product { get; set; }
+        public virtual DbSet<Group_Product_Code_Mapping> Group_Product_Code_Mapping { get; set; }
+        public virtual DbSet<Bond_ISIN_Changed_Info> Bond_ISIN_Changed_Info { get; set; }
+        public virtual DbSet<Bond_ISIN_Changed_IntRevise> Bond_ISIN_Changed_IntRevise { get; set; }
     }
 }

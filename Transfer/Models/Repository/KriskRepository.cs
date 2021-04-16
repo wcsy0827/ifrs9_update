@@ -231,6 +231,57 @@ INSERT INTO [EL_Data_Out]
             }
         }
         #endregion
+        
+        #region 執行減損計算前檢核
+        public MSGReturnModel CheckInfo(string date, string version)
+        {
+            DateTime dateReportDate = TypeTransfer.stringToDateTime(date);
+            int intVersion = TypeTransfer.stringToInt(version);
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = true;
+            try
+            {
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    #region 檢核該版本是否已進入風控覆核流程
+                    var versioninfo = db.Version_Info.Where(x => x.Report_Date == dateReportDate && x.Version == intVersion).FirstOrDefault();
+                    if (versioninfo != null && versioninfo.Risk_Control_Status != 0)
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = Message_Type.kriskError.GetDescription(null, Message_Type.ReviewVersionInfo.GetDescription());
+                        return result;
+                    }
+                    #endregion
+                    #region C07轉檔前檢核數字一致(190628換券應收未收金額修正)
+                    List<Bond_ISIN_Changed_IntRevise> A44_2List = new List<Bond_ISIN_Changed_IntRevise>().Where(x => x.Report_Date == dateReportDate && x.Version == intVersion).ToList();
+                    foreach (var item in A44_2List)
+                    {
+                        var A41item = new List<Bond_Account_Info>()
+                            .Where(x => x.Report_Date == dateReportDate && x.Version == intVersion && x.Bond_Number_Old == item.Bond_Number_Old && x.Portfolio_Name_Old == item.Portfolio_Name_Old && x.Lots == "1").FirstOrDefault();
+                        var B01item = new List<IFRS9_Main>().Where(x => x.Report_Date == dateReportDate && x.Version == intVersion && x.Reference_Nbr == A41item.Reference_Nbr).FirstOrDefault();
+                        var C01item = new List<EL_Data_In>().Where(x => x.Report_Date == dateReportDate && x.Version == intVersion && x.Reference_Nbr == A41item.Reference_Nbr).FirstOrDefault();
+
+                        if (!(A41item.Interest_Receivable == B01item.Interest_Receivable) || !(A41item.Interest_Receivable == C01item.Interest_Receivable))//A41與B01、C01不一致狀況
+                        {
+                            result.RETURN_FLAG = false;
+                            result.DESCRIPTION = Message_Type.kriskError.GetDescription(null, Message_Type.Not_Match_IntReceivable.GetDescription());                            
+                            break;
+                        }
+                    }
+                    return result;
+                    #endregion
+                }
+            }
+            catch (Exception ex)
+            {
+                result.DESCRIPTION = ex.Message.ToString();
+                result.RETURN_FLAG = false;
+                return result;
+            }
+        }
+        #endregion
+
+
 
         protected class temp
         {

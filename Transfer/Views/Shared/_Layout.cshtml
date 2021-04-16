@@ -112,6 +112,7 @@
             customerUtility.reportUrl = '@Url.HttpRouteUrl("Report", new { aspx = "ReportViewer" })';
             customerUtility.unloadUrl = '@Url.Action("Logout", "Account")';
             customerUtility.reportCommonUrl = '@Url.Action("GetReport", "Common")';
+            customerUtility.downloadreportCommonUrl = '@Url.Action("GetReportFile", "Common")';
             customerUtility.checkCacheCommonUrl = '@Url.Action("GetCommonCheckData", "Common")';
             customerUtility.checkMessageDL = "@Url.RouteUrl(new
             { Controller = "Common", Action = "DownloadMessage" })/?key=";

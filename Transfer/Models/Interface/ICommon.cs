@@ -98,5 +98,19 @@ namespace Transfer.Models.Interface
         /// <param name="account"></param>
         /// <returns></returns>
         string getUserDebt(string account);
+
+        /// <summary>
+        /// get User Name
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        string GetUserName(string data);
+
+        /// <summary>
+        /// get Database Field Name
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        List<string> GetDatabaseFieldName(string data);
     }
 }

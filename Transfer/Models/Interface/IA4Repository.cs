@@ -34,10 +34,26 @@ namespace Transfer.Models.Interface
         /// save A42 To Db
         /// </summary>
         /// <param name="dataModel">A42ViewModel</param>
+        /// <param name="ver">最大版本</param>
         /// <returns></returns>
-        MSGReturnModel saveA42(List<A42ViewModel> dataModel);
+        MSGReturnModel saveA42(List<A42ViewModel> dataModel,string ver);
 
         MSGReturnModel DownLoadA42Excel(string path, List<A42ViewModel> dbDatas);
+
+
+        /// <summary>
+        /// 檢查A44_2最大版本與A41最大版本是否相同 (190628 John.投會換券應收未收金額修正)
+        /// </summary>
+        /// <param name="reportdate">報導日</param>
+        /// <returns></returns>
+        bool CheckMaxVerion(DateTime reportdate); 
+
+
+        /// <summary>
+        /// Save A44_2 To Db (190628 John.投會換券應收未收金額修正)
+        /// </summary>
+        /// <returns></returns>
+        MSGReturnModel SaveA44_2(List<A44_2ViewModel> dataModel, string reportDate); 
 
         /// <summary>
         /// get Db A45 data
@@ -77,6 +93,33 @@ namespace Transfer.Models.Interface
         /// <param name="ASK">產業別</param>
         /// <returns></returns>
         Tuple<bool, List<A95ViewModel>> GetA95(DateTime reportDate, int verison, string bondType, string ASK);
+
+        /// <summary>
+        /// Excel 資料轉成 A44_2 ViewModel (190628 John.投會換券應收未收金額修正)
+        /// </summary>
+        /// <param name="pathType"></param>
+        /// <param name="stream"></param>
+        /// <param name="reportDate">報導日</param>
+        /// <param name="processingDate">檔案上傳日期</param>
+        /// <returns></returns>
+        Tuple<string, List<A44_2ViewModel>> getA44_2Excel(
+            string pathType,
+            Stream stream,
+            DateTime reportDate
+            );
+        /// <summary>
+        /// 查詢A44_2內容並關聯A41部位資訊
+        /// </summary>
+        /// <returns></returns>
+        List<A44_2DetailViewModel> GetA44_2Detail(DateTime ReportDate, int Version);
+
+        /// <summary>
+        /// 查詢DB中是否已經有A44_2資料 (190628 John.投會換券應收未收金額修正)
+        /// </summary>
+        /// <param name="ReportDate">報導日</param>
+        /// <param name="Version">版本</param>
+        /// <returns></returns>
+        List<A44_2ViewModel> GetA44_2(DateTime ReportDate, int Version);
 
         /// <summary>
         /// Excel資料 轉 A45ViewModel
@@ -214,7 +257,7 @@ namespace Transfer.Models.Interface
 
         Tuple<bool, List<A44ViewModel>> getA44All();
         Tuple<bool, List<A44ViewModel>> getA44(A44ViewModel dataModel);
-        MSGReturnModel saveA44(string actionType, A44ViewModel dataModel);
+        MSGReturnModel saveA44(string actionType, A44ViewModel dataModel, bool isoldbondsave = false);//20200925 alibaba isoldbondsave:舊券重複確認是否存檔 202008210166-00
         MSGReturnModel deleteA44(string bondNumberNew, string lotsNew, string portfolioNameNew);
 
         Tuple<bool, List<A49ViewModel>> getA49(A49ViewModel dataModel);

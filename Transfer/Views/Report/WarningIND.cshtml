@@ -10,9 +10,14 @@
             <form id="myForm">
                 <table>
                     <tr>
-                        <td style="width:550px; " >
+                        <td style="width:550px; ">
                             <label>基準日 : </label>
                             <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        @*<td style="padding-top:5px;display:none">*@
+                        <td style="padding-top:5px">
+                            <label>版本 : </label>
+                            <select class="form-control" style="display:inline-block" id="version"></select>
                         </td>
                     </tr>
                     <tr>
@@ -33,11 +38,20 @@
         //#region 註冊URL
         var url = {};
         url.report = '@Url.Action("GetReport","Common")';
+        url.version = '@Url.Action("GetReportVersion", "Report")';
+        url.getreviewdata = '@Url.Action("GetD75Review", "D7")';
+        //datepicker 觸發行為
+        var versionFun = function () {
+            customerUtility.clrSelectData(['version']);
+            customerUtility.setAttr('message', 'alt', '無資料');
+            customerUtility.getSelectData('version', [$('#datepicker').val(), ""], url.version);
+        }
         //#endregion 註冊URL
+        // 註冊datepicker
+        created.createDatepicker('datepicker', true, '', versionFun);
+        // 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
 
-        created.createDatepicker('datepicker', false, null);
-
-        verified.datepicker("myForm", "datepicker", false);
         //#region 註冊click事件
         $('input:button').each(function () {
             var id = $(this).attr('id');
@@ -49,17 +63,59 @@
         })
         //#endregion 註冊click事件
 
-        function report()
-        {
-            if ($('#myForm').valid())
-            {
-                var parms = [];
-                parms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
-                customerUtility.report(
-                    customerUtility.reportModel('預警名單', 'WarningIND'),
-                    parms,
-                    parms
-                    );
+        function report() {
+            if ($('#myForm').valid()) {
+
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        data: [$('#datepicker').val(),
+                        $('#version').find(':selected').val(),
+                            '5']
+                    }),
+                    dataType: "json",
+                    url: url.getreviewdata,
+                    contentType: 'application/json'
+                })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            reportData = result.Datas.Data[0];
+                            reportData.First_Order_Status == "1" ? reportData.First_Order_Status = "待覆核" : reportData.First_Order_Status == "2" ? reportData.First_Order_Status = "已覆核" : reportData.First_Order_Status = "退回";
+                            reportData.Second_Order_Status == "1" ? reportData.Second_Order_Status = "待覆核" : reportData.Second_Order_Status == "2" ? reportData.Second_Order_Status = "已覆核" : reportData.Second_Order_Status = "退回";
+                            message = "表單建立人員 : " + reportData.Create_User_Name;
+                            message += "\n一階覆核人員 : " + reportData.First_Order_Name + " (" + reportData.First_Order_Status + ")";
+                            message += "\n二階覆核人員 : " + reportData.Second_Order_Name + " (" + reportData.Second_Order_Status + ")";
+                        }
+                        let handle = "", firstOrder = "", secondOrder = "", reportDate = "",
+                            handleOpinion = "", firstOrderOpinion = "", secondOrderOpinion = "",
+                            eName = "WarningIND", parms = [], extensionParms = [];
+
+                        reportDate = reportData.Create_Date;
+                        handleOpinion = reportData[eName + '_Handle_Opinion'];
+                        if (reportData.Create_User_Name != null) { handle = reportData.Create_User_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+                        reportDate = reportData.First_Order_Date;
+                        firstOrderOpinion = reportData[eName + '_First_Order_Opinion'];
+                        if (reportData.First_Order_Name != null) { firstOrder = reportData.First_Order_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+                        reportDate = reportData.Second_Order_Date;
+                        secondOrderOpinion = reportData[eName + '_Second_Order_Opinion'];
+                        if (reportData.Second_Order_Name != null) { secondOrder = reportData.Second_Order_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+
+                        parms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
+                        parms.push(customerUtility.reportParm('Version', $('#version').find(':selected').val()));
+                        extensionParms.push(customerUtility.reportParm('Handle', handle));
+                        extensionParms.push(customerUtility.reportParm('Handle' + eName, handleOpinion));
+                        extensionParms.push(customerUtility.reportParm('FirstOrder', firstOrder));
+                        extensionParms.push(customerUtility.reportParm('FirstOrder' + eName, firstOrderOpinion));
+                        extensionParms.push(customerUtility.reportParm('SecondOrder', secondOrder));
+                        extensionParms.push(customerUtility.reportParm('SecondOrder' + eName, secondOrderOpinion));
+                        extensionParms.push(customerUtility.reportParm('FirstOrderStatus', reportData.First_Order_Status));
+                        extensionParms.push(customerUtility.reportParm('SecondOrderStatus', reportData.Second_Order_Status));
+                        extensionParms.push(customerUtility.reportParm('Status', reportData.Status));
+                        extensionParms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
+                        extensionParms.push(customerUtility.reportParm('Version', $('#version').find(':selected').val()));
+                        customerUtility.report(
+                            customerUtility.reportModel('預警名單', 'WarningIND'), parms, extensionParms);
+                    })
             }
         }
     });

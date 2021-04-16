@@ -1,0 +1,258 @@
+﻿@using Transfer.Utility;
+@using Transfer.Enum;
+@{
+    ViewBag.Menu = "A4Main";
+    ViewBag.SubMenu = "A44_2SearchSub";
+    ViewBag.Title = "A44_2Detail(查詢換券應收未收修正檔)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="SearchForm">
+                <table>
+                    <tr class="action search">
+                        <td style="" white-space:nowrap" class="form-group TS T0 T1 T3">
+                            <label>換券日期 : </label>
+                            <input type="text" id="editChange_Date" name="editChange_Date">
+                        </td>
+                        <td style="white-space:nowrap" class="form-group TS T0 T1 T3">
+                            <label>版本:</label>
+                        </td>
+                        <td style="white-space:nowrap">
+                            <div class="select-editable">
+                                <select id="versionSelect" onchange="this.nextElementSibling.value=this.value"></select>
+                                <input type="text" name="version" id="version" value="" />
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <table style="margin-top:5px">
+                <tr class="action search">
+                    <td style="padding-top:10px;">
+                        <input type="button" class="btn btn-primary" style="margin-right:13px" value="查詢" id="btnSearch" />
+
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                <div id="jqgridDiv" class="jqd">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        //#region 註冊URL
+        var url = {};
+        url.getData = '@Url.Action("GetA44_2Data", "A4")';
+        url.getDbData = '@Url.Action("GetCacheA44_2Data", "A4")';
+        url.getversion = '@Url.Action("GetVersion", "A4")';        
+        //#endregion 註冊URL
+
+        //#region 共用參數
+        var reportDate = '';
+        //#endregion 共用參數
+
+
+        //#region Select List
+        $('#action').on('change', function () {
+            $('.action').hide();
+            var opencls = $(this).val();
+            $('.' + opencls).show();
+
+            $('#btnExportExcel').prop('disabled', true);
+            clearJqgrid();
+        });
+        //#endregion
+        //#region 選擇reportDate 後要觸發的動作
+        var versionFun = customerUtility.getVersion('versionSelect',
+            'editChange_Date',
+            '@Ref.Transfer_Table_Type.A44_2.ToString()',
+            url.getversion);
+        //#endregion 選擇reportDate 後要觸發的動作
+        //#region 產生datepicker
+        created.createDatepicker('editChange_Date', true, '', versionFun);
+        created.createDatepicker('editChange_Date2', true, '');
+
+        //#endregion
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnSearch':
+                    $("#" + id).on('click', function () { search() });
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+        //#region 驗證重設
+        function resetVerified() {
+            $('#SearchForm').validate().resetForm();
+            $('#editChange_Date').rules("remove", 'dateFormate');
+        }
+        //#endregion 驗證重設
+        function setVerified(_Oflag) {
+            _Oflag = _Oflag || '';
+            verified.datepicker("SearchForm", "editChange_Date", false, $('#editChange_Date').val());
+            verified.required('SearchForm', 'version', message.required(message.version));
+            verified.number('SearchForm', 'version');
+            if (_Oflag == 'Y')
+                verified.datepicker("SearchForm", "editChange_Date", false, $('#editChange_Date').val());
+        }
+
+        //#region 資料上傳(Excel 資料寫入 local sql)
+        function transfer() {
+            reportDate = $('#editChange_Date2').val();
+            if (verified.isDate(reportDate, true) ) {
+                $.ajax({
+                    type: "POST",
+                    url: url.transfer,
+                    data: JSON.stringify({
+                        reportDate: reportDate
+                    }),
+                    contentType: 'application/json'
+                })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG)
+                            customerUtility.alert(result.DESCRIPTION, 's');
+                        else
+                            customerUtility.alert(result.DESCRIPTION, 'e');
+                    })
+            }
+            else {
+                customerUtility.alert('日期有誤,請重新上傳檔案!', 'e');
+            }
+        }
+        //#endregion 資料上傳(Excel 資料寫入 local sql)
+
+
+        //#region 查詢條件
+
+        function search()
+        {
+            clearJqgrid();
+            resetVerified();
+            if($('#datepicker2').val() != '')
+                setVerified('Y');
+            else
+                setVerified('N');
+            if ($('#SearchForm').valid())
+            {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        ReportDate: $('#editChange_Date').val(),
+                        Version : $('#version').val(),
+                    }),
+                    dataType: "json",
+                    url: url.getData,
+                    contentType: 'application/json',
+                })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        createJqgrid("list1", "pager1", 'A44_2_Db');
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION,'e');
+                    }
+                });
+            }
+        }
+        //#endregion 查詢條件
+        @*//#region 下載excel
+                function A44_2Excel() {
+            $.ajax({
+                type: "POST",
+                url: url.getA95_1Excel,
+                contentType: 'application/json',
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG)
+                    window.location.href = "@Url.RouteUrl(new
+                { Controller = "A9", Action = "DownloadExcel"})/?type=" + '@Ref.Excel_DownloadName.A44_2.ToString()';
+                else
+                customerUtility.alert(result.DESCRIPTION,'e');
+            })
+        }
+        //#endregion 下載excel*@
+        //#region clearJqgrid (清除JqGrid)
+        function clearJqgrid() {
+            $('#jqgridDiv').children().remove();
+        }
+        //#endregion clearJqgrid
+
+        //#region createJqgrid (建立JqGrid套件)
+        function createJqgrid(listId, pagerId, cacheType, title) {
+            var colModelArray = [
+                { name: "Bond_Number_New", index: "Bond_Number_New", width: '120', align: 'left' }, 
+                //20200928 alibaba 新增欄位 202010120377-00
+                { name: "Portfolio_Name_New", index: "Portfolio_Name_New", width: '140', align: 'left' }, 
+                { name: "Lots_New", index: "Lots_New", width: '65', align: 'left' }, 
+                { name: "Ori_Amount_Percentage_New", index: "Ori_Amount_Percentage_New", width: '100', align: 'left' }, 
+                { name: "IntRevise_perBond_New", index: "IntRevise_perBond_New", width: '150', align: 'left' },
+                { name: "IntRevise_perBond_Tw_New", index: "IntRevise_perBond_Tw_New", width: '140', align: 'left' },
+                //end 20200928 alibaba  
+                { name: "Bond_Number_Old", index: "Bond_Number_Old" , width: '120'},
+                { name: "Portfolio_Name_Old", index: "Portfolio_Name_Old", width: '145', align: 'left' },               
+                { name: "Lots_Old", index: "Lots_Old", width: '65', align: 'left' }, //20200928 alibaba 由Lots改為Lots_Old 202010120377-00
+                { name: "Int_Receivable", index: "Int_Receivable", width: '150', align: 'left' },
+                { name: "Int_Receivable_Tw", index: "Int_Receivable_Tw", width: '140', align: 'left' },            
+            ];
+
+            //20200928 alibaba 改欄位名稱與新增欄位 202010120377-00
+            var colNameArray = ['債券編號_新', 'Portfolio_Name_新', 'Lots_新', '換入面額比例', '原幣應收利息_新', '台幣應收利息_新',
+                                '債券編號_舊', 'Portfolio_Name_舊', 'Lots_舊', '原幣應收利息_舊', '台幣應收利息_舊'];
+            //end 20200928 alibaba 
+
+            $('#jqgridDiv').append('<table id="' + listId + '"></table>');
+            $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
+
+            $("#" + listId).jqGrid({
+                url: url.getDbData,
+                datatype: "json",
+                mtype: "POST",
+                postData:
+                {
+                    type: cacheType,
+                },
+                jsonReader:
+                {
+                    repeatitems: false,
+                },
+                colModel: colModelArray,
+                colNames: colNameArray,
+                width: jqgridCustom.getwidth(),
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowList: jqgridCustom.rowList(), //設定一頁幾筆
+                pager: '#' + pagerId,
+                autowidth: true,
+                height: jqgridCustom.getHeight(),
+                width: jqgridCustom.getwidth(),
+                caption: title, //標題
+                rownumbers: true,
+                resizable: true,
+                shrinkToFit: false,
+                autoencode: true,
+                viewsortcols: [true, 'vertical', true],
+                viewrecords: true,
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                }
+            });
+
+            $("#" + listId).jqGrid('navGrid', '#' + pagerId, { edit: false, add: false, del: false });
+        }
+        //#endregion createJqgrid
+
+    });
+</script>
+

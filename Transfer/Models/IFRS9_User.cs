@@ -17,11 +17,11 @@ namespace Transfer.Models
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public IFRS9_User()
         {
-            this.Flow_Info = new HashSet<Flow_Info>();
             this.IFRS9_Menu_Set = new HashSet<IFRS9_Menu_Set>();
             this.IFRS9_User_Log = new HashSet<IFRS9_User_Log>();
             this.IFRS9_Assessment_Config = new HashSet<IFRS9_Assessment_Config>();
             this.IFRS9_Assessment_Config1 = new HashSet<IFRS9_Assessment_Config>();
+            this.Flow_Info = new HashSet<Flow_Info>();
         }
     
         public string User_Account { get; set; }
@@ -39,8 +39,6 @@ namespace Transfer.Models
         public Nullable<System.TimeSpan> LastUpdate_Time { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Flow_Info> Flow_Info { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<IFRS9_Menu_Set> IFRS9_Menu_Set { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<IFRS9_User_Log> IFRS9_User_Log { get; set; }
@@ -48,5 +46,7 @@ namespace Transfer.Models
         public virtual ICollection<IFRS9_Assessment_Config> IFRS9_Assessment_Config { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<IFRS9_Assessment_Config> IFRS9_Assessment_Config1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Flow_Info> Flow_Info { get; set; }
     }
 }

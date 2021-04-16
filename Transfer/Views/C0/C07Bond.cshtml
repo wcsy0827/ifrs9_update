@@ -183,10 +183,10 @@
 
             productCode = $('#Product_Code').val().trim();
             reportDate = $('#Report_Date').val().trim();
-            version = $('#Version').val().trim();
+            version = $('#Version').val();
 
             if (productCode == "") {
-                alert("您選擇的產品組合沒有Product_Code，請至 D05 新增");
+                toastr.error("您選擇的產品組合沒有Product_Code，請至 D05 新增");
                 return false;
             }
 
@@ -202,14 +202,12 @@
             }
 
             if ($("#tdVersion").is(":hidden") == false) {
-                if (version == "") {
-                    alert("請選擇 資料版本");
+                if (version == "" ||version== null) {
+                    toastr.error("請選擇 資料版本");
                     return false;
                 }
             }
-            else {
-                version = "";
-            }
+
 
             return true;
         }

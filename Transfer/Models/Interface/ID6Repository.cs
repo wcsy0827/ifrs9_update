@@ -39,7 +39,7 @@ namespace Transfer.Models.Interface
                                                  string referenceNbr, string bondNumber,
                                                  string basicPass,
                                                  string watchIND, string warningIND,
-                                                 string chgInSpreadIND, string beforeHasChgInSpread);
+                                                 string chgInSpreadIND, string beforeHasChgInSpread,int version=0);
         MSGReturnModel DownLoadD62Excel(string path, List<D62ViewModel> dbDatas);
 
         MSGReturnModel saveD62(string reportDate, string version);
@@ -127,9 +127,10 @@ namespace Transfer.Models.Interface
         /// <summary>
         /// get 減損作業狀態查詢 
         /// </summary>
-        /// <param name="reportDate"></param>
+        /// <param name="reportDate">報導日</param>
+        /// <param name="version">版本</param>
         /// <returns></returns>
-        List<D6CheckViewModel> getD6Check(string reportDate);
+        List<D6CheckViewModel> getD6Check(string reportDate,int version,string content); //John.風控覆核專區需求修改
 
         #region 量化評估
 
@@ -156,8 +157,9 @@ namespace Transfer.Models.Interface
         /// <param name="assessmentSubKind">評估次分類</param>
         /// <param name="Send_to_AuditorFlag">是否提交複核</param>
         /// <param name="referenceNbr">帳戶編號</param>
+        /// <param name="version">查詢版本</param>
         /// <returns></returns>
-        List<D63ViewModel> getD63(DateTime reportDate, string boundNumber, Evaluation_Status_Type indexFlag, string assessmentSubKind, bool Send_to_AuditorFlag = false,string referenceNbr = "");
+        List<D63ViewModel> getD63(DateTime reportDate, string boundNumber, Evaluation_Status_Type indexFlag, string assessmentSubKind, bool Send_to_AuditorFlag = false, string referenceNbr = "", int version = 0);
 
         /// <summary>
         /// get D63 Assessment_Result_Version
@@ -190,7 +192,7 @@ namespace Transfer.Models.Interface
         /// <param name="Assessment_Result_Version"></param>
         /// <param name="status"></param>
         /// <returns></returns>
-        MSGReturnModel UpdateD63(string Reference_Nbr,int Assessment_Result_Version, Evaluation_Status_Type status);
+        MSGReturnModel UpdateD63(string Reference_Nbr, int Assessment_Result_Version, Evaluation_Status_Type status);
         #endregion 量化評估
 
         #region 質化評估
@@ -265,7 +267,7 @@ namespace Transfer.Models.Interface
         /// <param name="Check_Reference"></param>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        MSGReturnModel DelQuantifyAndQualitativeFile(string type, string Check_Reference, string fileName);
+        MSGReturnModel DelQuantifyAndQualitativeFile(string type, string Check_Reference, string fileName,string user=null);
 
         /// <summary>
         /// get QuantifyFile fileName
@@ -355,7 +357,7 @@ namespace Transfer.Models.Interface
         //190619 PGE需求新增
         List<Bond_Account_Info> GetA41AssessmentCheck(string reportDate, int version);
         //190619 PGE需求新增
-        MSGReturnModel AutoInsertD65ExtraCase(List<Bond_Account_Info> A41Data,string reportDate);
+        MSGReturnModel AutoInsertD65ExtraCase(List<Bond_Account_Info> A41Data, string reportDate);
 
         MSGReturnModel DeleteD65ByExtraCase(string referenceNbr, int version);
 
@@ -375,7 +377,7 @@ namespace Transfer.Models.Interface
         /// </summary>
         /// <param name="reportDate"></param>
         /// <returns></returns>
-        List<ReELViewModel> getReEL(string reportDate,string Group_Product_Code);
+        List<ReELViewModel> getReEL(string reportDate, string Group_Product_Code);
 
         /// <summary>
         /// 減損報表資料刪除作業
@@ -385,5 +387,17 @@ namespace Transfer.Models.Interface
         /// <param name="msg"></param>
         /// <returns></returns>
         MSGReturnModel ReEL(string reportDate, string flowId, string msg);
+
+        /// <summary>
+        /// Version_Info(版本/版本內容)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        List<SelectOption> GetD6Version(DateTime data);
+        /// <summary>
+        /// 刪除D75_1DB內容以及實體檔案
+        /// </summary>
+        /// <returns></returns>
+        MSGReturnModel DelD75_1File(string path, string Check_Reference);
     }
 }

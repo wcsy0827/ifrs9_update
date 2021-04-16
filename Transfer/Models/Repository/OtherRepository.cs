@@ -63,5 +63,23 @@ namespace Transfer.Models.Repository
             }
             return data;
         }
+
+
+        public List<SelectOption> getReportVersion(DateTime reportdate)
+        {
+            List<SelectOption> result = new List<SelectOption>();
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                var vers = db.Version_Info.Where(x => x.Report_Date == reportdate&&x.Risk_Control_Status==5).Select(x => x.Version).DefaultIfEmpty(0).Distinct().Max();
+                if (vers!=0)
+                {
+
+                    var selectoption = new SelectOption() { Value = vers.ToString(), Text = vers.ToString() };
+                    result.Insert(result.Count(), selectoption);
+
+                }
+            }
+            return result;
+        }
     }
 }

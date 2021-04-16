@@ -178,23 +178,25 @@
         //#region createJqgrid (建立JqGrid套件)
         function createJqgrid(listId, pagerId, cacheType, title) {
             var colModelArray = [
-                                    { name: "Bond_Number", index: "Bond_Number" },
-                                    { name: "Lots", index: "Lots", width: '60', align: 'center' },
-                                    { name: "Segment_Name", index: "Segment_Name", width: '170', align: 'center' },
-                                    { name: "Portfolio_Name", index: "Portfolio_Name", width: '150', align: 'center' },
-                                    { name: "Bond_Value", index: "Bond_Value", width: '100', align: 'right' },
-                                    { name: "Ori_Amount", index: "Ori_Amount", width: '100', align: 'right' },
-                                    { name: "Principal", index: "Principal", width: '100', align: 'right' },
-                                    { name: "Amort_value", index: "Amort_value", width: '90', align: 'right' },
-                                    { name: "Processing_Date", index: "Processing_Date", width: '110', align: 'center' },
-                                    { name: "Report_Date", index: "Report_Date", width: '150', align: 'center' },
-                                    { name: "Security_Name", index: "Security_Name" }
-                                ];
+                { name: "Bond_Number", index: "Bond_Number" },
+                { name: "Lots", index: "Lots", width: '60', align: 'center' },
+                { name: "Segment_Name", index: "Segment_Name", width: '170', align: 'center' },
+                { name: "Portfolio_Name", index: "Portfolio_Name", width: '150', align: 'center' },
+                { name: "Bond_Value", index: "Bond_Value", width: '170', align: 'right' },
+                { name: "Ori_Amount", index: "Ori_Amount", width: '170', align: 'right' },
+                { name: "Principal", index: "Principal", width: '170', align: 'right' },
+                { name: "Amort_Amt_Tw", index: "Amort_Amt_Tw", width: '170', align: 'right' },
+                { name: "Amort_value", index: "Amort_value", width: '170', align: 'right' },
+                { name: "Amort_value_Tw", index: "Amort_value", width: '170', align: 'right' },
+                { name: "Processing_Date", index: "Processing_Date", width: '110', align: 'center' },
+                { name: "Report_Date", index: "Report_Date", width: '150', align: 'center' },
+                { name: "Security_Name", index: "Security_Name" }
+            ];
 
             var colNameArray = ['債券編號', 'Lots', '債券(資產)名稱',
-                                 'Portfolio_Name', "面額", '成交金額',
-                                 '攤銷後成本', '本期攤銷數',
-                                 "資料處理日期", '評估基準日/報導日', 'Security_Name'];
+                'Portfolio_Name', "面額", '成交金額(原幣)',
+                '攤銷後成本(原幣)', '攤銷後成本(台幣)', '本期攤銷數(原幣)', '本期攤銷數(台幣)',
+                "資料處理日期", '評估基準日/報導日', 'Security_Name'];
 
             $('#jqgridDiv').append('<table id="' + listId + '"></table>');
             $('#jqgridDiv').append('<div id="' + pagerId + '"></div>');
@@ -214,7 +216,7 @@
                 colModel: colModelArray,
                 colNames: colNameArray,
                 width: jqgridCustom.getwidth(),
-                 rowNum: jqgridCustom.rowNum(), //一頁筆數
+                rowNum: jqgridCustom.rowNum(), //一頁筆數
                 rowList: jqgridCustom.rowList(), //設定一頁幾筆
                 pager: '#' + pagerId,
                 height: jqgridCustom.getHeight(),
@@ -224,6 +226,7 @@
                 resizable: false,
                 shrinkToFit: false,
                 autoencode: true,
+                autowidth: true,
                 viewsortcols: [true, 'vertical', true],
                 viewrecords: true,
                 loadComplete: function () {
@@ -250,11 +253,7 @@
                 })
                 .done(function (result) {
                     if (result.RETURN_FLAG) {
-                        window.location.href = "@Url.RouteUrl(new
-                                                               {
-                                                                   Controller = "A4", Action = "DownloadExcel"
-                                                               }
-                                                             )/?type=A42";
+                        window.location.href = "@Url.RouteUrl(new{ Controller = "A4", Action = "DownloadExcel"})/?type=A42";
                     }
                     else {
                         toastr.error(result.DESCRIPTION);
@@ -345,4 +344,5 @@
         //#endregion 資料上傳(Excel 資料寫入 DB)
 
     });
+
 </script>

@@ -84,24 +84,44 @@ namespace Transfer.Models.Repository
             {
                 if (action == Action_Type.Add.ToString())
                 {
+
                     if (db.IFRS9_User.Any(x => x.User_Account == data.User_Account && !x.Effective))
                     {
-                        result.DESCRIPTION = "剛帳號已存在,目前於失效(刪除過)狀態,如需復原請於資料庫動作!";
-                        return result;
+                        var change = db.IFRS9_User.SingleOrDefault(x => x.User_Account == data.User_Account);
+                        if (!data.User_Password.IsNullOrWhiteSpace())
+                        {
+                            change.User_Password = data.User_Password.stringToSHA512();
+                        }
+                        change.User_Name = data.User_Name;
+                        change.AdminFlag = data.AdminFlag;
+                        change.Effective = true;
+                        change.LoginFlag = false;
+                        change.LoginFlag = data.LoginFlag;
+                        change.DebtType = data.DebtType.IsNullOrWhiteSpace() ? null : data.DebtType;
+                        change.LastUpdate_User = "Admin";
+                        change.LastUpdate_Date = _UserInfo._date;
+                        change.LastUpdate_Time = _UserInfo._time;
+
+                        //result.DESCRIPTION = "該帳號已存在,目前於失效(刪除過)狀態,如需復原請於資料庫動作!";
+                        //return result;
                     }
-                    db.IFRS9_User.Add(new IFRS9_User()
+                    else
                     {
-                        User_Account = data.User_Account,
-                        User_Password = data.User_Password.stringToSHA512(),
-                        User_Name = data.User_Name,
-                        AdminFlag = data.AdminFlag,
-                        Effective = true,
-                        LoginFlag = false,
-                        DebtType = data.DebtType.IsNullOrWhiteSpace() ? null : data.DebtType,
-                        Create_User = _UserInfo._user,
-                        Create_Date = _UserInfo._date,
-                        Create_Time = _UserInfo._time
-                    });
+                        db.IFRS9_User.Add(new IFRS9_User()
+                        {
+                            User_Account = data.User_Account,
+                            User_Password = data.User_Password.stringToSHA512(),
+                            User_Name = data.User_Name,
+                            AdminFlag = data.AdminFlag,
+                            Effective = true,
+                            LoginFlag = false,
+                            DebtType = data.DebtType.IsNullOrWhiteSpace() ? null : data.DebtType,
+                            Create_User = "Admin",
+                            Create_Date = _UserInfo._date,
+                            Create_Time = _UserInfo._time
+                        });
+                    }
+
                     changeFlag = true;
                 }
                 if (action == Action_Type.Edit.ToString())
@@ -117,7 +137,7 @@ namespace Transfer.Models.Repository
                         change.AdminFlag = data.AdminFlag;
                         change.LoginFlag = data.LoginFlag;
                         change.DebtType = data.DebtType.IsNullOrWhiteSpace() ? null : data.DebtType;
-                        change.LastUpdate_User = _UserInfo._user;
+                        change.LastUpdate_User = "Admin";
                         change.LastUpdate_Date = _UserInfo._date;
                         change.LastUpdate_Time = _UserInfo._time;
                         changeFlag = true;
@@ -129,14 +149,54 @@ namespace Transfer.Models.Repository
                 }
                 if (action == Action_Type.Dele.ToString())
                 {
-                    var del = db.IFRS9_User.SingleOrDefault(x => x.User_Account == data.User_Account);
-                    if (del != null)
+                    var del_User = db.IFRS9_User.SingleOrDefault(x => x.User_Account == data.User_Account);
+                    
+                    if (del_User != null)
                     {
-                        del.LastUpdate_User = _UserInfo._user;
-                        del.LastUpdate_Date = _UserInfo._date;
-                        del.LastUpdate_Time = _UserInfo._time;
-                        del.Effective = false;
-                        changeFlag = true;
+                        #region 使用sql scripts執行
+                        List<string> UpdateScripts = new List<string>();
+                        List<bool> ExcuteStatus = new List<bool>();
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_Menu_Set  where User_Account='{data.User_Account}'");
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_Assessment_Presented_Config  where User_Account='{data.User_Account}'");
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_Assessment_Auditor_Config  where User_Account='{data.User_Account}'");
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_Event_Log  where User_Account='{data.User_Account}'");
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_Browse_Log  where User_Account='{data.User_Account}'");
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_User_Log  where User_Account='{data.User_Account}'");
+                        UpdateScripts.Add(
+                            $@"Delete from IFRS9_User  where User_Account='{data.User_Account}'");
+
+                        using (var dbContextTransaction = db.Database.BeginTransaction())
+                        {
+                            foreach (var item in UpdateScripts)
+                            {
+                                try
+                                {
+                                    db.Database.ExecuteSqlCommand(item);
+                                    ExcuteStatus.Add(true);
+                                }
+                                catch (Exception ex)
+                                {
+                                    ExcuteStatus.Add(false);
+                                }
+                            }
+
+                            if (ExcuteStatus.All(x => x))
+                            {
+                                dbContextTransaction.Commit();
+                                changeFlag = true;
+                            }
+                            else
+                            {
+                                result.DESCRIPTION = "刪除作業有誤!";
+                            }
+                        }
+                        #endregion
                     }
                     else
                     {
@@ -541,7 +601,7 @@ namespace Transfer.Models.Repository
                 }
                 if (type == SetAssessmentType.Auditor || type == SetAssessmentType.Presented)
                 {
-                    var users = db.IFRS9_User.AsNoTracking().Where(x => x.Effective).ToList();
+                    var users = db.IFRS9_User.AsNoTracking().ToList();
                     var data = db.IFRS9_Assessment_Config.AsNoTracking()
                         .Where(x => x.Effective == "Y", effective)
                         .FirstOrDefault(x => x.Group_Product_Code == productCode
@@ -1076,7 +1136,7 @@ namespace Transfer.Models.Repository
                             if (set.Effective == "Y") //目前有權限
                             {
                                 set.Effective = "N";
-                                set.LastUpdate_User = _UserInfo._user;
+                                set.LastUpdate_User = "Admin";
                                 set.LastUpdate_Date = _UserInfo._date;
                                 set.LastUpdate_Time = _UserInfo._time;
                             }
@@ -1086,7 +1146,7 @@ namespace Transfer.Models.Repository
                             if (set.Effective != "Y")//目前無權限
                             {
                                 set.Effective = "Y";
-                                set.LastUpdate_User = _UserInfo._user;
+                                set.LastUpdate_User = "Admin";
                                 set.LastUpdate_Date = _UserInfo._date;
                                 set.LastUpdate_Time = _UserInfo._time;
                             }
@@ -1099,7 +1159,7 @@ namespace Transfer.Models.Repository
                             {
                                 User_Account = userAccount,
                                 Menu_Id = item.Value,
-                                Create_User = _UserInfo._user,
+                                Create_User = "Admin",
                                 Create_Date = _UserInfo._date,
                                 Create_Time = _UserInfo._time,
                                 Effective = "Y"

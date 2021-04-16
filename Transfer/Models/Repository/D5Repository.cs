@@ -466,7 +466,7 @@ INSERT INTO [SMF_Info]
                 //190524 排除註記為N的部位
                 string sql1 = $@"
 WITH C07S AS
-(
+( 
      SELECT C07.PRJID AS PRJID, --專案名稱
             C07.FLOWID AS FLOWID, --流程名稱
             C07.Report_Date AS Report_Date, --評估基準日/報導日
@@ -503,6 +503,14 @@ WITH C07S AS
 	        END AS EL, --累計減損(原幣)(最終預期信用損失)
             A41.Ex_rate AS Ex_rate, --月底匯率(報表日匯率)
             A41.Ori_Ex_rate AS Ori_Ex_rate --成本匯率
+--20191008 alibaba 優化需求 第9項
+,A41.Ori_Ex_rate_to_USD , --成本USD匯率
+A41.Ex_rate_to_USD ,--報表日USD匯率
+A41.Trading_Number--成交單號
+,A41.Portfolio--for SUBSTRING (A41.Portfolio,0,4) = 'OIU'
+,A41.IAS39_CATEGORY--for IAS39_CATEGORY IN ('FVOCI','AC')
+--end 20191008 alibaba
+
      FROM (SELECT * FROM Bond_Account_Info
      where Report_Date =  @Report_Date 
      and Version = @Version
@@ -563,27 +571,88 @@ Insert into IFRS9_EL
              Exec_Date,
              Create_User,
              Create_Date,
-             Create_Time)
+             Create_Time
+--20191008 alibaba 優化需求 第9項
+,Ori_Ex_rate_to_USD , --成本USD匯率
+Ex_rate_to_USD ,--報表日USD匯率
+Trading_Number--成交單號
+--end 20191008 alibaba			 
+			 )
 Select
-*,
-Lifetime_EL * Ex_rate AS Lifetime_EL_Ex , --存續期間預期信用損失(報表日匯率台幣)
-Y1_EL * Ex_rate AS Y1_EL_Ex , --一年期預期信用損失(報表日匯率台幣)
-EL * Ex_rate AS EL_Ex, --累計減損(報表日匯率台幣)
-Lifetime_EL * Ori_Ex_rate AS Lifetime_EL_Ori_Ex, --存續期間預期信用損失(成本匯率台幣)
-Y1_EL * Ori_Ex_rate AS Y1_EL_Ori_Ex, --一年期預期信用損失(成本匯率台幣)
-EL * Ori_Ex_rate AS EL_Ori_Ex, --累計減損(成本匯率台幣)
+           PRJID, --專案名稱
+           FLOWID, --流程名稱
+           Report_Date, --評估基準日/報導日
+           Version, --資料版本
+           Processing_Date, --資料處理日期
+           Product_Code, --產品
+           Reference_Nbr, --案件編號/帳號
+           Bond_Number, --債券編號
+           Lots, --Lots
+           Portfolio_Name, --Portfolio英文
+           Segment_Name, --債券(資產)名稱
+	       Impairment_Stage, --減損階段
+           PD, --第一年違約率
+           Lifetime_EL, --存續期間預期信用損失(原幣)
+           Y1_EL, --一年期預期信用損失(原幣)
+	       EL, --累計減損(原幣)(最終預期信用損失)
+           Ex_rate, --月底匯率(報表日匯率)
+           Ori_Ex_rate, --成本匯率,
+Lifetime_EL *
+--20191008 alibaba  優化需求 第9項
+	   CASE WHEN IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (Portfolio,0,4) = 'OIU' THEN Ex_rate_to_USD  ELSE Ex_rate END AS Lifetime_EL_Ex , 
+--存續期間預期信用損失(報表日匯率台幣)
+--END 20191008 alibaba  	   
+	   
+Y1_EL * 
+--20191008 alibaba  優化需求 第9項
+	   CASE WHEN IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (Portfolio,0,4) = 'OIU' THEN Ex_rate_to_USD  ELSE Ex_rate END AS Y1_EL_Ex , 
+--一年期預期信用損失(報表日匯率台幣)
+--END 20191008 alibaba  	   
+	   
+EL * 
+--20191008 alibaba  優化需求 第9項
+	   CASE WHEN IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (Portfolio,0,4) = 'OIU' THEN Ex_rate_to_USD  ELSE Ex_rate END AS EL_Ex,
+ --累計減損(報表日匯率台幣) , 
+--END 20191008 alibab
+
+
+Lifetime_EL * 
+--20191008 alibaba  優化需求 第9項
+ CASE WHEN  IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING ( Portfolio,0,4)='OIU' THEN  Ori_Ex_rate_to_USD ELSE
+ Ori_Ex_rate END AS Lifetime_EL_Ori_Ex, 
+--存續期間預期信用損失(成本匯率台幣)
+--END 20191008 alibab
+
+Y1_EL * 
+--20191008 alibaba  優化需求 第9項
+ CASE WHEN  IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING ( Portfolio,0,4)='OIU' THEN  Ori_Ex_rate_to_USD ELSE  Ori_Ex_rate END
+AS Y1_EL_Ori_Ex, 
+--一年期預期信用損失(成本匯率台幣)
+--END 20191008 alibab
+
+EL * 
+--20191008 alibaba  優化需求 第9項
+ CASE WHEN  IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING ( Portfolio,0,4)='OIU' THEN  Ori_Ex_rate_to_USD ELSE  Ori_Ex_rate END AS EL_Ori_Ex, 
+--累計減損(成本匯率台幣)
+--END 20191008 alibab
+
 @Exec_Date  AS Exec_Date, --資料處理日期
 @Create_User AS Create_User,
 @Create_Date AS Create_Date,
 @Create_Time AS Create_Time
+
+--20191008 alibaba 優化需求 第9項
+, Ori_Ex_rate_to_USD , --成本USD匯率
+ Ex_rate_to_USD ,--報表日USD匯率
+ Trading_Number--成交單號
+--end 20191008 alibaba
 FROM C07S ;
 ";
 
                 #endregion
                 #region D52Insert SQL(沒有註記N的部位)
                 //190524 排除註記為N的部位
-                string sql2 = $@"
-WITH Temp AS
+                string sql2 = $@"WITH Temp AS
 (
 Select 
        A41.Reference_Nbr,
@@ -640,7 +709,7 @@ ON D66.Reference_Nbr = D65.Reference_Nbr
 AND D66.Assessment_Result_Version = D65.Assessment_Result_Version
 )
 ,D54Temp AS
-(
+( 
 SELECT C07.PRJID AS PRJID, --專案名稱
        C07.FLOWID AS FLOWID, --流程名稱
        C07.Report_Date AS Report_Date, --評估基準日/報導日
@@ -657,65 +726,73 @@ SELECT C07.PRJID AS PRJID, --專案名稱
        A41.Ori_Amount , --帳列面額(原幣)
 	   A41.Interest_Receivable , --應收利息(原幣)
 	   A41.Amort_Amt_Ori_Tw  , --攤銷後成本(成本匯率台幣)
+	   
 	   A41.Amort_Amt_Tw , --攤銷後成本(報表日匯率台幣)
+
 	   A41.Ex_rate , --月底匯率(報表日匯率)
-	   A41.Ori_Ex_rate , --成本匯率
-	   ROUND( C07.Lifetime_EL * A41.Ex_rate ,0) AS Lifetime_EL_Ex,
+	   A41.Ori_Ex_rate , --成本匯率 
+	   ROUND( C07.Lifetime_EL *A41.Ex_rate ,0) AS Lifetime_EL_Ex,
 	   --Lifetime_EL_Ex float, --存續期間預期信用損失(報表日匯率台幣)
-	   ROUND( C07.Y1_EL * A41.Ex_rate ,0) AS Y1_EL_Ex,
+	   ROUND( C07.Y1_EL * A41.Ex_rate  ,0) AS Y1_EL_Ex,
 	   --Y1_EL_Ex float, --一年期預期信用損失(報表日匯率台幣)
-	   ROUND( t.EL * A41.Ex_rate ,0) AS EL_Ex,
+
+
+	   ROUND( t.EL *A41.Ex_rate   ,0) AS EL_Ex,
 	   --EL_Ex float, --累計減損(報表日匯率台幣)
 	   CASE WHEN A41.PRODUCT like 'D21%'
 	        THEN 
-                ROUND(t.EL * A41.Ex_rate , 0)
+                ROUND(t.EL * A41.Ex_rate  , 0)
 			ELSE 
 			    CASE WHEN A41.Maturity_Date is not null
 				     THEN
 			             CASE WHEN datediff(MONTH,A41.Report_Date,A41.Maturity_Date) /12 > 1
-				              THEN ROUND(t.EL * A41.Ex_rate , 0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD *C09.Current_LGD,2) * A41.Ex_rate,0)
-				         	  ELSE ROUND(t.EL * A41.Ex_rate , 0) - ROUND(ROUND(t.EL *  A41.Interest_Receivable/(A41.Principal + A41.Interest_Receivable),2) * A41.Ex_rate ,0)
+				              THEN ROUND(t.EL *  A41.Ex_rate  , 0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD *C09.Current_LGD,2) * A41.Ex_rate  ,0)
+				         	  ELSE ROUND(t.EL * A41.Ex_rate  , 0) - ROUND(ROUND(t.EL *  A41.Interest_Receivable/(A41.Principal + A41.Interest_Receivable),2) * A41.Ex_rate ,0)
 				              END 
 					 ELSE
-					 ROUND(t.EL * A41.Ex_rate , 0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ex_rate,0)
+					 ROUND(t.EL * A41.Ex_rate  , 0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ex_rate  ,0)
 					 END
        END AS Principal_EL_Ex,
 	   --Principal_EL_Ex float, --累計減損_本金(報表日匯率台幣) ps:債券的LGD 須從C09-減損計算輸入資料修正檔取得 EL_Data_In_Update
+
 	   CASE WHEN A41.PRODUCT like 'D21%'
 	        THEN 0
 			ELSE 
 			    CASE WHEN A41.Maturity_Date is not null
 				     THEN 
 					      CASE WHEN datediff(MONTH,A41.Report_Date,A41.Maturity_Date) /12 > 1
-					           THEN ROUND(ROUND(A41.Interest_Receivable * C07.PD *C09.Current_LGD,2) * A41.Ex_rate,0)
-					      	   ELSE ROUND(ROUND(t.EL * A41.Interest_Receivable/(A41.Principal + A41.Interest_Receivable),2)*A41.Ex_rate ,0)
+					           THEN ROUND(ROUND(A41.Interest_Receivable * C07.PD *C09.Current_LGD,2) * A41.Ex_rate  ,0)
+					      	   ELSE ROUND(ROUND(t.EL * A41.Interest_Receivable/(A41.Principal + A41.Interest_Receivable),2)*A41.Ex_rate  ,0)
 					      	   END
 				     ELSE
-					 ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ex_rate,0)
+					 ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ex_rate  ,0)
 					 END
 	   END AS Interest_Receivable_EL_Ex,
 	   --Interest_Receivable_EL_Ex float, --累計減損_利息(報表日匯率台幣)
-	   ROUND( C07.Lifetime_EL * A41.Ori_Ex_rate ,0) AS Lifetime_EL_Ori_Ex,
+	   ROUND( C07.Lifetime_EL *  A41.Ori_Ex_rate ,0) AS Lifetime_EL_Ori_Ex,
 	   --Lifetime_EL_Ori_Ex float, --存續期間預期信用損失(成本匯率台幣)
-	   ROUND( C07.Y1_EL * A41.Ori_Ex_rate ,0) AS Y1_EL_Ori_Ex,
+	   ROUND( C07.Y1_EL *  A41.Ori_Ex_rate  ,0) AS Y1_EL_Ori_Ex,
 	   --Y1_EL_Ori_Ex float, --一年期預期信用損失(成本匯率台幣)
-	   ROUND( t.EL * A41.Ori_Ex_rate ,0) AS EL_Ori_Ex,
+	   ROUND( t.EL * A41.Ori_Ex_rate  ,0) AS EL_Ori_Ex,
 	   --EL_Ori_Ex float, --累計減損(成本匯率台幣)
 	   CASE WHEN A41.PRODUCT like 'D21%'
 	        THEN 
-                 ROUND(t.EL * A41.Ori_Ex_rate,0)
+                 ROUND(t.EL *   A41.Ori_Ex_rate   ,0)
 			ELSE 
 			     CASE WHEN A41.Maturity_Date is not null
 				      THEN
 					       CASE WHEN datediff(MONTH,A41.Report_Date,A41.Maturity_Date) /12 > 1
-						        THEN ROUND(t.EL * A41.Ori_Ex_rate,0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ori_Ex_rate , 0)
-								ELSE ROUND(t.EL * A41.Ori_Ex_rate,0) - ROUND(ROUND(t.EL * A41.Interest_Receivable /(A41.Principal + A41.Interest_Receivable),2) * A41.Ori_Ex_rate,0)
+						        THEN ROUND(t.EL *    A41.Ori_Ex_rate   ,0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * 
+										A41.Ori_Ex_rate  , 0)
+								ELSE ROUND(t.EL *  A41.Ori_Ex_rate  ,0) - ROUND(ROUND(t.EL * A41.Interest_Receivable /(A41.Principal + A41.Interest_Receivable),2) *
+										A41.Ori_Ex_rate  ,0)
 								END
 					  ELSE
-					  ROUND(t.EL * A41.Ori_Ex_rate,0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ori_Ex_rate,0)
+					  ROUND(t.EL *   A41.Ori_Ex_rate  ,0) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) *A41.Ori_Ex_rate ,0)
 					  END
 	   END AS Principal_EL_Ori_Ex,
 	   --Principal_EL_Ori_Ex float, --累計減損_本金(成本匯率台幣)
+
 	   CASE WHEN A41.PRODUCT like 'D21%'
 	        THEN 0
 			ELSE 
@@ -726,11 +803,11 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 								ELSE ROUND(ROUND(t.EL * A41.Interest_Receivable / (A41.Principal + A41.Interest_Receivable),2) * A41.Ori_Ex_rate , 0)
 								END
 					  ELSE
-					  ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD * A41.Ori_Ex_rate,0)
+					  ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD * A41.Ori_Ex_rate ,0)
 					  END
 		END AS Interest_Receivable_EL_Ori_Ex,
 	   --Interest_Receivable_EL_Ori_Ex float, --累計減損_利息(成本匯率台幣)
-	   ROUND(t.EL * A41.Ex_rate , 0) - ROUND(t.EL * A41.Ori_Ex_rate , 0) AS EL_EX_Diff , --累計減損匯兌損益(台幣)
+	   ROUND(t.EL * A41.Ex_rate , 0) - ROUND(t.EL *A41.Ori_Ex_rate , 0) AS EL_EX_Diff , --累計減損匯兌損益(台幣)
 	   A41.ISSUER , --ISSUER
 	   A41.Bond_Number , --債券編號 
 	   A41.Lots , --Lots
@@ -750,6 +827,7 @@ SELECT C07.PRJID AS PRJID, --專案名稱
        A41.PRODUCT , --SMF
 	   A41.Market_Value_Ori  , --市價(原幣)
 	   A41.Market_Value_TW , --市價(報表日匯率台幣)
+
 	   A41.Current_Int_Rate  , --合?利率/產品利率
 	   A41.EIR , --有效利率
 	   A41.Lien_position , --擔保順位
@@ -768,6 +846,7 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 	   D62.Map_Rule_Id_D71  , --對應D71-預警名單參數檔規則編號
 	   A41.Ori_Amount * A41.Ori_Ex_rate AS Ori_Amount_Ori_Ex,
 	   --Ori_Amount_Ori_Ex float , --帳列面額(成本匯率台幣)
+
 	   	CASE WHEN A41.PRODUCT like 'D21%'
 	        THEN 
                  ROUND(t.EL , 2)
@@ -798,7 +877,8 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 		END AS Interest_Receivable_EL_Ori, 
 	   --Interest_Receivable_EL_Ori float , --累計減損-利息(原幣)
 	   A41.Interest_Receivable_tw , --應收利息(報表日匯率台幣)
-        ROUND(t.EL * A41.Ex_rate , 0) - ROUND(t.EL * A41.Ori_Ex_rate , 0)  AS Principal_Diff_Tw,
+
+        ROUND(t.EL * A41.Ex_rate  , 0) - ROUND(t.EL * A41.Ori_Ex_rate  , 0)  AS Principal_Diff_Tw,
 	   --預先註記  ((t.EL - (A41.Interest_Receivable * C07.PD * C09.Current_LGD)) * (A41.Ex_rate - A41.Ori_Ex_rate)) AS Principal_Diff_Tw,
 	   --Principal_Diff_Tw float , --累計減損匯兌損益-本金(台幣)
 	   A41.ISIN_Changed_Ind, --是否為換券
@@ -806,11 +886,84 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 	   A41.Lots_Old  , --Lots_舊
 	   A41.Portfolio_Name_Old , --Portfolio英文_舊
 	   A41.Origination_Date_Old   --舊券原始購入日
+--20190921 alibaba  優化需求 第9項
+,A41.Ori_Ex_rate_to_USD , --成本USD匯率
+A41.Ex_rate_to_USD ,--報表日USD匯率
+A41.Trading_Number,--成交單號
+--end 20190921 alibaba
+--20191101 alibaba 優化需求 第9項
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4)='OIU' AND a41.Ori_Ex_rate_to_USD IS NOT NULL THEN CAST(A41.Ori_Amount * a41.Ori_Ex_rate_to_USD AS DECIMAL(30,2)) ELSE NULL END  AS Ori_Amount_Ori_Ex_USD,
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4)='OIU' AND A41.Ori_Ex_rate_to_USD IS NOT NULL  THEN  CAST(A41.Ori_Ex_rate_to_USD* A41.Principal  AS DECIMAL(30,2)) ELSE NULL END AS Amort_Amt_Ori_USD,--攤銷後成本(成本匯率美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4)='OIU' AND A41.Ex_rate_to_USD IS NOT NULL THEN   CAST( A41.Ex_rate_to_USD* A41.Principal  AS DECIMAL(30,2)) ELSE NULL END AS Amort_Amt_USD,--攤銷後成本(報表日匯率美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4)='OIU' AND A41.Ex_rate_to_USD IS NOT NULL  THEN  CAST(A41.Ex_rate_to_USD*A41.Market_Value_Ori AS DECIMAL(30,2)) ELSE NULL END AS Market_Value_USD, --市價(報表日匯率美金)
+
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4)='OIU' AND a41.Ori_Ex_rate_to_USD IS NOT NULL   THEN
+       CASE WHEN A41.PRODUCT like 'D21%'
+	        THEN 
+                 ROUND(t.EL *  a41.Ori_Ex_rate_to_USD  ,2)
+			ELSE 
+			     CASE WHEN A41.Maturity_Date is not null
+				      THEN
+					       CASE WHEN datediff(MONTH,A41.Report_Date,A41.Maturity_Date) /12 > 1
+						        THEN ROUND(t.EL *  a41.Ori_Ex_rate_to_USD  ,2) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * a41.Ori_Ex_rate_to_USD, 2)
+								ELSE ROUND(t.EL *  a41.Ori_Ex_rate_to_USD ,2) - ROUND(ROUND(t.EL * A41.Interest_Receivable /(A41.Principal + A41.Interest_Receivable),2) * a41.Ori_Ex_rate_to_USD ,2)
+							END
+					  ELSE
+					  ROUND(t.EL * a41.Ori_Ex_rate_to_USD ,2) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) *a41.Ori_Ex_rate_to_USD ,2)
+			      END
+	   END 
+	ELSE NULL
+ END AS Principal_EL_Ori_Ex_USD,
+	   --Principal_EL_Ori_Ex_USD float, --累計減損_本金(成本匯率台幣)
+
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU'  AND A41.Ex_rate_to_USD IS NOT NULL  THEN 
+	   CASE WHEN A41.PRODUCT like 'D21%'
+	        THEN 
+                ROUND(t.EL *  A41.Ex_rate_to_USD , 2)
+			ELSE 
+			    CASE WHEN A41.Maturity_Date is not null
+				     THEN
+			             CASE WHEN datediff(MONTH,A41.Report_Date,A41.Maturity_Date) /12 > 1
+				              THEN ROUND(t.EL *  A41.Ex_rate_to_USD , 2) - ROUND(ROUND(A41.Interest_Receivable * C07.PD *C09.Current_LGD,2) *  A41.Ex_rate_to_USD ,2)
+				         	  ELSE ROUND(t.EL * A41.Ex_rate_to_USD , 2) - 
+							       ROUND(ROUND(t.EL *  A41.Interest_Receivable/(A41.Principal + A41.Interest_Receivable),2) * A41.Ex_rate_to_USD  ,2)
+				          END 
+					 ELSE
+					 ROUND(t.EL * A41.Ex_rate_to_USD , 2) - ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ex_rate_to_USD  ,2)
+			    END
+       END 
+       ELSE NULL 
+END AS Principal_EL_Ex_USD,
+
+	   --Principal_EL_Ex_USD float, --累計減損_本金(報表日匯率台幣) ps:債券的LGD 須從C09-減損計算輸入資料修正檔取得 EL_Data_In_Update
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU'  AND a41.Ori_Ex_rate_to_USD IS NOT NULL  AND a41.Ex_rate_to_USD IS NOT NULL  THEN 
+     ROUND(t.EL * A41.Ex_rate_to_USD  , 2) - ROUND(t.EL * a41.Ori_Ex_rate_to_USD , 2) 
+	 ELSE NULL 
+END  AS Principal_Diff_USD,
+	   --預先註記  ((t.EL - (A41.Interest_Receivable * C07.PD * C09.Current_LGD)) * (A41.Ex_rate - A41.Ori_Ex_rate)) AS Principal_Diff_USD,
+	   --Principal_Diff_USD float , --累計減損匯兌損益-本金(美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU'  AND a41.Ex_rate_to_USD IS NOT NULL  THEN CAST(A41.Ex_rate_to_USD*A41.Interest_Receivable AS DECIMAL(33,2)) ELSE NULL END AS Interest_Receivable_USD, --應收利息(報表日匯率美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND a41.Ex_rate_to_USD IS NOT NULL  THEN 
+	 CASE WHEN A41.PRODUCT like 'D21%'  THEN 0
+		  ELSE 
+			    CASE WHEN A41.Maturity_Date is not null THEN 
+					      CASE WHEN datediff(MONTH,A41.Report_Date,A41.Maturity_Date) /12 > 1
+					           THEN ROUND(ROUND(A41.Interest_Receivable * C07.PD *C09.Current_LGD,2) *  A41.Ex_rate_to_USD ,2)
+					      	   ELSE ROUND(ROUND(t.EL * A41.Interest_Receivable/(A41.Principal + A41.Interest_Receivable),2)* A41.Ex_rate_to_USD ,2)
+					      END
+				     ELSE ROUND(ROUND(A41.Interest_Receivable * C07.PD * C09.Current_LGD,2) * A41.Ex_rate_to_USD ,2)
+				END
+	 END 
+	 ELSE NULL
+END AS Interest_Receivable_EL_Ex_USD
+--END 20191101 alibaba
+
+
 FROM (
 SELECT * 
-FROM Bond_Account_Info
-WHERE Report_Date = @Report_Date 
-AND Version = @Version  ) AS A41 
+FROM Bond_Account_Info 
+WHERE Report_Date =@Report_Date 
+AND Version = @Version ) AS A41 
 JOIN( 
 SELECT * 
 FROM EL_Data_Out 
@@ -844,6 +997,7 @@ WHERE Report_Date = @Report_Date
 AND Version = @Version ) AS D62
 ON A41.Reference_Nbr = D62.Reference_Nbr
 )
+ 
 INSERT INTO [IFRS9_Bond_Report]
            ([PRJID]
            ,[FLOWID]
@@ -922,7 +1076,24 @@ INSERT INTO [IFRS9_Bond_Report]
            ,[Origination_Date_Old]
            ,[Create_User]
            ,[Create_Date]
-           ,[Create_Time])
+           ,[Create_Time]
+--20190921 alibaba  優化需求 第9項
+,Ori_Ex_rate_to_USD , --成本USD匯率
+Ex_rate_to_USD ,--報表日USD匯率
+Trading_Number,--成交單號
+--end 20190921 alibaba
+--20191104 alibaba 優化需求 第9項
+Ori_Amount_Ori_Ex_USD,
+Amort_Amt_Ori_USD,
+Amort_Amt_USD,
+Market_Value_USD,
+Principal_EL_Ori_Ex_USD,
+Principal_EL_Ex_USD,
+Principal_Diff_USD,
+Interest_Receivable_USD,
+Interest_Receivable_EL_Ex_USD
+--end 20191104
+		   )
 select      [PRJID]
            ,[FLOWID]
            ,[Report_Date]
@@ -1003,7 +1174,23 @@ select      [PRJID]
            ,@Create_User
            ,@Create_Date
            ,@Create_Time
-from D54Temp ;
+--20190921 alibaba  優化需求 第9項
+,Ori_Ex_rate_to_USD , --成本USD匯率
+Ex_rate_to_USD ,--報表日USD匯率
+Trading_Number,--成交單號
+--end 20190921 alibaba
+--20191104 alibaba
+Ori_Amount_Ori_Ex_USD,
+Amort_Amt_Ori_USD,
+Amort_Amt_USD,
+Market_Value_USD,
+Principal_EL_Ori_Ex_USD,
+Principal_EL_Ex_USD,
+Principal_Diff_USD,
+Interest_Receivable_USD,
+Interest_Receivable_EL_Ex_USD
+--end 20191104 alibaba
+from D54Temp ; ;
 ";
 
                 #endregion
@@ -1040,8 +1227,15 @@ from D54Temp ;
 			C10.EL_import_Principle,
 			C10.EL_import_Int,
 			(C10.EL_import_Principle+C10.EL_import_Int) AS EL,--累計減損(原幣)(最終預期信用損失)
-            A41.Ex_rate AS Ex_rate, --月底匯率(報表日匯率)
-            A41.Ori_Ex_rate AS Ori_Ex_rate --成本匯率
+             Ex_rate AS Ex_rate, --月底匯率(報表日匯率)
+             Ori_Ex_rate AS Ori_Ex_rate --成本匯率
+--20191008 alibaba 優化需求 第9項
+,A41.Ori_Ex_rate_to_USD , --成本USD匯率
+A41.Ex_rate_to_USD ,--報表日USD匯率
+A41.Trading_Number--成交單號
+, A41.Portfolio--for SUBSTRING (A41.Portfolio,0,4) = 'OIU'
+, A41.IAS39_CATEGORY--for IAS39_CATEGORY IN ('FVOCI','AC')
+--end 20191008 alibaba
      FROM 
 	 (SELECT * FROM Bond_Account_Info where Report_Date =  @Report_Date  and Version = @Version and Assessment_Check='N') AS A41 
 	 
@@ -1058,7 +1252,7 @@ from D54Temp ;
 	FROM Bond_Account_AssessmentCheck
 	WHERE Report_Date = @Report_Date and Version=0  --沒確認(鎖住)的版本C10版號皆為0
 	)AS C10
-	ON A41.Report_Date=C10.Report_Date and A41.Bond_Number=C10.Bond_Number and A41.Lots=C10.Lots and A41.Portfolio_Name=C10.Portfolio_Name --因為C10沒有Refernece Number，所以要用Bond number、Lots、portfolio和report date做join
+	ON A41.Report_Date=C10.Report_Date and  A41.Bond_Number=C10.Bond_Number and A41.Lots=C10.Lots and A41.Portfolio_Name=C10.Portfolio_Name --因為C10沒有Refernece Number，所以要用Bond number、Lots、portfolio和report date做join
 	JOIN
     (select * from Flow_Info where Apply_Off_Date is null) AS D01
 	ON C07.PRJID = D01.PRJID and C07.FLOWID = D01.FLOWID
@@ -1104,6 +1298,11 @@ Insert into IFRS9_EL
              Create_User,
              Create_Date,
              Create_Time
+----20191008 alibaba 優化需求 第9項
+,Ori_Ex_rate_to_USD , --成本USD匯率
+Ex_rate_to_USD ,--報表日USD匯率
+Trading_Number--成交單號
+----end 20191008 alibaba		
 			 )
 Select 
 PRJID,
@@ -1125,16 +1324,51 @@ Y1_EL,
 EL,
 Ex_rate,
 Ori_Ex_rate,
-Lifetime_EL * Ex_rate AS Lifetime_EL_Ex , --存續期間預期信用損失(報表日匯率台幣)
-Y1_EL * Ex_rate AS Y1_EL_Ex , --一年期預期信用損失(報表日匯率台幣)
-EL * Ex_rate AS EL_Ex, --累計減損(報表日匯率台幣)
-Lifetime_EL * Ori_Ex_rate AS Lifetime_EL_Ori_Ex, --存續期間預期信用損失(成本匯率台幣)
-Y1_EL * Ori_Ex_rate AS Y1_EL_Ori_Ex, --一年期預期信用損失(成本匯率台幣)
-EL * Ori_Ex_rate AS EL_Ori_Ex, --累計減損(成本匯率台幣)
+Lifetime_EL * 
+--20191008 alibaba  優化需求 第9項
+	   CASE WHEN IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (Portfolio,0,4) = 'OIU' THEN Ex_rate_to_USD  ELSE Ex_rate END AS Lifetime_EL_Ex ,
+--存續期間預期信用損失(報表日匯率台幣)
+--end 20191008 alibaba 
+
+Y1_EL * 
+--20191008 alibaba  優化需求 第9項
+	   CASE WHEN IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (Portfolio,0,4) = 'OIU' THEN Ex_rate_to_USD  ELSE Ex_rate END AS Y1_EL_Ex , 
+--一年期預期信用損失(報表日匯率台幣)
+--end 20191008 alibaba 
+
+EL * 
+--20191008 alibaba  優化需求 第9項
+	   CASE WHEN IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (Portfolio,0,4) = 'OIU' THEN Ex_rate_to_USD  ELSE Ex_rate END AS EL_Ex, 
+	   --累計減損(報表日匯率台幣)
+--end 20191008 alibaba 
+
+Lifetime_EL * 
+--20191008 alibaba  優化需求 第9項
+ CASE WHEN  IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING ( Portfolio,0,4)='OIU' THEN  Ori_Ex_rate_to_USD ELSE  Ori_Ex_rate END AS Lifetime_EL_Ori_Ex, 
+ --存續期間預期信用損失(成本匯率台幣)
+--end 20191008 alibaba 
+
+Y1_EL * 
+--20191008 alibaba  優化需求 第9項
+ CASE WHEN  IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING ( Portfolio,0,4)='OIU' THEN  Ori_Ex_rate_to_USD ELSE  Ori_Ex_rate END AS Y1_EL_Ori_Ex, 
+--一年期預期信用損失(成本匯率台幣)
+--end 20191008 alibaba 
+
+EL * 
+--20191008 alibaba  優化需求 第9項
+ CASE WHEN  IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING ( Portfolio,0,4)='OIU' THEN  Ori_Ex_rate_to_USD ELSE  Ori_Ex_rate END AS EL_Ori_Ex,
+ --累計減損(成本匯率台幣)
+ --end 20191008 alibaba 
 @Exec_Date  AS Exec_Date, --資料處理日期
 @Create_User AS Create_User,
 @Create_Date AS Create_Date,
 @Create_Time AS Create_Time
+--20191008 alibaba 優化需求 第9項
+, Ori_Ex_rate_to_USD , --成本USD匯率
+ Ex_rate_to_USD ,--報表日USD匯率
+ Trading_Number--成交單號
+--end 20191008 alibaba
+
 FROM C07S ;";
 
                 #endregion
@@ -1172,7 +1406,12 @@ Select
        ELSE C07.Impairment_Stage 
        END AS Impairment_Stage, --減損階段
        C07.FLOWID,
-       C07.PRJID
+       C07.PRJID,
+--20191101 alibaba  優化需求 第9項
+	   cast(A41.Ori_Ex_rate_to_USD as decimal(30,3)) as Ori_Ex_rate_to_USD,
+	   cast(A41.Ex_rate_to_USD as decimal(30,3)) as Ex_rate_to_USD,
+	   A41.Trading_Number AS Trading_Number
+--end 20191101 alibaba
 FROM (SELECT * FROM Bond_Account_Info WHERE Report_Date = @Report_Date AND Version = @Version AND Assessment_Check='N') AS A41    --抓註記為N的部位、@Version已經取得該報導日最大版本
 
 JOIN( 
@@ -1201,9 +1440,7 @@ left join
 where Report_Date = @Report_Date and Version = @Version  and (Check_Item_Code like 'Pass_Count%' or Check_Item_Code like 'Z%')) AS D66
 ON D66.Reference_Nbr = D65.Reference_Nbr AND D66.Assessment_Result_Version = D65.Assessment_Result_Version
 )
-
-
-
+--line 1352
 ,D54Temp AS
 (
 SELECT C07.PRJID AS PRJID, --專案名稱
@@ -1222,30 +1459,37 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 	   A41.Ori_Amount , --帳列面額(原幣)
 	   t.Interest_Receivable_import AS Interest_Receivable , --(PG&E需求更動)應收利息(原幣)
 	   A41.Amort_Amt_Ori_Tw  , --攤銷後成本(成本匯率台幣)
+
 	   t.Amort_Amt_import_TW AS Amort_Amt_Tw , --(PG&E需求更動)攤銷後成本(報表日匯率台幣)
+
 	   t.Ex_rate AS Ex_rate , --月底匯率(報表日匯率)
 	   t.Ori_Ex_rate AS Ori_Ex_rate, --成本匯率
-	   ROUND( t.Lifetime_EL_Import * t.Ex_rate ,0) AS Lifetime_EL_Ex,
+	   ROUND( t.Lifetime_EL_Import *  t.Ex_rate  ,0) AS Lifetime_EL_Ex,
 	   --Lifetime_EL_Ex float, --存續期間預期信用損失(報表日匯率台幣)
-	   ROUND( t.Y1_EL_Import * t.Ex_rate ,0) AS Y1_EL_Ex,
+	   ROUND( t.Y1_EL_Import * t.Ex_rate   ,0) AS Y1_EL_Ex,
 	   --Y1_EL_Ex float, --一年期預期信用損失(報表日匯率台幣)
-	   ROUND( t.EL * t.Ex_rate ,0) AS EL_Ex,
+
+
+	   ROUND( t.EL *  t.Ex_rate ,0) AS EL_Ex,
 	   --EL_Ex float, --(PG&E需求更動累計減損(報表日匯率台幣)
-	   ROUND(ROUND(t.EL_import_Principle,2)*t.Ex_rate,0) AS Principal_EL_Ex,
+	   ROUND(ROUND(t.EL_import_Principle,2)*  t.Ex_rate  ,0) AS Principal_EL_Ex,
 	   --Principal_EL_Ex float, --(PG&E需求更動)累計減損_本金(報表日匯率台幣) 
-	   ROUND(ROUND(t.EL_import_Int,2)*t.Ex_rate,0) AS Interest_Receivable_EL_Ex,
+
+	   ROUND(ROUND(t.EL_import_Int,2)*t.Ex_rate ,0) AS Interest_Receivable_EL_Ex,
 	   --Interest_Receivable_EL_Ex float, --(PG&E需求更動)累計減損_利息(報表日匯率台幣)
-	   ROUND( t.Lifetime_EL_Import * t.Ori_Ex_rate ,0) AS Lifetime_EL_Ori_Ex,
+
+	   ROUND( t.Lifetime_EL_Import *  t.Ori_Ex_rate ,0) AS Lifetime_EL_Ori_Ex,
 	   --Lifetime_EL_Ori_Ex float, --存續期間預期信用損失(成本匯率台幣)
-	   ROUND( t.Y1_EL_Import * t.Ori_Ex_rate ,0) AS Y1_EL_Ori_Ex,
+	   ROUND( t.Y1_EL_Import *  t.Ori_Ex_rate ,0) AS Y1_EL_Ori_Ex,
 	   --Y1_EL_Ori_Ex float, --一年期預期信用損失(成本匯率台幣)
-	   ROUND( t.EL * t.Ori_Ex_rate ,0) AS EL_Ori_Ex,
+	   ROUND( t.EL *  t.Ori_Ex_rate ,0) AS EL_Ori_Ex,
 	   --EL_Ori_Ex float, --累計減損(成本匯率台幣)
-	   ROUND(ROUND(t.EL_import_Principle,2)*t.Ori_Ex_rate,0) AS Principal_EL_Ori_Ex,
+	   ROUND(ROUND(t.EL_import_Principle,2)* t.Ori_Ex_rate  ,0) AS Principal_EL_Ori_Ex,
 	   --Principal_EL_Ori_Ex float, --(PG&E需求更動)累計減損_本金(成本匯率台幣)	 
-       ROUND(ROUND(t.EL_import_Int,2)* t.Ori_Ex_rate,0) AS Interest_Receivable_EL_Ori_Ex,
+
+       ROUND(ROUND(t.EL_import_Int,2)*  t.Ori_Ex_rate ,0) AS Interest_Receivable_EL_Ori_Ex,
 	   --Interest_Receivable_EL_Ori_Ex float, --(PG&E需求更動)累計減損_利息(成本匯率台幣)
-	   ROUND(t.EL * t.Ex_rate , 0) - ROUND(t.EL * t.Ori_Ex_rate , 0) AS EL_EX_Diff , --累計減損匯兌損益(台幣)
+	   ROUND(t.EL *  t.Ex_rate  , 0) - ROUND(t.EL *  t.Ori_Ex_rate , 0) AS EL_EX_Diff , --累計減損匯兌損益(台幣)
 	   A41.ISSUER , --ISSUER
 	   A41.Bond_Number , --債券編號 
 	   A41.Lots , --Lots
@@ -1265,6 +1509,7 @@ SELECT C07.PRJID AS PRJID, --專案名稱
        A41.PRODUCT , --SMF
 	   A41.Market_Value_Ori  , --市價(原幣)
 	   A41.Market_Value_TW , --市價(報表日匯率台幣)
+	   
 	   A41.Current_Int_Rate  , --合?利率/產品利率
 	   A41.EIR , --有效利率
 	   A41.Lien_position , --擔保順位
@@ -1281,16 +1526,19 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 	   D62.Map_Rule_Id_D70 ,  --對應D70-觀察名單參數檔規則編號
 	   D62.Warning_IND , --是否為預警名單
 	   D62.Map_Rule_Id_D71  , --對應D71-預警名單參數檔規則編號
-	   cast(A41.Ori_Amount * A41.Ori_Ex_rate as decimal(30,3)) AS Ori_Amount_Ori_Ex,
-	   --Ori_Amount_Ori_Ex float , --帳列面額(成本匯率台幣)
+	   cast(A41.Ori_Amount *  A41.Ori_Ex_rate as decimal(30,3)) AS Ori_Amount_Ori_Ex,
+	   
+	 
 	   ROUND(t.EL_import_Principle,2) AS Principal_EL_Ori, 
 	   --Principal_EL_Ori float , --(PG&E需求更動)累計減損-本金(原幣)
 	   ROUND(t.EL_import_Int,2) AS Interest_Receivable_EL_Ori, 
 	   --Interest_Receivable_EL_Ori float,--(PG&E需求更動)累計減損-利息(原幣)
 	   t.Interest_Receivable_import_TW AS Interest_Receivable_tw , --(PG&E需求更動應收利息(報表日匯率台幣)
-	   ROUND(t.EL * t.Ex_rate , 0) - ROUND(t.EL * t.Ori_Ex_rate , 0)  AS Principal_Diff_Tw,
+	   
+	   ROUND(t.EL * t.Ex_rate  , 0) - ROUND(t.EL * t.Ori_Ex_rate  , 0)  AS Principal_Diff_Tw,
 	   --預先註記  ((t.EL - (A41.Interest_Receivable * C07.PD * C09.Current_LGD)) * (A41.Ex_rate - A41.Ori_Ex_rate)) AS Principal_Diff_Tw,
 	   --Principal_Diff_Tw float , --累計減損匯兌損益-本金(台幣)
+
 	   A41.ISIN_Changed_Ind, --是否為換券
 	   A41.Bond_Number_Old , --債券編號_換券前
 	   A41.Lots_Old  , --Lots_舊
@@ -1298,7 +1546,35 @@ SELECT C07.PRJID AS PRJID, --專案名稱
 	   A41.Origination_Date_Old,   --舊券原始購入日
 	   t.PD_Interest_Receivable_import AS PD_Int,--(PG&E需求更動)利息第一年違約率
 	   t.LGD_Interest_Receivable_import as LGD_Int--(PG&E需求更動)利息違約損失率
+--20191003 alibaba  優化需求 第9項
+,t.Ori_Ex_rate_to_USD , --成本USD匯率
+t.Ex_rate_to_USD ,--報表日USD匯率
+t.Trading_Number,--成交單號
+--end 20191003 alibaba
+--20191101 alibaba  優化需求 第9項
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU'  AND A41.Ori_Ex_rate_to_USD IS NOT NULL THEN CAST(A41.Ori_Amount*A41.Ori_Ex_rate_to_USD AS decimal(30,2) )
+ELSE NULL END	 AS Ori_Amount_Ori_Ex_USD,
+--Ori_Amount_Ori_Ex_USD float , --帳列面額(成本匯率美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ori_Ex_rate_to_USD IS NOT NULL THEN  CAST(A41.Ori_Ex_rate_to_USD *A41.Principal   AS decimal(30,2) ) ELSE NULL END 
+AS Amort_Amt_Ori_USD,  --攤銷後成本(成本匯率美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ex_rate_to_USD IS NOT NULL THEN  CAST(A41.Ex_rate_to_USD *t.Amort_Amt_import AS decimal(30,2) ) ELSE NULL END 
+AS Amort_Amt_USD,   --攤銷後成本(報表日匯率美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ex_rate_to_USD IS NOT NULL THEN CAST(A41.Ex_rate_to_USD*A41.Market_Value_Ori  AS decimal(30,2) )ELSE NULL END 
+AS Market_Value_USD,  --市價(報表日匯率美金)
 
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ori_Ex_rate_to_USD IS NOT NULL THEN ROUND(ROUND(t.EL_import_Principle,2)*t.Ori_Ex_rate_to_USD ,2)ELSE NULL END AS Principal_EL_Ori_Ex_USD,
+--Principal_EL_Ori_Ex_USD float, --(PG&E需求更動)累計減損_本金(成本匯率美金)	
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ex_rate_to_USD IS NOT NULL THEN ROUND(ROUND(t.EL_import_Principle,2)*t.Ex_rate_to_USD  ,2)ELSE NULL END  AS Principal_EL_Ex_USD,
+--Principal_EL_Ex_USD float, --(PG&E需求更動)累計減損_本金(報表日匯率美金) 
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ex_rate_to_USD IS NOT NULL  AND  A41.Ori_Ex_rate_to_USD IS NOT NULL  THEN
+ROUND(t.EL * t.Ex_rate_to_USD  , 2) - ROUND(t.EL *  t.Ori_Ex_rate_to_USD ,2) ELSE NULL END AS Principal_Diff_USD,
+--預先註記  ((t.EL - (A41.Interest_Receivable * C07.PD * C09.Current_LGD)) * (A41.Ex_rate - A41.Ori_Ex_rate)) AS Principal_Diff_USD,
+--Principal_Diff_USD float , --累計減損匯兌損益-本金(美金)
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ex_rate_to_USD IS NOT NULL  THEN ROUND(ROUND(t.Interest_Receivable_import,2)*A41.Ex_rate_to_USD,2) ELSE NULL END AS Interest_Receivable_USD,  --(PG&E需求更動應收利息(報表日匯率台幣)
+
+CASE WHEN A41.IAS39_CATEGORY IN ('FVOCI','AC') AND  SUBSTRING (A41.Portfolio,0,4) = 'OIU' AND A41.Ex_rate_to_USD IS NOT NULL  THEN ROUND(ROUND(t.EL_import_Int,2)*t.Ex_rate_to_USD,2)ELSE NULL END AS Interest_Receivable_EL_Ex_USD
+--Interest_Receivable_EL_Ex_USD float, --(PG&E需求更動)累計減損_利息(報表日匯率美金 )
+--END 20191101 alibaba  
 FROM (SELECT * FROM Bond_Account_Info WHERE Report_Date = @Report_Date AND Version = @Version  ) AS A41 
 
 JOIN( 
@@ -1406,7 +1682,24 @@ INSERT INTO [IFRS9_Bond_Report]
            ,[Origination_Date_Old]
            ,[Create_User]
            ,[Create_Date]
-           ,[Create_Time])
+           ,[Create_Time]
+--20190921 alibaba  優化需求 第9項
+,Ori_Ex_rate_to_USD , --成本USD匯率
+Ex_rate_to_USD ,--報表日USD匯率
+Trading_Number,--成交單號
+--end 20190921 alibaba
+--20191104 alibaba 
+Ori_Amount_Ori_Ex_USD,
+Amort_Amt_Ori_USD,
+Amort_Amt_USD,
+Market_Value_USD,
+Principal_EL_Ori_Ex_USD,
+Principal_EL_Ex_USD,
+Principal_Diff_USD,
+Interest_Receivable_USD,
+Interest_Receivable_EL_Ex_USD
+--end 20191104 alibaba
+		   )
 select      [PRJID]
            ,[FLOWID]
            ,[Report_Date]
@@ -1489,6 +1782,22 @@ select      [PRJID]
            ,@Create_User
            ,@Create_Date
            ,@Create_Time
+--20190921 alibaba  優化需求 第9項
+,Ori_Ex_rate_to_USD , --成本USD匯率
+Ex_rate_to_USD ,--報表日USD匯率
+Trading_Number,--成交單號
+--end 20190921 alibaba
+--20191104 alibaba 
+Ori_Amount_Ori_Ex_USD,
+Amort_Amt_Ori_USD,
+Amort_Amt_USD,
+Market_Value_USD,
+Principal_EL_Ori_Ex_USD,
+Principal_EL_Ex_USD,
+Principal_Diff_USD,
+Interest_Receivable_USD,
+Interest_Receivable_EL_Ex_USD
+--end 20191104 alibaba
 from D54Temp ;";
 
                 #endregion

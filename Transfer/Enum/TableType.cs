@@ -47,6 +47,13 @@ namespace Transfer.Enum
             A42,
 
             /// <summary>
+            /// 換券收息調整資料檔
+            /// </summary>
+            [Description("Bond_ISIN_Changed_IntRevise")]
+            [Name("換券收息調整資料檔")]
+            A44_2,     
+
+            /// <summary>
             /// 產業別資訊檔
             /// </summary>
             [Description("Bond_Category_Info")]
@@ -242,7 +249,7 @@ namespace Transfer.Enum
             [Description("Bond_Spread_Trade_Info")]
             [Name("信用利差最後交易日資料")]
             A96_Trade,
-            
+
             /// <summary>
             /// 帳戶主檔
             /// </summary>
@@ -372,6 +379,13 @@ namespace Transfer.Enum
             D66,
 
             /// <summary>
+            /// 風控覆核專區
+            /// </summary>
+            [Description("Bond_RiskReview_Result_File")]
+            [Name("風控覆核專區")]
+            D6RiskReview,            
+
+            /// <summary>
             /// SMF分群設定檔
             /// </summary>
             [Commucation(typeof(D72ViewModel))]
@@ -402,6 +416,13 @@ namespace Transfer.Enum
             [Description("Mail_Info")]
             [Name("郵件設定")]
             D74_1,
+
+            /// <summary>
+            /// 風控覆核專區上傳檔
+            /// </summary>
+            [Description("Bond_Risk_Control_Result_File")]
+            [Name("風控覆核專區上傳檔")]
+            D75,
 
             /// <summary>
             /// 檢查轉檔完成資料表

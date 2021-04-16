@@ -23,9 +23,22 @@
                 </hgroup>
             </div>
             <div>
-                <a href="@Url.Action("Login", "Account", null)">回登入畫面</a>
+                <a id="returntoLogin" onclick="loginpage()" href='#'>回登入畫面</a>
+
             </div>
         </div>
     </div>
 </body>
 </html>
+<script>
+    function loginpage() {
+        let uri = encodeURIComponent('@Url.Action("Login", "Account", null)');
+        window.location.replace(window.location.protocol + "//" + window.location.hostname + ':' + window.location.port + '/' + uri)
+
+    }
+
+    
+
+
+
+</script>

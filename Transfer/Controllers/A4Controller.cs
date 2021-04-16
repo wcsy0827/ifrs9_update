@@ -21,10 +21,16 @@ namespace Transfer.Controllers
         private string[] selectsMortgage = { "All", "B01", "C01", "C02" };
         private List<SelectOption> actions = null;
         DateTime startTime = DateTime.MinValue;
+        protected Common common
+        {
+            get;
+            private set;
+        }
 
         public A4Controller()
         {
             this.A4Repository = new A4Repository();
+            this.common = new Common();
             startTime = DateTime.Now;
             actions = new List<SelectOption>() {
                 new SelectOption() {Text="查詢",Value="search" },
@@ -214,6 +220,336 @@ namespace Transfer.Controllers
         {
             return View();
         }
+
+        #region 190628 John.投會換券應收未收金額修正
+        /// <summary>
+        /// A44_2Upload(換券應收未收修正檔)
+        /// </summary>
+        /// <returns></returns>
+        [UserAuth]
+        public ActionResult A44_2()
+        {
+            ViewBag.UserAccount = AccountController.CurrentUserInfo.Name;//20200926 alibaba 系統使用者 202008210166-00
+            return View();
+        }
+
+        /// <summary>
+        /// A44_2Detail(換券應收未收修正檔)
+        /// </summary>
+        /// <returns></returns>
+        [UserAuth]
+        public ActionResult A44_2Detail()
+        {
+            return View();
+        }
+
+        #region UploadA44_2
+        [BrowserEvent("上傳A44_2換券應收未收金額修正檔")]
+        [HttpPost]
+        public JsonResult UploadA44_2()
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            try
+            {
+                #region 前端無傳送檔案進來
+
+                if (!Request.Files.AllKeys.Any())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.upload_Not_Find.GetDescription();
+                    return Json(result);
+                }
+
+                #endregion 前端無傳送檔案進來
+
+                #region 前端檔案大小不符或不為Excel檔案(驗證)
+
+                var FileModel = Request.Files["UploadedFile"];
+                string reportDate = Request.Form["reportDate"];
+                DateTime dt = DateTime.MinValue;
+                DateTime.TryParse(reportDate, out dt);
+
+                string pathType = Path.GetExtension(FileModel.FileName)
+                       .Substring(1); //上傳的檔案類型
+
+                List<string> pathTypes = new List<string>()
+                {
+                    "xlsx","xls"
+                };
+                if (!pathTypes.Contains(pathType.ToLower()))
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.excel_Validate.GetDescription();
+                    return Json(result);
+                }
+
+                #endregion 前端檔案大小不符或不為Excel檔案(驗證)
+
+                #region 上傳檔案
+
+                var fileName = string.Format("{0}.{1}",
+                    Excel_UploadName.A44_2Upload.GetDescription(),
+                    pathType); //固定轉成此名稱
+
+                Cache.Invalidate(CacheList.A44_2ExcelName); //清除 Cache
+                Cache.Set(CacheList.A44_2ExcelName, fileName); //把Excel_name存到 Cache
+
+                #region 檢查是否有FileUploads資料夾,如果沒有就新增 並加入 excel 檔案
+
+                string projectFile = Server.MapPath("~/" + SetFile.FileUploads); //專案資料夾
+                string path = Path.Combine(projectFile, fileName);
+
+                FileRelated.createFile(projectFile); //檢查是否有FileUploads資料夾,如果沒有就新增
+
+                //呼叫上傳檔案 function
+                result = FileRelated.FileUpLoadinPath(path, FileModel);
+                if (!result.RETURN_FLAG)
+                    return Json(result);
+
+                #endregion 檢查是否有FileUploads資料夾,如果沒有就新增 並加入 excel 檔案
+
+                #region 讀取Excel資料 使用ExcelDataReader 並且組成 json
+
+                var stream = FileModel.InputStream;
+
+                var data = A4Repository.getA44_2Excel(pathType, stream, dt);
+                if (!data.Item1.IsNullOrWhiteSpace())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = data.Item1;
+                    return Json(result);
+                }
+                List<A44_2ViewModel> dataModel = data.Item2;
+                if (dataModel.Count > 0)
+                {
+                    result.RETURN_FLAG = true;
+                    Cache.Invalidate(CacheList.A44_2ExcelfileDate); //清除 Cache
+                    Cache.Set(CacheList.A44_2ExcelfileDate, dataModel); //把資料存到 Cache
+                    //20200930 alibaba 1筆舊券換多筆新券提示訊息 202008210166-00
+                    if (dataModel.Exists(y => y.Multi_NewBonds == "Y"))
+                    { result.DESCRIPTION = "請注意! 本次上傳應收息修正檔有一筆舊券換多筆新券情形。"; }
+                    //end 20200930 alibaba
+                    //new BondsCheckRepository<A44_2ViewModel>(dataModel, Check_Table_Type.Bonds_C10_UpLoad_Check);  //0615 檢核部分先不寫，之後再看要做哪些檢核
+                }
+                else
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.data_Not_Compare.GetDescription();
+                }
+
+                #endregion 讀取Excel資料 使用ExcelDataReader 並且組成 json
+
+                #endregion 上傳檔案
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.exceptionMessage();
+            }
+            return Json(result);
+        }
+        #endregion
+
+        #region Excel檔存進DB
+        [BrowserEvent("A44_2換券應收未收金額修正檔存入DB")]
+        [HttpPost]
+        public JsonResult TransferA44_2(string reportDate, List<A44_2ViewModel> dataModel)//20200924 alibaba 新增傳入jqgrid的obj 202008210166-00
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            try
+            {
+                #region 抓Excel檔案 轉成 model
+
+                // Excel 檔案位置
+
+                string projectFile = Server.MapPath("~/" + SetFile.FileUploads);
+
+                string fileName = string.Empty;
+                if (Cache.IsSet(CacheList.A44_2ExcelName))
+                    fileName = (string)Cache.Get(CacheList.A44_2ExcelName);  //從Cache 抓資料Name
+
+                if (fileName.IsNullOrWhiteSpace())
+                {
+                    result.RETURN_FLAG = false;
+                    result.DESCRIPTION = Message_Type.time_Out.GetDescription();
+                    return Json(result);
+                }
+
+                string path = Path.Combine(projectFile, fileName);               
+
+                DateTime dt = DateTime.MinValue;
+                DateTime.TryParse(reportDate, out dt);
+
+                string errorMessage = string.Empty;
+
+                #endregion 抓Excel檔案 轉成 model
+
+                #region txtlog 檔案名稱
+
+
+                string txtpath = SetFile.A44_2TransferTxtLog; //預設txt名稱
+                string configTxtName = ConfigurationManager.AppSettings["txtLogA44_2Name"];
+                if (!string.IsNullOrWhiteSpace(configTxtName))
+                    txtpath = configTxtName; //有設定webConfig且不為空就取代
+
+
+                #endregion txtlog 檔案名稱
+                #region save A44_2
+                MSGReturnModel resultA44_2 = A4Repository.SaveA44_2(dataModel, reportDate); //save to DB
+
+                int ver = 0; ///上傳檔案，版本皆為0
+
+                bool A44_2Log = CommonFunction.saveLog(Table_Type.A44_2,
+                    fileName, SetFile.ProgramName, resultA44_2.RETURN_FLAG,
+                    Debt_Type.B.ToString(), startTime, DateTime.Now, AccountController.CurrentUserInfo.Name, ver, dt); //寫sql Log
+                TxtLog.txtLog(Table_Type.A44_2, resultA44_2.RETURN_FLAG, startTime, txtLocation(txtpath)); //寫txt Log
+
+                #endregion save A44_2
+
+                result.RETURN_FLAG = resultA44_2.RETURN_FLAG;
+                result.DESCRIPTION = Message_Type.save_Success.GetDescription(Table_Type.A44_2.ToString());
+
+                if (!result.RETURN_FLAG)
+                {
+
+                    result.DESCRIPTION = Message_Type.save_Fail
+                        .GetDescription(Table_Type.A44_2.ToString(), resultA44_2.DESCRIPTION);
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.Message;
+
+            }
+            return Json(result);
+        }
+        #endregion
+
+        #region CheckA44_2MaxVersion
+        [BrowserEvent("檢查目前報導日A44_2最大版本")]
+        [HttpPost]
+        public JsonResult CheckA44_2MaxVersion(string reportDate)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            DateTime dt = TypeTransfer.stringToDateTime(reportDate);
+            try
+            {
+                var CheckFlag = A4Repository.CheckMaxVerion(dt);
+                if (CheckFlag)
+                {
+                    result.RETURN_FLAG = true;
+                    result.DESCRIPTION = "目前最大版本A41已經執行過B01、C01，請投資風控重新上傳A41!";
+                }
+                return Json(result);
+            }
+            catch(Exception ex)
+            {
+
+                result.RETURN_FLAG = true;
+                result.DESCRIPTION = $"取得最大版本錯誤，錯誤訊息:{ex}";
+                return Json(result);
+            }
+
+        }
+        #endregion
+
+        #region CheckA44_2Data
+        [BrowserEvent("檢查A44_2上傳內容")]
+        [HttpPost]
+        public JsonResult CheckA44_2Data(string reportDate)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            DateTime dt = TypeTransfer.stringToDateTime(reportDate);
+            string filename = Table_Type.A44_2.ToString();
+            int version = 0;
+
+            var queryData = A4Repository.GetA44_2(dt, version);
+            if (common.checkTransferCheck(filename, "A44_2", dt, version) && queryData != null && queryData.Count > 0)
+            {
+                result.RETURN_FLAG = true;
+
+                result.DESCRIPTION = Message_Type.Uplaod_data_Overwrite_File.GetDescription();
+            }
+            else
+            {
+                result.RETURN_FLAG = false;
+            }
+
+            return Json(result);
+        }
+        #endregion
+
+        #region Get A44_2Data
+        [BrowserEvent("查詢A44_2資料")]
+        [HttpPost]
+        public JsonResult GetA44_2Data(string ReportDate, string Version)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            //result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.A44_2.tableNameGetDescription());
+
+            DateTime _ReportDate = new DateTime();
+            int _Version = 0;
+            if (!DateTime.TryParse(ReportDate, out _ReportDate) ||
+                !int.TryParse(Version, out _Version))
+            {
+                result.DESCRIPTION = Message_Type.parameter_Error.GetDescription();
+                return Json(result);
+            }
+            try
+            {
+                var resultData = A4Repository.GetA44_2Detail(_ReportDate, _Version);
+                if (resultData.Any())
+                {
+                    Cache.Invalidate(CacheList.A44_2DbfileData); //清除
+                    Cache.Set(CacheList.A44_2DbfileData, resultData); //把資料存到 Cache
+                    result.RETURN_FLAG = true;
+                }
+                else
+                {
+                    result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription(Table_Type.A44_2.tableNameGetDescription());
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.exceptionMessage();
+            }
+
+            return Json(result);
+        }
+        #endregion
+        #region GetCacheA44_2Data
+        [HttpPost]
+        public ActionResult GetCacheA44_2Data(jqGridParam jdata, string type)
+        {
+            switch (type)
+            {
+                case "A44_2Upload":
+                    if (Cache.IsSet(CacheList.A44_2ExcelfileDate))
+                        //從Cache 抓資料
+                        return Json(jdata.modelToJqgridResult((List<A44_2ViewModel>)Cache.Get(CacheList.A44_2ExcelfileDate), true));
+                    break;
+
+                case "A44_2_Db":
+                    if (Cache.IsSet(CacheList.A44_2DbfileData))
+                        return Json(jdata.modelToJqgridResult((List<A44_2DetailViewModel>)Cache.Get(CacheList.A44_2DbfileData), true));
+                    break;
+            }
+            return null;
+        }
+        #endregion
+
+
+
+
+        #endregion
 
         #region GetCacheData
         /// <summary>
@@ -500,7 +836,10 @@ namespace Transfer.Controllers
         public JsonResult TransferA42(string processingDate, string reportDate)
         {
             MSGReturnModel result = new MSGReturnModel();
-
+            DateTime dt = DateTime.MinValue;
+            DateTime.TryParse(reportDate, out dt);
+            var data = CommonFunction.getVersion(dt, "A41");//抓A41報導日最大版本
+            var version = data.Last();
             try
             {
                 //result = A4Repository.checkA42Duplicate(reportDate);
@@ -545,9 +884,13 @@ namespace Transfer.Controllers
                 #endregion txtlog 檔案名稱
 
                 #region save
-                MSGReturnModel resultSave = A4Repository.saveA42(dataModel); //save to DB
+                MSGReturnModel resultSave = A4Repository.saveA42(dataModel, version); //save to DB
                 #endregion save
-
+                #region 20200514 John.A42回寫A41邏輯調整.增加手動上傳A42時的Log
+                bool A42Log = CommonFunction.saveLog(Table_Type.A42, fileName, SetFile.ProgramName, resultSave.RETURN_FLAG, Debt_Type.B.ToString(),
+                    startTime, DateTime.Now, AccountController.CurrentUserInfo.Name,int.Parse(version), dt); //寫sql Log
+                #endregion
+                               
                 result.RETURN_FLAG = resultSave.RETURN_FLAG;
                 result.DESCRIPTION = Message_Type.save_Success.GetDescription(Table_Type.A42.ToString());
 
@@ -1328,7 +1671,7 @@ namespace Transfer.Controllers
             if (Debt_Type.M.ToString().Equals(debt))
                 fileName = "A01-IAS39,A02";
 
-            //DateTime startTime = DateTime.Now;
+           
             switch (type)
             {
                 case "All": //All 也是重B01開始 B01 => C01
@@ -1982,6 +2325,19 @@ namespace Transfer.Controllers
         }
         #endregion
 
+        #region GetCacheA44_2Data (190628 John.投會換券應收未收金額修正)
+        public JsonResult GetCacheA44_2Data(jqGridParam jdata)
+        {
+            List<A44_2ViewModel> data = new List<A44_2ViewModel>();
+            if (Cache.IsSet(CacheList.A44_2ExcelfileDate))
+            {
+                data = (List<A44_2ViewModel>)Cache.Get(CacheList.A44_2ExcelfileDate);
+            }
+
+            return Json(jdata.modelToJqgridResult(data));
+        }
+        #endregion
+
         #region GetCacheA44Data
         [HttpPost]
         public JsonResult GetCacheA44Data(jqGridParam jdata)
@@ -2032,7 +2388,7 @@ namespace Transfer.Controllers
         #region SaveA44
         [BrowserEvent("儲存A44資料")]
         [HttpPost]
-        public JsonResult SaveA44(string actionType, A44ViewModel dataModel)
+        public JsonResult SaveA44(string actionType, A44ViewModel dataModel, bool isoldbondsave = false)//20200925 alibaba isoldbondsave：舊券重複確認是否存檔 202008210166-00
         {
             MSGReturnModel result = new MSGReturnModel();
 
@@ -2041,14 +2397,27 @@ namespace Transfer.Controllers
 
             try
             {
-                MSGReturnModel resultSave = A4Repository.saveA44(actionType, dataModel);
+                MSGReturnModel resultSave = A4Repository.saveA44(actionType, dataModel, isoldbondsave);//20200925 alibaba isoldbondsave：舊券重複確認是否存檔 202008210166-00
 
                 result.RETURN_FLAG = resultSave.RETURN_FLAG;
                 result.DESCRIPTION = resultSave.DESCRIPTION;
 
+               
+
+               
+
                 if (!result.RETURN_FLAG)
-                {
-                    result.DESCRIPTION = Message_Type.save_Fail.GetDescription() + " " + resultSave.DESCRIPTION;
+                { //20200930 alibaba 回傳舊券是否重複 202008210166-00
+                    if (resultSave.REASON_CODE == "1")
+                    {
+                        result.REASON_CODE = resultSave.REASON_CODE;
+                        result.DESCRIPTION = resultSave.DESCRIPTION;
+                    } 
+                    //end 20200930 alibaba
+                    else
+                    {
+                        result.DESCRIPTION = Message_Type.save_Fail.GetDescription() + " " + resultSave.DESCRIPTION;
+                    }
                 }
             }
             catch (Exception ex)

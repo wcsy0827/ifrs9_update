@@ -15,39 +15,39 @@ namespace Transfer.Report.Data
             {
                 string sql = string.Empty;
 
-                sql += $@"
+                sql += $@"--20190923 alibaba from email 20190920	RE: IFRS9資訊更新
 select 
 IAS39_CATEGORY,
 SUM(CASE WHEN Impairment_Stage = '1' AND Risk_Level = '低風險'
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_1_1,
+     ELSE 0
+     END) AS Risk_Level_1_1,
 SUM(CASE WHEN Impairment_Stage = '1' AND Risk_Level = '中風險'
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_1_2,
+     ELSE 0
+     END) AS Risk_Level_1_2,
 SUM(CASE WHEN Impairment_Stage = '1' AND Risk_Level = '高風險'
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_1_3,
+     ELSE 0
+     END) AS Risk_Level_1_3,
 SUM(CASE WHEN Impairment_Stage = '2' AND Risk_Level = '低風險'
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_2_1,
+     ELSE 0
+     END) AS Risk_Level_2_1,
 SUM(CASE WHEN Impairment_Stage = '2' AND Risk_Level = '中風險'
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_2_2,
+     ELSE 0
+     END) AS Risk_Level_2_2,
 SUM(CASE WHEN Impairment_Stage = '2' AND Risk_Level = '高風險'
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_2_3,
-SUM(CASE WHEN Impairment_Stage = '3' AND Risk_Level = '高風險'
+     ELSE 0
+     END) AS Risk_Level_2_3,
+SUM(CASE WHEN Impairment_Stage = '3' --投會需求，財報揭露stage3不須再區分低/中/高風險 from email 20190920	RE: IFRS9資訊更新
      THEN ISNULL(Accounting_EL,0)
-	 ELSE 0
-	 END) AS Risk_Level_3_3,
+     ELSE 0
+     END) AS Risk_Level_3_3,
 SUM(ISNULL(Principal_EL_Ex,0)) AS Principal_EL_Ex
- from
+from
 (select Reference_Nbr, IAS39_CATEGORY,Impairment_Stage,Risk_Level,Accounting_EL 
 from Bond_Accounting_EL 
 where Report_Date = @Report_Date
@@ -55,15 +55,13 @@ and IAS39_CATEGORY not like 'FVPL%' ) AS BAE
 left join
 (
 select D52.Reference_Nbr,D52.Principal_EL_Ex from 
-(select Reference_Nbr,Principal_EL_Ex,PRJID,FLOWID  from IFRS9_Bond_Report 
-where Report_Date = @Report_Date) D52
-JOIN (select PRJID,FLOWID from Flow_Info
-where Group_Product_Code = @Group_Product_Code) FI
+(select Reference_Nbr,Principal_EL_Ex,PRJID,FLOWID  from IFRS9_Bond_Report where Report_Date = @Report_Date) D52
+JOIN (select PRJID,FLOWID from Flow_Info where Group_Product_Code = @Group_Product_Code) FI
 on D52.PRJID = FI.PRJID
 and D52.FLOWID = FI.FLOWID
 ) AS ILR
 on BAE.Reference_Nbr = ILR.Reference_Nbr
-group by IAS39_CATEGORY ;
+group by IAS39_CATEGORY 
 ";
 
                 using (var cmd = new SqlCommand(sql, conn))

@@ -9,7 +9,13 @@ namespace Transfer.Enum
         /// </summary>
         public enum Message_Type
         {
-
+            //增加執行Krisk時檢查A41與B01、C01不一致時錯誤訊息
+            /// <summary>
+            /// A41應收利息資訊存在與B01及C01不一致狀況，請確認A44_2上傳狀況!
+            /// </summary>
+            [Description("A41應收利息資訊存在與B01及C01不一致狀況，請確認A44_2上傳狀況!")]
+            Not_Match_IntReceivable,         
+            
             //增加C10覆蓋轉檔資料前提醒，
             /// <summary>
             /// 已經有上傳資料，請問要進行上傳並覆蓋資料?
@@ -44,8 +50,6 @@ namespace Transfer.Enum
             /// </summary>
             [Description("沒有找到對應缺漏資料!")]
             Not_Find_Relating_Missing,
-
-
 
             /// <summary>
             /// 資料已經儲存過了
@@ -198,10 +202,27 @@ namespace Transfer.Enum
             insert_Success_Wait_Audit,
 
             /// <summary>
-            /// 已更新資料等待呈送覆核!
+            /// 覆核確認完成!
             /// </summary>
-            [Description("已更新資料等待呈送覆核!")]
+            [Description("覆核確認完成!")]
             update_Success_Wait_Audit,
+            /// <summary>
+            /// 退回完成!
+            /// </summary>
+            [Description("退回完成!")]
+            return_Success,
+
+            /// <summary>
+            /// 銷案完成!
+            /// </summary>
+            [Description("銷案完成!")]
+            close_Success,
+
+            /// <summary>
+            /// 結案完成!
+            /// </summary>
+            [Description("結案完成!")]
+            approve_Success,
 
             /// <summary>
             /// 已為失效狀態無須再設定失效!
@@ -341,12 +362,20 @@ namespace Transfer.Enum
             /// A41註記部位與C10上傳檔部位不符
             /// </summary>
             [Description("此版本A41註記為”N”毋須進行評估部位與C10 風控上傳檔部位不相符。 請聯繫投資風控確認C10上傳檔")]
-            A41C10NotMatch
+            A41C10NotMatch,
             #endregion
 
+            /// <summary>
+            /// 該版本風控覆核專區尚在流程中，若欲執行D62，請先於風控覆核專區銷案。
+            /// </summary>
+            [Description("該版本風控覆核專區尚在流程中，若欲執行D62，請先於風控覆核專區銷案。")]
+            ReviewInProgress,
 
-
-
+            /// <summary>
+            /// 該版本風控覆核專區尚在流程中，若欲執行減損計算，請先於風控覆核專區銷案。
+            /// </summary>
+            [Description("該版本風控覆核專區尚在流程中，若欲執行減損計算，請先於風控覆核專區銷案。")]
+            ReviewVersionInfo
 
         }
     }

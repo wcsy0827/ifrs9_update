@@ -1,0 +1,174 @@
+﻿@{
+    ViewBag.Menu = "ReportMain";
+    ViewBag.SubMenu = "SummarySub";
+    ViewBag.Title = "預期信用損失估算表";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="padding-top:5px; ">
+                            <label>基準日/報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>版本 : </label>
+                            <select class="form-control" style="display:inline-block" id="version"></select>
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>版本內容 : </label>
+                            <select class="form-control" style="display:inline-block" id="content"></select>
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>產品 : </label>
+                            <select class="form-control" style="display:inline-block" id="product"></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:15px">
+                            <input type="button" class="btn btn-primary" value="預期信用損失估算表" id="btnReport" />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <i class="fa fa-exclamation-circle title" style="font-size:24px;"
+               alt="預期信用損失估算表"></i>
+        </div>
+    </div>
+    <div id="remarkdiv"></div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        const fileName = '預期信用損失估算表_紙本簽核.pdf';
+        //#region 註冊URL
+        var url = {};
+        url.report = '@Url.Action("GetReport","Common")';
+        url.version = '@Url.Action("GetD75VersionForReport", "D7")';
+        url.content = '@Url.Action("GetD75Content", "D7")';
+        url.product = '@Url.Action("GetD75Product", "D7")';
+        url.getreviewdata = '@Url.Action("GetD75Review", "D7")';
+        url.getFile = '@Url.Action("GetD75File", "D7")';
+        //#endregion 註冊URL
+        //datepicker 觸發行為
+        var versionFun = function () {
+            customerUtility.clrSelectData(['version', 'content', 'product']);          
+            customerUtility.addSelectData('version', "0", "");
+            customerUtility.getSelectData('version', [$('#datepicker').val(), ""], url.version);
+        }
+        var contentFun = function () {
+            customerUtility.clrSelectData(['content', 'status', 'product']);
+            customerUtility.getSelectData('content', [$('#datepicker').val(), $('#version').find(':selected').val()], url.content);
+            customerUtility.getSelectData('product', [$('#datepicker').val(), $('#version').find(':selected').val()], url.product);
+        }
+        created.createDatepicker('datepicker', true,'', versionFun);
+        // 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        //verified.required('myForm', 'version', message.required(message.version));
+        //verified.number('myForm', 'version');
+        // 註冊verified
+
+        //註冊select事件
+        $('select').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'version':
+                    $('#' + id).on('change', function () {
+                        contentFun();
+                    })
+                    break;
+            }
+        })
+
+        //#region 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'btnReport':
+                    $("#" + id).click(report);
+                    break;
+            }
+        })
+        //#endregion 註冊click事件
+
+        function report()
+        {
+            if ($('#myForm').valid())
+            {
+
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        data: [$('#datepicker').val(),
+                        $('#version').find(':selected').val(),
+                            '5']
+                    }),
+                    dataType: "json",
+                    url: url.getreviewdata,
+                    contentType: 'application/json'
+                })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            reportData = result.Datas.Data[0];
+                            reportData.First_Order_Status == "1" ? reportData.First_Order_Status = "待覆核" : reportData.First_Order_Status == "2" ? reportData.First_Order_Status = "已覆核" : reportData.First_Order_Status = "退回";
+                            reportData.Second_Order_Status == "1" ? reportData.Second_Order_Status = "待覆核" : reportData.Second_Order_Status == "2" ? reportData.Second_Order_Status = "已覆核" : reportData.Second_Order_Status = "退回";
+                            message = "表單建立人員 : " + reportData.Create_User_Name;
+                            message += "\n一階覆核人員 : " + reportData.First_Order_Name + " (" + reportData.First_Order_Status + ")";
+                            message += "\n二階覆核人員 : " + reportData.Second_Order_Name + " (" + reportData.Second_Order_Status + ")";
+                        }
+                        let handle = "", firstOrder = "", secondOrder = "", reportDate = "",
+                            handleOpinion = "", firstOrderOpinion = "", secondOrderOpinion = "",
+                            eName = "Summary", parms = [], extensionParms = [];
+
+                        reportDate = reportData.Create_Date;
+                        handleOpinion = reportData[eName + '_Handle_Opinion'];
+                        if (reportData.Create_User_Name != null) { handle = reportData.Create_User_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+                        reportDate = reportData.First_Order_Date;
+                        firstOrderOpinion = reportData[eName + '_First_Order_Opinion'];
+                        if (reportData.First_Order_Name != null) { firstOrder = reportData.First_Order_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+                        reportDate = reportData.Second_Order_Date;
+                        secondOrderOpinion = reportData[eName + '_Second_Order_Opinion'];
+                        if (reportData.Second_Order_Name != null) { secondOrder = reportData.Second_Order_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+
+                        
+                        //下載附件
+                        var checkReference = reportData.Reference_Nbr +"_"+ "Summary"
+                        window.location.href= "@Url.RouteUrl(new
+                                           { Controller="D6",Action= "DLRiskControlFile" })/?Check_Reference="
+                            + checkReference + "&fileName=" + fileName;
+
+                        //parms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
+                        //parms.push(customerUtility.reportParm('Version', $('#version').find(':selected').val()));
+                        //parms.push(customerUtility.reportParm('ReferenceNbr', reportData.Reference_Nbr));
+                        //parms.push(customerUtility.reportParm('ProductCode', $('#product').find(':selected').val()));
+                        //parms.push(customerUtility.reportParm('ClassName', 'Summary'));
+                        //parms.push(customerUtility.reportParm('GroupProductName', $('#product').find(':selected').text()));
+                        //extensionParms.push(customerUtility.reportParm('Format', 'Preview'));
+                        //extensionParms.push(customerUtility.reportParm('Handle', handle));
+                        //extensionParms.push(customerUtility.reportParm('Handle' + eName, handleOpinion));
+                        //extensionParms.push(customerUtility.reportParm('FirstOrder', firstOrder));
+                        //extensionParms.push(customerUtility.reportParm('FirstOrder' + eName, firstOrderOpinion));
+                        //extensionParms.push(customerUtility.reportParm('SecondOrder', secondOrder));
+                        //extensionParms.push(customerUtility.reportParm('SecondOrder' + eName, secondOrderOpinion));
+                        //extensionParms.push(customerUtility.reportParm('FirstOrderStatus', reportData.First_Order_Status));
+                        //extensionParms.push(customerUtility.reportParm('SecondOrderStatus', reportData.Second_Order_Status));
+                        //extensionParms.push(customerUtility.reportParm('Status', reportData.Status));
+                        //extensionParms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
+                        //extensionParms.push(customerUtility.reportParm('Version', $('#version').find(':selected').val()));
+                        //extensionParms.push(customerUtility.reportParm('cTitle', 'IFRS9金融工具-預期信用損失估算表'));
+                        //extensionParms.push(customerUtility.reportParm('Content', $('#content').find(':selected').text()));
+                        //extensionParms.push(customerUtility.reportParm('GroupProductName', $('#product').find(':selected').text()));
+
+                        //customerUtility.report(
+                        //    customerUtility.reportModel('預期信用損失估算表', 'Summary'),
+                        //    parms,
+                        //    extensionParms
+                        //);
+                        //$("#remarkdiv").html('');
+                    })
+            }
+        }
+    });
+</script>

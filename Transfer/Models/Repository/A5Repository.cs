@@ -1976,6 +1976,7 @@ UNION ALL
    ON    BA_Info.Bond_Number =  oldA57.Bond_Number_Old
    AND   BA_Info.Lots = oldA57.Lots_Old
    AND   BA_Info.Portfolio_Name = oldA57.Portfolio_Name_Old
+ 
 UNION ALL
    SELECT BA_Info.Reference_Nbr AS Reference_Nbr ,
           BA_Info.Bond_Number AS Bond_Number,
@@ -2070,6 +2071,11 @@ UNION ALL
    ON    BA_Info.Bond_Number_Old =  oldA57.Bond_Number_Old
    AND   BA_Info.Lots_Old = oldA57.Lots_Old
    AND   BA_Info.Portfolio_Name_Old = oldA57.Portfolio_Name_Old
+  --20201028 alibaba 一舊券換多新券, 需再增加join 新券的KEY值，避免產生重複資料
+   and BA_Info.Bond_Number=oldA57.Bond_Number 
+   and BA_Info.Lots=oldA57.Lots 
+   and BA_Info.Portfolio_Name=oldA57.Portfolio_Name 
+--end 20201028 alibaba
 ),
 T1s AS(
 Select BA_Info.Reference_Nbr AS Reference_Nbr ,

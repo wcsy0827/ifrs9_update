@@ -28,6 +28,13 @@ namespace Transfer.Enum
             [Description("A42")]
             A42,
 
+            //190628換券應收未收金額修正
+            /// <summary>
+            /// A44_2Upload
+            /// </summary>
+            [Description("A44_2Upload")]
+            A44_2Upload,
+
             /// <summary>
             /// A45
             /// </summary>

@@ -132,5 +132,7 @@ namespace Transfer.ViewModels
 
         [Description("預警名單手動調整者名稱")]
         public string Warning_IND_Override_User_Name { get; set; }
+        [Description("覆核專區狀態")]
+        public string ReviewStatus { get; set; }
     }
 }

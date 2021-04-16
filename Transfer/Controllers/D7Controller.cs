@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Web.Mvc;
 using Transfer.Infrastructure;
+using Transfer.Models;
 using Transfer.Models.Interface;
 using Transfer.Models.Repository;
 using Transfer.Utility;
@@ -21,6 +22,7 @@ namespace Transfer.Controllers
         List<SelectOption> selectOptionYN;
         List<SelectOption> selectOptionRange;
         List<SelectOption> selectOptionStatus;
+        SystemRepository systemRepository = new SystemRepository();
         private string groupProductCode = Assessment_Type.B.GetDescription();
 
         public D7Controller()
@@ -79,7 +81,7 @@ namespace Transfer.Controllers
             List<SelectOption> selectOptionA52 = new List<SelectOption>();
             selectOptionA52.Add(new SelectOption() { Text = "", Value = "" });
             selectOptionA52.AddRange((A5Repository.getA52("SP").Item2)
-                           .Select(x => new SelectOption(){ Text = x.Rating, Value = x.Rating }));
+                           .Select(x => new SelectOption() { Text = x.Rating, Value = x.Rating }));
             selectOptionA52.Add(new SelectOption() { Text = "-999", Value = "-999" });
             ViewBag.A52 = new SelectList(selectOptionA52, "Value", "Text");
 
@@ -200,7 +202,7 @@ namespace Transfer.Controllers
             ViewBag.action = new SelectList(new List<SelectOption>() {
                 new SelectOption() {Text="查詢",Value="search" },
                 new SelectOption() {Text="上傳&存檔",Value="upload" }}, "Value", "Text");
-            var jqgridInfo = new D72ViewModel().TojqGridData(new int[] {200,250,150,250});
+            var jqgridInfo = new D72ViewModel().TojqGridData(new int[] { 200, 250, 150, 250 });
             ViewBag.jqgridColNames = jqgridInfo.colNames;
             ViewBag.jqgridColModel = jqgridInfo.colModel;
             return View();
@@ -363,7 +365,7 @@ namespace Transfer.Controllers
 
             try
             {
-                result = D7Repository.deleteD70(type,ruleID);
+                result = D7Repository.deleteD70(type, ruleID);
             }
             catch (Exception ex)
             {
@@ -400,7 +402,7 @@ namespace Transfer.Controllers
                     dataList.Add(dataModel);
                 }
 
-                result = D7Repository.sendD70ToAudit(type,dataList);
+                result = D7Repository.sendD70ToAudit(type, dataList);
             }
             catch (Exception ex)
             {
@@ -437,7 +439,7 @@ namespace Transfer.Controllers
                     dataList.Add(dataModel);
                 }
 
-                MSGReturnModel resultAudit = D7Repository.D70Audit(type,dataList);
+                MSGReturnModel resultAudit = D7Repository.D70Audit(type, dataList);
 
                 result.RETURN_FLAG = resultAudit.RETURN_FLAG;
                 result.DESCRIPTION = Message_Type.Audit_Success.GetDescription(type);
@@ -720,7 +722,7 @@ namespace Transfer.Controllers
           string fileName
           )
         {
-            return File(filePath, "application/octet-stream",fileName);
+            return File(filePath, "application/octet-stream", fileName);
         }
         #endregion
 
@@ -927,5 +929,292 @@ namespace Transfer.Controllers
         }
 
         #endregion
+
+        /// <summary>
+        /// D75Handle(D75風控覆核專區(經辦))
+        /// </summary>
+        /// <returns></returns>
+        [UserAuth]
+        public ActionResult D75Handle()
+        {
+            ViewBag.User = AccountController.CurrentUserInfo.Name;
+            ViewBag.UserName = CommonFunction.GetUserName(AccountController.CurrentUserInfo.Name);
+            ViewBag.UserList = new SelectList(
+                 systemRepository.getUser("menu", false, "Admin")
+                 .Select(x => new { Text = x.Item2, Value = x.Item1 }), "Value", "Text");
+            ViewBag.FieldName = CommonFunction.GetDatabaseFieldName("Bond_Risk_Control_Result").ToDictionary(x => x, x => "");
+
+            return View();
+        }
+
+        /// <summary>
+        /// D75Review(D75風控覆核專區(覆核))
+        /// </summary>
+        /// <returns></returns>
+        [UserAuth]
+        public ActionResult D75Review()
+        {
+            ViewBag.User = AccountController.CurrentUserInfo.Name;
+            ViewBag.UserName = CommonFunction.GetUserName(AccountController.CurrentUserInfo.Name);
+            ViewBag.FieldName = CommonFunction.GetDatabaseFieldName("Bond_Risk_Control_Result").ToDictionary(x => x, x => "");
+
+            return View();
+        }
+
+        /// <summary>
+        /// Bond_Quantitative_Resource(版本)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75Version(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<SelectOption> version = new List<SelectOption>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            string status = string.Empty;
+            status = data[1].IsNullOrEmpty() ? "" : data[1].ToString();
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "版本 : " + Message_Type.not_Find_Data.GetDescription();
+            version = D7Repository.GetD75Version(reportDate, status);
+
+            if (version.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(version);
+            }
+
+            return Json(result);
+        }
+
+        public JsonResult GetD75VersionForReport(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<SelectOption> version = new List<SelectOption>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "風控尚未完成。";
+            version = D7Repository.GetD75VersionForReport(reportDate);
+
+            if (version.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(version);
+            }
+
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Version_Info(版本內容)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75Content(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<SelectOption> content = new List<SelectOption>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            int version = Convert.ToInt32(data[1]);
+
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "版本內容 : " + Message_Type.not_Find_Data.GetDescription();
+            content = D7Repository.GetD75Content(reportDate, version);
+
+            if (content.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(content);
+            }
+
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75Status(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            int version = 0;
+            List<SelectOption> status = new List<SelectOption>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            if (!data[1].IsNullOrEmpty())
+            {
+                Int32.TryParse(data[1], out version);
+            }
+            string role = Convert.ToString(data[2]);           
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "覆核狀態 : " + Message_Type.not_Find_Data.GetDescription();
+            status = D7Repository.GetD75Status(reportDate, version, role);
+
+            if (status.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(status);
+            }
+
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Flow_Apply_Status(產品)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75Product(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<GroupSelectOption> product = new List<GroupSelectOption>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            int version = Convert.ToInt32(data[1]);
+
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "產品 : " + Message_Type.not_Find_Data.GetDescription();
+            product = D7Repository.GetD75Product(reportDate, version);
+
+            if (product.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(product);
+            }
+
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Bond_Quantitative_Resource(經辦)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75Handle(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<D75ViewModel> handle = new List<D75ViewModel>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            int version = Convert.ToInt32(data[1]);
+            int status = Convert.ToInt32(data[2]);
+
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "量化評估 : " + Message_Type.not_Find_Data.GetDescription();
+            handle = D7Repository.GetD75Handle(reportDate, version, status);
+
+            if (handle.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(handle);
+            }
+
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Bond_Risk_Control_Result_File(附件)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75File(string data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<Bond_Risk_Control_Result_File> file = new List<Bond_Risk_Control_Result_File>();
+
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "附件 : " + Message_Type.not_Find_Data.GetDescription();
+            file = D7Repository.GetD75File(data);
+
+            if (file.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(file);
+            }
+
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Version_Info(版本內容)
+        /// Bond_Risk_Control_Result(呈送覆核)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult SubmitD75Review(Dictionary<string, string> data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D7Repository.SubmitD75Review(data);
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(覆核)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD75Review(string[] data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<D75ViewModel> review = new List<D75ViewModel>();
+            DateTime reportDate = DateTime.Parse(data[0]);
+            int version = Convert.ToInt32(data[1]);
+            int status = Convert.ToInt32(data[2]);
+
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "風控覆核 : " + Message_Type.not_Find_Data.GetDescription();
+            review = D7Repository.GetD75Review(reportDate, version, status);
+
+            if (review.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(review);
+            }
+
+            return Json(result);
+        }
+
+
+        /// <summary>
+        /// 銷案
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult CloseD75Review(Dictionary<string, string> data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D7Repository.CloseD75Review(data);
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(確認覆核)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult ConfirmD75Review(Dictionary<string, string> data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D7Repository.ConfirmD75Review(data);
+            return Json(result);
+        }
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(退回)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult ReturnD75Review(Dictionary<string, string> data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D7Repository.ReturnD75Review(data);
+            return Json(result);
+        }
+        public JsonResult ApproveD75Review(Dictionary<string,string>data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result = D7Repository.ApproveD75Review(data);
+            return Json(result);
+        }
     }
 }

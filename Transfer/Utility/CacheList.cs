@@ -12,6 +12,8 @@
         public static string A42DbfileData { get; private set; }
         public static string A42ExcelfileData { get; private set; }
         public static string A44DbfileData { get; private set; }
+        public static string A44_2DbfileData { get; private set; }//190628換券應收未收金額修正
+        public static string A44_2ExcelfileDate { get; private set; }//190628換券應收未收金額修正
         public static string A46DbfileData { get; private set; }
         public static string A46ExcelfileData { get; private set; }
         public static string A47DbfileData { get; private set; }
@@ -99,6 +101,7 @@
         public static string A41ExcelName { get; private set; }
 
         public static string A42ExcelName { get; private set; }
+        public static string A44_2ExcelName { get; private set; } //190628換券應收未收金額修正
 
         public static string A45ExcelName { get; private set; }
 
@@ -141,6 +144,7 @@
             A42DbfileData = "A42DbfileData";
             A42ExcelfileData = "A42ExcelfileData";
             A44DbfileData = "A44DbfileData";
+            A44_2ExcelfileDate = "A44_2ExcelfileDate"; //190628換券應收未收金額修正
             A46DbfileData = "A46DbfileData";
             A46ExcelfileData = "A46ExcelfileData";
             A47DbfileData = "A47DbfileData";
@@ -226,6 +230,7 @@
 
             A41ExcelName = "A41ExcelName";
             A42ExcelName = "A42ExcelName";
+            A44_2ExcelName = "A44_2ExcelName"; //190628換券應收未收金額修正
             A45ExcelName = "A45ExcelName";
             A46ExcelName = "A46ExcelName";
             A47ExcelName = "A47ExcelName";

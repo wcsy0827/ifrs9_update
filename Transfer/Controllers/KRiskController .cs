@@ -63,6 +63,7 @@ namespace Transfer.Controllers
         [HttpPost]
         public async Task<JsonResult> KriskBondsComplete(string date, string version, string product,string productCode)
         {
+            MSGReturnModel result = new MSGReturnModel();
             DateTime dt = DateTime.MinValue;
             int ver = 0;
             if (date.IsNullOrWhiteSpace() || version.IsNullOrWhiteSpace() ||
@@ -71,6 +72,13 @@ namespace Transfer.Controllers
             {
                 return Json(new KRiskFlowLoaderResult() { result = "1", message = Message_Type.parameter_Error.GetDescription() });
             }
+            #region 執行前檢核
+            result = KriskRepository.CheckInfo(date, version);
+            if (!result.RETURN_FLAG)
+            {                
+                return Json(new KRiskFlowLoaderResult() { result = "1", message =result.DESCRIPTION });
+            }
+            #endregion
             var productInfo = KriskRepository.getProductInfo(productCode);
             var pc = string.Join(",", product.Split(',').Select(x => string.Format("'{0}'", x)));         
             Flow_Apply_Status D04 = new Flow_Apply_Status();

@@ -200,5 +200,20 @@ namespace Transfer.ViewModels
 
         [Description("是否進行基本要件評估")]
         public string Assessment_Check { get; set; }
+
+        //20190903 alibaba 優化需求 第10項
+        [Description("兌美金成本匯率")]
+        public string Ori_Ex_rate_to_USD { get; set; }
+
+        [Description("兌美金報表匯率")]
+        public string Ex_rate_to_USD { get; set; }
+
+        [Description("交易單編號")]
+        public string Trading_Number { get; set; }
+        //end 20190903 alibaba
+
+        //190628 John.投會換券應收未收金額修正
+        //[Description("是否進行應收利息修正")]
+        //public string Interest_Receivable_Revise { get; set; }
     }
 }

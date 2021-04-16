@@ -27,7 +27,7 @@ namespace Transfer.Enum
             /// <summary>
             /// 無須複核
             /// </summary>
-            [Description("無須複核")]
+            [Description("無須覆核")]
             No_Need_Review,
         }
     }

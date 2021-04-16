@@ -19,6 +19,12 @@
 </style>
 <html>
 <head>
+    @* 1002 John.解WebInpsect弱點修正 *@
+    <style>
+        body {
+            display: none;
+        }
+    </style>
     <meta name="viewport" content="width=device-width" />
     <title>Login</title>
 </head>
@@ -31,11 +37,11 @@
                 {
                     // 跨網站的偽造要求(CSRF)
                     @Html.AntiForgeryToken()
-                    <table>
+                    <table style="width:95%;font-size:large">
                         <tr>
-                            <td style="position:absolute;margin-top:12px;">
+                            <td style="text-align:right">
                                 <label>
-                                    帳號&emsp; :&ensp;
+                                    帳號:
                                 </label>
                             </td>
                             <td>
@@ -44,26 +50,14 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="position:absolute;margin-top:12px;">
+                            <td style="text-align:right">
                                 <label>
-                                    密碼&emsp; :&ensp;
+                                    密碼:
                                 </label>
                             </td>
                             <td>
                                 <input class="form-control" data-toggle="tooltip" title="請輸入密碼"
                                        id="passWord" type="password" name="pwd" placeholder="Password" autocomplete="off">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>
-                                    驗證碼 :&ensp;
-                                </label>
-                            </td>
-                            <td>
-                                @{ MvcCaptcha exampleCaptcha = new MvcCaptcha("ExampleCaptcha"); }
-                                @Html.Captcha(exampleCaptcha)
-                                @Html.TextBox("CaptchaCode", null, new { placeholder = "請輸入驗證碼" , style = "width:200px;height:30px", title = "請輸入驗證碼" })
                             </td>
                         </tr>
                         <tr>
@@ -81,8 +75,8 @@
 </html>
 <script>
     (function () {
-        $('#ExampleCaptcha_CaptchaImageDiv').find('a').off('click');
-        $('#ExampleCaptcha_CaptchaImageDiv').find('a').on('click',function(){return false;});
+        //$('#ExampleCaptcha_CaptchaImageDiv').find('a').off('click');
+        //$('#ExampleCaptcha_CaptchaImageDiv').find('a').on('click',function(){return false;});
         var User = @Html.Raw(Json.Encode(TempData["User"]));
         var Login = @Html.Raw(Json.Encode(TempData["Login"]));
         if(User != null)
@@ -91,7 +85,7 @@
             rules: {
                 userId: { required: true },
                 pwd: { required: true },
-                CaptchaCode:{ required: true }
+                //CaptchaCode:{ required: true }
             }
         })
         $('form').submit(function () {
@@ -107,4 +101,11 @@
             setTimeout(function() { alert(Login); }, 100);
         }
     })()
+    //1002 John.解WebInpsect弱點修正
+    if (self == top) {
+        document.getElementsByTagName("body")[0].style.display = 'block';
+    }
+    else {
+        top.location = self.location;
+    }
 </script>

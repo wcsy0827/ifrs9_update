@@ -52,7 +52,25 @@ namespace Transfer.Utility
         }
 
         #endregion save txtlog
-
+        #region save logintxtlog
+        ////191113 John.解金檢議題，加入Hostname相關
+        public static void detailtxtLog(bool loginFlag,string LoginDetailInfo,string folderPath)
+        {
+            try
+            {
+                string txtData = string.Empty;
+                bool exists = File.Exists(folderPath);
+                if (exists)
+                {
+                    txtData = File.ReadAllText(folderPath, System.Text.Encoding.Default);   
+                }
+                string txt = string.Format("[{0}][{1}]{2}", loginFlag?"Y":"N",DateTime.Now.dateTimeToStr(),  LoginDetailInfo);
+                writeTxt(folderPath, txt, txtData);
+            }
+            catch {}
+        }
+        #endregion
+        
         #region readLog
 
         /// <summary>
@@ -74,7 +92,6 @@ namespace Transfer.Utility
         #endregion
 
         #region SendMailLog
-
         /// <summary>
         /// 寫入 寄信txt (量化評估使用)
         /// </summary>
@@ -95,7 +112,7 @@ namespace Transfer.Utility
 
             }
         }
-
+        #endregion
         /// <summary>
         /// 寫入 txt
         /// </summary>
@@ -123,7 +140,7 @@ namespace Transfer.Utility
                     sw.Close();
                 }
         } 
-        #endregion
+
 
 
     }

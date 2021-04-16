@@ -25,5 +25,7 @@ namespace Transfer.Models
         public System.DateTime Processing_Date { get; set; }
         public System.DateTime Report_Date { get; set; }
         public string Security_Name { get; set; }
+        public double Amort_Amt_Tw { get; set; }
+        public double Amort_value_Tw { get; set; }
     }
 }

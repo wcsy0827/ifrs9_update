@@ -116,7 +116,7 @@ namespace Transfer.Models.Interface
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        MSGReturnModel AddD74_1( D74_1ViewModel data);
+        MSGReturnModel AddD74_1(D74_1ViewModel data);
 
         /// <summary>
         /// 修改郵件設定檔
@@ -131,5 +131,106 @@ namespace Transfer.Models.Interface
         /// <param name="data"></param>
         /// <returns></returns>
         MSGReturnModel DeleD74_1(D74_1ViewModel data);
+
+        /// <summary>
+        /// Bond_Quantitative_Resource(版本)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        List<SelectOption> GetD75Version(DateTime data,string status);
+
+        List<SelectOption> GetD75VersionForReport(DateTime dtat);
+
+
+        /// <summary>
+        /// Version_Info(版本內容)
+        /// </summary>
+        /// <param name="reportDate"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        List<SelectOption> GetD75Content(DateTime reportDate, int version);
+
+        /// <summary>
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="reportDate"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        List<SelectOption> GetD75Status(DateTime reportDate, int version,string role);
+
+        /// <summary>
+        /// Flow_Apply_Status(產品)
+        /// </summary>
+        /// <param name="reportDate"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        List<GroupSelectOption> GetD75Product(DateTime reportDate, int version);
+
+        /// <summary>
+        /// Bond_Quantitative_Resource(經辦)
+        /// </summary>
+        /// <param name="reportDate"></param>
+        /// <param name="version"></param>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        List<D75ViewModel> GetD75Handle(DateTime reportDate, int version, int status);
+
+        /// <summary>
+        /// Bond_Risk_Control_Result_File(附件)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        List<Bond_Risk_Control_Result_File> GetD75File(string data);
+
+        /// <summary>
+        /// Version_Info(版本內容)
+        /// Bond_Risk_Control_Result(呈送覆核)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        MSGReturnModel SubmitD75Review(Dictionary<string, string> data);
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(覆核)
+        /// </summary>
+        /// <param name="reportDate"></param>
+        /// <param name="version"></param>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        List<D75ViewModel> GetD75Review(DateTime reportDate, int version, int status);
+
+        /// <summary>
+        /// Version_Info(版本內容)
+        /// Bond_Risk_Control_Result(呈送覆核)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// Bond_Risk_Control_Result_File(上傳檔案)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        MSGReturnModel CloseD75Review(Dictionary<string, string> data);
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(確認覆核)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        MSGReturnModel ConfirmD75Review(Dictionary<string, string> data);
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(退回)
+        /// Bond_Quantitative_Resource(覆核狀態)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        MSGReturnModel ReturnD75Review(Dictionary<string, string> data);
+
+        /// <summary>
+        /// Bond_Risk_Control_Result(結案)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        MSGReturnModel ApproveD75Review(Dictionary<string, string> data);
     }
 }

@@ -23,5 +23,11 @@ namespace Transfer.Models.Interface
         void backC07(List<EL_Data_Out> datas);
 
         void getBondC07CheckData(DateTime dt, int version);
+
+        //(190628 John.換券應收未收金額修正)
+        //執行UniRisk前檢核該報導日版本是否已經進入風控覆核流程
+        //(190628 John.換券應收未收金額修正)
+        //執行UniRisk前檢核該報導日版本是否已經進入風控覆核流程
+        MSGReturnModel CheckInfo(string date, string version);
     }
 }

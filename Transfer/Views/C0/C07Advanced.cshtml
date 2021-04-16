@@ -276,29 +276,29 @@
 
             productCode = $('#Product_Code').val().trim();
             reportDate = $('#Report_Date').val().trim();
-            version = $('#Version').val().trim();
+            version = $('#Version').val();
             assessmentSubKind = $('#Assessment_Sub_Kind').val().trim();
             watchIND = $('#Watch_IND').val().trim();
 
             if (productCode == "") {
-                alert("您選擇的產品組合沒有Product_Code，請至 D05 新增");
+                toastr.error("您選擇的產品組合沒有Product_Code，請至 D05 新增");
                 return false;
             }
 
             if (reportDate == "") {
-                alert("請輸入 評估基準日/報導日");
+                toastr.error("請輸入 評估基準日/報導日");
                 return false;
             }
             else {
                 if (verified.isDate(reportDate, false) == false) {
-                    alert("評估基準日/報導日 錯誤(yyyy/MM/dd)");
+                    toastr.error("評估基準日/報導日 錯誤(yyyy/MM/dd)");
                     return false;
                 }
             }
 
             if ($("#tdVersion").is(":hidden") == false) {
-                if (version == "") {
-                    alert("請選擇 資料版本");
+                if (version == "" || version == null) {
+                    toastr.error("請選擇 資料版本");
                     return false;
                 }
             }

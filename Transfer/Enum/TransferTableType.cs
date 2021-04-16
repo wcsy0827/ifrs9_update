@@ -92,6 +92,12 @@ namespace Transfer.Enum
             [Description("EL_Data_Out")]
             C07,
 
+            /// <summary>
+            /// Bond_ISIN_Changed_IntRevise
+            /// </summary>
+            [Description("Bond_ISIN_Changed_IntRevise")]
+            A44_2,
+
             [Description("Bond_Account_AssessmentCheck")]
             C10,
 

@@ -17,6 +17,12 @@ namespace Transfer.Enum
             Bonds_A41_UpLoad,
 
             /// <summary>
+            /// (債券) A44 換券應收未收金額修正Excel上傳驗證
+            /// </summary>
+            [Description("(債券) A44 換券應收未收金額修正 Excel上傳驗證")]
+            Bonds_A44_2_UpLoad,
+
+            /// <summary>
             /// (債券) 執行信評轉檔驗證
             /// </summary>
             [Description("(債券) 執行信評轉檔驗證上一版原始投資信評")]

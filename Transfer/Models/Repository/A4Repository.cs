@@ -15,6 +15,7 @@ using System.Transactions;
 using Transfer.Models.Interface;
 using Transfer.Utility;
 using Transfer.ViewModels;
+
 using static Transfer.Enum.Ref;
 
 namespace Transfer.Models.Repository
@@ -388,7 +389,9 @@ namespace Transfer.Models.Repository
                 Bond_Value = TypeTransfer.doubleNToString(data.Bond_Value),
                 Ori_Amount = TypeTransfer.doubleNToString(data.Ori_Amount),
                 Principal = TypeTransfer.doubleNToString(data.Principal),
+                Amort_Amt_Tw=TypeTransfer.doubleNToString(data.Amort_Amt_Tw),
                 Amort_value = TypeTransfer.doubleNToString(data.Amort_value),
+                Amort_value_Tw = TypeTransfer.doubleNToString(data.Amort_value_Tw),
                 Processing_Date = data.Processing_Date.ToString("yyyy/MM/dd"),
                 Report_Date = data.Report_Date.ToString("yyyy/MM/dd"),
                 Security_Name = data.Security_Name
@@ -403,8 +406,9 @@ namespace Transfer.Models.Repository
         /// A42 save db
         /// </summary>
         /// <param name="dataModel"></param>
+        /// <param name="maxver">最大版本</param>
         /// <returns></returns>
-        public MSGReturnModel saveA42(List<A42ViewModel> dataModel)
+        public MSGReturnModel saveA42(List<A42ViewModel> dataModel,string maxver)
         {
             MSGReturnModel result = new MSGReturnModel();
             try
@@ -423,8 +427,11 @@ namespace Transfer.Models.Repository
                     DateTime dtReportDate = DateTime.Parse(dataModel[0].Report_Date);
                     db.Treasury_Securities_Info.RemoveRange(db.Treasury_Securities_Info
                                                               .Where(x=>x.Report_Date == dtReportDate));
+
+                    string ver = maxver;
                     foreach (var item in dataModel)
                     {
+                        //20200514 John.手動上傳A42時增加兩個欄位內容
                         db.Treasury_Securities_Info.Add(
                         new Treasury_Securities_Info()
                         {
@@ -438,15 +445,16 @@ namespace Transfer.Models.Repository
                             Amort_value = TypeTransfer.stringToDouble(item.Amort_value),
                             Processing_Date = TypeTransfer.stringToDateTime(item.Processing_Date),
                             Report_Date = TypeTransfer.stringToDateTime(item.Report_Date),
-                            Security_Name = item.Security_Name
-                        });
+                            Security_Name = item.Security_Name,
+                            Amort_Amt_Tw=TypeTransfer.stringToDouble(item.Amort_Amt_Tw),
+                            Amort_value_Tw=TypeTransfer.stringToDouble(item.Amort_value_Tw)
 
+                        });
+                        //20200514 John.手動上傳A42時回寫該報導日下A41最新版本該部位的數字
+                       
                         sb.Append($@"UPDATE Bond_Account_Info 
-                                     SET Principal = {item.Principal}
-                                     WHERE Report_Date = '{item.Report_Date}'
-                                           AND Security_Name = '{item.Security_Name}'
-                                           AND Lots = '{item.Lots}' 
-                                           AND Portfolio_Name = '{item.Portfolio_Name}';");
+                                     SET Principal = {item.Principal},Amort_Amt_Tw={item.Amort_Amt_Tw}
+                                     WHERE Report_Date = '{item.Report_Date}' AND version='{ver}'AND Security_Name = '{item.Security_Name}'AND Lots = '{item.Lots}' AND Portfolio_Name = '{item.Portfolio_Name}';");
                     }
 
                     db.SaveChanges(); //Save
@@ -478,18 +486,19 @@ namespace Transfer.Models.Repository
         {
             return new A42ViewModel()
             {
-                //Bond_Number = TypeTransfer.objToString(item[0]),
-                Bond_Number = TypeTransfer.objToString(item[8]),
+                Bond_Number = TypeTransfer.objToString(item[0]),
                 Lots = TypeTransfer.objToString(item[1]),
                 Segment_Name = TypeTransfer.objToString(item[2]),
                 Portfolio_Name = TypeTransfer.objToString(item[3]),
                 Bond_Value = TypeTransfer.objToString(item[4]),
                 Ori_Amount = TypeTransfer.objToString(item[5]),
                 Principal = TypeTransfer.objToString(item[6]),
-                Amort_value = TypeTransfer.objToString(item[7]),
+                Amort_Amt_Tw=TypeTransfer.objToString(item[7]),
+                Amort_value = TypeTransfer.objToString(item[8]),
+                Amort_value_Tw= TypeTransfer.objToString(item[9]),
                 Processing_Date = processingDate,
                 Report_Date = reportDate,
-                Security_Name = TypeTransfer.objToString(item[8])
+                Security_Name = TypeTransfer.objToString(item[10])
             };
         }
 
@@ -532,9 +541,11 @@ namespace Transfer.Models.Repository
                 dt.Columns.Add("債券(資產)名稱", typeof(object));
                 dt.Columns.Add("Portfolio_Name", typeof(object));
                 dt.Columns.Add("面額", typeof(object));
-                dt.Columns.Add("成交金額", typeof(object));
-                dt.Columns.Add("攤銷後成本", typeof(object));
-                dt.Columns.Add("本期攤銷數", typeof(object));
+                dt.Columns.Add("成交金額(原幣)", typeof(object));
+                dt.Columns.Add("攤銷後成本(原幣)", typeof(object));
+                dt.Columns.Add("攤銷後成本(台幣)", typeof(object));
+                dt.Columns.Add("本期攤銷數(原幣)", typeof(object));
+                dt.Columns.Add("本期攤銷數(台幣)", typeof(object));
                 dt.Columns.Add("Security_Name", typeof(object));
 
                 foreach (A42ViewModel item in dbDatas)
@@ -546,9 +557,11 @@ namespace Transfer.Models.Repository
                     nrow["債券(資產)名稱"] = item.Segment_Name;
                     nrow["Portfolio_Name"] = item.Portfolio_Name;
                     nrow["面額"] = item.Bond_Value;
-                    nrow["成交金額"] = item.Ori_Amount;
-                    nrow["攤銷後成本"] = item.Principal;
-                    nrow["本期攤銷數"] = item.Amort_value;
+                    nrow["成交金額(原幣)"] = item.Ori_Amount;
+                    nrow["攤銷後成本(原幣)"] = item.Principal;
+                    nrow["攤銷後成本(台幣)"] = item.Amort_Amt_Tw;
+                    nrow["本期攤銷數(原幣)"] = item.Amort_value;
+                    nrow["本期攤銷數(台幣)"] = item.Amort_value_Tw;
                     nrow["Security_Name"] = item.Security_Name;
 
                     dt.Rows.Add(nrow);
@@ -690,6 +703,11 @@ namespace Transfer.Models.Repository
            ,[Create_Date]
            ,[Create_Time]
            ,[Assessment_Check]
+--20190903 alibaba 優化需求 第10項
+           ,[Ori_Ex_rate_to_USD]
+           ,[Ex_rate_to_USD]
+           ,[Trading_Number]
+--end 20190903 alibaba 
 )
      VALUES
            (
@@ -755,6 +773,11 @@ namespace Transfer.Models.Repository
            {_UserInfo._date.dateTimeToStrSql()},
            {_UserInfo._time.timeSpanToStrSql()},
            {item.Assessment_Check.stringToStrSql()}
+--20190903 alibaba 優化需求 第10項
+,{item.Ori_Ex_rate_to_USD.stringToStrSql()}
+,{item.Ex_rate_to_USD.stringToStrSql()}
+,{item.Trading_Number.stringToStrSql()}
+--end //20190903 alibaba
 ); ");
                     #endregion
                     #region insert A95
@@ -958,6 +981,14 @@ where A41.Reference_Nbr = A41TEMP.Reference_Nbr ;
                         //優化 -由A41上傳中SMF為D21的券，直接帶入A42需修改的名單中(請排入後續優化) (投會)
                         var A42s = db.Treasury_Securities_Info.AsNoTracking()
                             .Where(x => x.Report_Date == dt).ToList();
+                        //20200514 John. 修正A42相關邏輯
+                        //刪除該報導日舊的A42內容
+                        if (A42s.Count() > 0)
+                        {
+                            string sql_removeA42 = $@"delete from Treasury_Securities_Info where Report_Date='{dt.ToString("yyyy/MM/dd")}'";
+                            db.Database.ExecuteSqlCommand(sql_removeA42);
+                            
+                        }
                         StringBuilder sb2 = new StringBuilder();
                         db.Bond_Account_Info.AsNoTracking()
                             .Where(x => x.Report_Date == dt &&
@@ -965,14 +996,10 @@ where A41.Reference_Nbr = A41TEMP.Reference_Nbr ;
                             x.PRODUCT.StartsWith("D21")).ToList()
                             .ForEach(x =>
                             {
-                                if (!A42s.Any(y =>
-                                 y.Security_Name == x.Security_Name &&
-                                 y.Lots == x.Lots &&
-                                 y.Portfolio_Name == x.Portfolio_Name))
-                                {
-                                    double _Ori_Amount = x.Ori_Amount == null ? 0 : x.Ori_Amount.Value;
-                                    double _Principal = x.Principal == null ? 0 : x.Principal.Value;
-                                    sb2.Append($@"
+                                double _Ori_Amount = x.Ori_Amount == null ? 0 : x.Ori_Amount.Value;
+                                double _Principal = x.Principal == null ? 0 : x.Principal.Value;
+                                double _Amort_Amt_Tw = x.Amort_Amt_Tw == null ? 0 : x.Amort_Amt_Tw.Value; //20200514 John.修正A42相關邏輯
+                                sb2.Append($@"
 INSERT INTO [Treasury_Securities_Info]
            ([Bond_Number]
            ,[Lots]
@@ -984,7 +1011,11 @@ INSERT INTO [Treasury_Securities_Info]
            ,[Amort_value]
            ,[Processing_Date]
            ,[Report_Date]
-           ,[Security_Name])
+           ,[Security_Name]
+           ,[Amort_Amt_Tw]
+           ,[Amort_value_Tw]
+
+)
      VALUES
            ({x.Bond_Number.stringToStrSql()}
            ,{x.Lots.stringToStrSql()}
@@ -996,9 +1027,13 @@ INSERT INTO [Treasury_Securities_Info]
            ,0
            ,'{start.ToString("yyyy/MM/dd")}'
            ,'{dt.ToString("yyyy/MM/dd")}'
-           ,{x.Security_Name.stringToStrSql()}) ;
+           ,{x.Security_Name.stringToStrSql()}
+           ,{_Amort_Amt_Tw}
+           ,0)
+
+;
 ");
-                                }
+
                             });
                         if(sb2.Length > 0)
                         db.Database.ExecuteSqlCommand(sb2.ToString());
@@ -1037,6 +1072,191 @@ INSERT INTO [Treasury_Securities_Info]
         }
 
         #endregion Save A41
+
+
+        #region A44_2上傳時檢查與A41最大版本是否相同
+        //190628 John.投會換券應收未收金額修正
+        public bool CheckMaxVerion( DateTime reportDate)
+        {
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                int A41MaxVerion = db.Bond_Account_Info.Where(x => x.Report_Date == reportDate).Max(x => x.Version).GetValueOrDefault();
+                int A44_2MaxVersion = 0;
+                if (!db.Bond_ISIN_Changed_IntRevise.Where(x=>x.Report_Date==reportDate).IsNullOrEmpty())
+                {
+                   A44_2MaxVersion = db.Bond_ISIN_Changed_IntRevise.Where(x=>x.Report_Date==reportDate).Max(x=>x.Version);
+                }  
+
+                if (A41MaxVerion == A44_2MaxVersion)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        #endregion
+
+
+        #region Save A44_2 (投會)應收未收利息修正需求
+        //190628 John.投會換券應收未收金額修正
+        public MSGReturnModel SaveA44_2(List<A44_2ViewModel> datamodel, string reportdate)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            DateTime rd = new DateTime();
+            DateTime start = DateTime.Now;
+            _UserInfo._date = start.Date;
+            _UserInfo._time = start.TimeOfDay;
+            rd = DateTime.Parse(reportdate); 
+            int _version = 0;
+            try
+            {
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    int A41MaxVerion = db.Bond_Account_Info.Where(x => x.Report_Date == rd).Max(x => x.Version).GetValueOrDefault();
+                    List<Bond_ISIN_Changed_Info> A44List = db.Bond_ISIN_Changed_Info.AsNoTracking().ToList();
+                    List<Bond_Account_Info> A41List = db.Bond_Account_Info.AsNoTracking().Where(x=>x.Report_Date==rd&&x.Version== A41MaxVerion).ToList();
+                    if (!datamodel.Any())
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = "上傳資料有誤!";
+                        return result;
+                    }
+
+                    var CheckDataA44_notmatch = datamodel.Where(x => !A44List.Exists(y => y.Bond_Number_Old == x.Bond_Number_Old && y.Portfolio_Name_Old == x.Portfolio_Name_Old)).ToList();
+
+                    if (CheckDataA44_notmatch.Count() > 0)
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = "上傳資料存在與A44換券資料對應不到的內容!";
+                        return result;
+                    }
+
+                    /*20201008 alibaba 要調整的新券ISIN、PORTFOLIONAME LOT是否存在A41 202008210166-00*/
+                    var CheckDataA41_notmatch = datamodel.Where(x => !A41List.Exists(y => y.Bond_Number == x.Bond_Number_New && y.Portfolio_Name == x.Portfolio_Name_New && y.Lots == x.Lots_New)).ToList();
+                    if (CheckDataA41_notmatch.Count()>0)
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = "上傳資料存在與同報導日下最大版本A41資料對應不到的內容!";
+                        return result;
+                    }
+
+                    #region 刪除相同報導日A44_2資料 ，參數version統一設為0
+                    if (!GetA44_2(rd, _version).IsNullOrEmpty())
+                    {
+                        var A44_2s_old = db.Bond_ISIN_Changed_IntRevise.AsEnumerable().Where(x => x.Report_Date == rd && x.Version == 0);
+
+                        //20200929 alibaba 扣回前一份上傳(version為0)的數字  202008210166-00
+                        var A44_2Revise =GetA44_2IntRevise(A44_2s_old);
+                      
+                        foreach (var A44_2item in A44_2Revise)
+                        {
+                            Bond_ISIN_Changed_IntRevise adddata = new Bond_ISIN_Changed_IntRevise();
+                            var a41item = db.Bond_Account_Info.FirstOrDefault(x => x.Bond_Number == A44_2item.Bond_Number_New && 
+                                                                                   x.Lots == A44_2item.Lots_New && 
+                                                                                   x.Portfolio_Name == A44_2item.Portfolio_Name_New && 
+                                                                                   x.Version == A41MaxVerion && 
+                                                                                   x.Report_Date == rd);
+                            if ( a41item!=null)
+                            {//var a41item = db.Bond_Account_Info.Where(x=>x.Bond_Number==a44item)
+                                a41item.Interest_Receivable= Math.Round(TypeTransfer.doubleNToDouble(a41item.Interest_Receivable) - 
+                                                                        Convert.ToDouble(A44_2item.IntRevise_perBond_New), 
+                                                                        2,
+                                                                        MidpointRounding.AwayFromZero);
+
+                                a41item.Interest_Receivable_Tw = Math.Round(TypeTransfer.doubleNToDouble(a41item.Interest_Receivable_Tw) - 
+                                                                        Convert.ToDouble(A44_2item.IntRevise_perBond_Tw_New), 
+                                                                        0, 
+                                                                        MidpointRounding.AwayFromZero);
+                            }
+                        }
+                        //end 20200929 alibaba 
+                        //將舊A44_2刪掉
+                         db.Bond_ISIN_Changed_IntRevise.RemoveRange(A44_2s_old);
+                         db.SaveChanges();
+                    }
+                    #endregion
+
+                    //20200929 alibaba 加上此次上傳應收息調整的數字  202008210166-00   
+
+                    var IntoA44_2 = datamodel.Select(x =>
+                                                     new Bond_ISIN_Changed_IntRevise()
+                                                     {
+                                                        Bond_Number_Old=x.Bond_Number_Old,
+                                                        Portfolio_Name_Old=x.Portfolio_Name_Old,
+                                                        Interest_Receivable=Convert.ToDouble(x.Int_Receivable),
+                                                        Interest_Receivable_Tw= Convert.ToDouble(x.Int_Receivable_Tw),
+                                                        Report_Date=Convert.ToDateTime( x.Report_Date),
+                                                        Processing_Date= Convert.ToDateTime(x.Processing_Date),
+                                                        Bond_Number_New=x.Bond_Number_New,
+                                                        Lots_New=x.Lots_New,
+                                                        Portfolio_Name_New=x.Portfolio_Name_New,
+                                                        Ori_Amount_New=Convert.ToDouble(x.Ori_Amount_New),
+                                                        CreateUser=x.CreateUser,
+                                                        Lots_Old=x.Lots_Old
+                                                     });
+
+                    var ExcelRevise = GetA44_2IntRevise(IntoA44_2);
+
+                    foreach (var item in ExcelRevise)
+                    {
+                        Bond_ISIN_Changed_IntRevise adddata = new Bond_ISIN_Changed_IntRevise();
+                        var a41item = db.Bond_Account_Info.FirstOrDefault(x => x.Bond_Number == item.Bond_Number_New && 
+                                                                               x.Lots ==item.Lots_New && 
+                                                                               x.Portfolio_Name == item.Portfolio_Name_New && 
+                                                                               x.Version == A41MaxVerion &&
+                                                                               x.Report_Date == rd);
+                        //var a41item = db.Bond_Account_Info.Where(x=>x.Bond_Number==a44item)
+                        if (a41item != null)
+                        {
+                            a41item.Interest_Receivable = Math.Round(TypeTransfer.doubleNToDouble(a41item.Interest_Receivable) + 
+                                                                     double.Parse(item.IntRevise_perBond_New), 
+                                                                     2, 
+                                                                     MidpointRounding.AwayFromZero);
+
+                            a41item.Interest_Receivable_Tw= Math.Round(TypeTransfer.doubleNToDouble(a41item.Interest_Receivable_Tw) + 
+                                                                      double.Parse(item.IntRevise_perBond_Tw_New), 
+                                                                      0, 
+                                                                      MidpointRounding.AwayFromZero);
+
+                            adddata.Bond_Number_Old = item.Bond_Number_Old;
+                            adddata.Portfolio_Name_Old = item.Portfolio_Name_Old;
+                            adddata.Interest_Receivable = double.Parse(item.Int_Receivable);
+                            adddata.Interest_Receivable_Tw = double.Parse(item.Int_Receivable_Tw);
+                            adddata.Report_Date = rd;
+                            adddata.Processing_Date = DateTime.Now.Date;
+                            adddata.Version = 0;
+                            //20201008 alibaba 新增欄位 202008210166-00
+                            adddata.Lots_Old = item.Lots_Old;
+                            adddata.Bond_Number_New = item.Bond_Number_New;
+                            adddata.Portfolio_Name_New = item.Portfolio_Name_New;
+                            adddata.Lots_New = item.Lots_New;
+                            adddata.CreateUser = item.Create_User;
+                            adddata.Ori_Amount_New =Convert.ToDouble(item.Ori_Amount_New);
+                            //end 20201008 alibaba 新增欄位
+                            db.Bond_ISIN_Changed_IntRevise.Add(adddata);
+                        }
+                    }
+                    //end 20200929 alibaba 
+
+                    result.RETURN_FLAG = true;
+                    result.DESCRIPTION = Message_Type.save_Success.GetDescription();
+                    db.SaveChanges(); 
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = ex.Message;
+            }
+            SaveA44_2TransLog(result, reportdate, start);
+            return result;
+        }
+        #endregion
 
         #region Save A45
 
@@ -1625,23 +1845,27 @@ AND  Portfolio_Name = {x.Portfolio_Name.stringToStrSql()} ;
                             return result;
                         }
                         #endregion
+
+
+
                         #region B01(債券) 轉檔
                         string sql = string.Empty;
-                        sql += $@"
-Update BA_Info
-Set   BA_Info.Principal = TS_Info.Principal,
-      BA_Info.Amort_Amt_Tw = TS_Info.Principal,
-      BA_Info.Processing_Date = '{startDt.ToString("yyyy/MM/dd")}'
-FROM  (Select * from Bond_Account_Info
-where Report_Date = '{date.ToString("yyyy/MM/dd")}'
-and   Version = {version.ToString()} ) As BA_Info
-JOIN  (Select * from Treasury_Securities_Info
-where Report_Date = '{date.ToString("yyyy/MM/dd")}' ) AS TS_Info
-ON    BA_Info.Bond_Number = TS_Info.Bond_Number
-AND   BA_Info.Lots = TS_Info.Lots
-AND   BA_Info.Portfolio_Name = TS_Info.Portfolio_Name
-AND   BA_Info.Report_Date = TS_Info.Report_Date ; 
-";
+                        //20200514 John.A42相關邏輯調整.修改轉B01時以A42數字回寫A41邏輯
+//                        sql += $@"
+//Update BA_Info
+//Set   BA_Info.Principal = TS_Info.Principal,
+//      BA_Info.Amort_Amt_Tw = TS_Info.Amort_Amt_Tw,
+//      BA_Info.Processing_Date = '{startDt.ToString("yyyy/MM/dd")}'
+//FROM  (Select * from Bond_Account_Info
+//where Report_Date = '{date.ToString("yyyy/MM/dd")}'
+//and   Version = {version.ToString()} ) As BA_Info
+//JOIN  (Select * from Treasury_Securities_Info
+//where Report_Date = '{date.ToString("yyyy/MM/dd")}' ) AS TS_Info
+//ON    BA_Info.Bond_Number = TS_Info.Bond_Number
+//AND   BA_Info.Lots = TS_Info.Lots
+//AND   BA_Info.Portfolio_Name = TS_Info.Portfolio_Name
+//AND   BA_Info.Report_Date = TS_Info.Report_Date ; 
+//";
 
                         sql += $@" 
 with RTA AS
@@ -1785,6 +2009,34 @@ where Report_Date = '{date.ToString("yyyy/MM/dd")}'
 and Version = {version.ToString()}; ";
                         db.Database.ExecuteSqlCommand(sql);
                         #endregion
+
+                        #region 190628換券應收未收金額修正
+                        #region 檢核A44_2(190628換券應收未收金額修正)
+                        if (db.Bond_ISIN_Changed_IntRevise.Where(x => x.Report_Date == date && x.Version == version).Any())
+                        {
+                            string sql_deleteA44_2 = string.Empty;
+                            sql_deleteA44_2 = $@"delete Bond_ISIN_Changed_IntRevise where Report_Date={date.dateTimeToStrSql()} and Version={version};";
+                            db.Database.ExecuteSqlCommand(sql_deleteA44_2);
+                        }
+
+                        #endregion
+
+                        var A44_2s = db.Bond_ISIN_Changed_IntRevise.AsNoTracking().Where(x => x.Report_Date == date && x.Version == 0).ToList();
+                        #region 寫A44_2版本號並同步存到轉檔紀錄的table
+                        if (A44_2s.Any())
+                        {
+                            foreach (var item in A44_2s)
+                            {
+                                item.Version = version;
+                                db.Bond_ISIN_Changed_IntRevise.Add(item);
+                            }
+                            db.SaveChanges();
+                            //將A44_2寫入版號的紀錄insert進轉檔記錄表
+                            common.saveTransferCheck(Table_Type.A44_2.ToString(), true, date, version, startDt, DateTime.Now);
+                        }
+                        #endregion
+                        #endregion
+
                         #region 新增轉檔紀錄
                         common.saveTransferCheck(
                                    fileName,
@@ -2459,6 +2711,8 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                 List<Bond_Category_Info> A45s = new List<Bond_Category_Info>();
                 List<Bond_ISIN_Changed_Info> A44s = new List<Bond_ISIN_Changed_Info>();
                 List<Treasury_Securities_Info> A42s = new List<Treasury_Securities_Info>();
+                List<Bond_ISIN_Changed_IntRevise> A44_2s = new List<Bond_ISIN_Changed_IntRevise>(); ////190628換券應收未收金額修正
+                List<A44_2DetailViewModel> A44_2Ds = new List<A44_2DetailViewModel>(); //20201216 alibaba 換券一對多按比例調整應收息
                 using (IFRS9DBEntities db = new IFRS9DBEntities())
                 {
                     int i = 0;
@@ -2470,6 +2724,9 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                     A44s = db.Bond_ISIN_Changed_Info.AsNoTracking().ToList();
                     A42s = db.Treasury_Securities_Info.AsNoTracking()
                         .Where(x => x.Report_Date == reportDate).ToList();
+                    A44_2s = db.Bond_ISIN_Changed_IntRevise.AsNoTracking()
+                        .Where(x => x.Report_Date == reportDate && x.Version == 0).ToList(); ////190628換券應收未收金額修正
+                    A44_2Ds = GetA44_2IntRevise(A44_2s);//20201216 alibaba 換券一對多按比例調整應收息
                     if (db.Bond_Account_Info.Any())
                     {
                         try
@@ -2514,6 +2771,8 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                                 A95_1s,
                                 A45s,
                                 A44s,
+                                //A44_2s,
+                                A44_2Ds,//20201216 alibaba 換券一對多按比例調整應收息
                                 A42s,
                                 reportDate,
                                 version);
@@ -2541,6 +2800,237 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
         }
 
         #endregion Excel 資料轉成 A41ViewModel
+
+        #region Excel 資料轉成 A44_2 ViewModel (190628換券應收未收金額修正)
+        public Tuple<string, List<A44_2ViewModel>> getA44_2Excel(
+            string pathType,
+            Stream stream,
+            DateTime reportDate
+           )
+        {
+            string message = string.Empty;
+            DataSet resultData = new DataSet();
+            List<A44_2ViewModel> dataModel = new List<A44_2ViewModel>();
+            try
+            {
+                IExcelDataReader reader = null;
+                switch (pathType) //判斷型別
+                {
+                    case "xls":
+                        reader = ExcelReaderFactory.CreateBinaryReader(stream);
+                        break;
+
+                    case "xlsx":
+                        reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+                        break;
+                }
+                reader.IsFirstRowAsColumnNames = true;
+                resultData = reader.AsDataSet();
+                reader.Close();
+                if (resultData.Tables[0].Rows.Count > 0) //判斷有無資料
+                {
+                    bool DataCheckFlag = resultData.Tables[0].AsEnumerable().Where(
+                        x => (string.Join("", x.ItemArray).Trim() != "") &&
+                        (x.Field<object>("債券代號(ISIN)") == null ||
+                        x.Field<object>("債券代號(ISIN)").ToString().IsNullOrWhiteSpace() ||
+                        x.Field<object>("Portfolio Name") == null ||
+                        x.Field<object>("Portfolio Name").ToString().IsNullOrWhiteSpace() ||
+                        x.Field<object>("原幣利息收入") == null ||
+                        x.Field<object>("原幣利息收入").ToString().IsNullOrWhiteSpace() ||
+                        x.Field<object>("應計息合計(台幣)") == null ||
+                        x.Field<object>("應計息合計(台幣)").ToString().IsNullOrWhiteSpace()
+                        )).IsNullOrEmpty();
+                    if (DataCheckFlag)
+                    {
+                        var data = resultData.Tables[0].AsEnumerable();
+                        List<string> titles = resultData.Tables[0].Columns
+                            .Cast<DataColumn>()
+                            .Select(x => x.ColumnName.Trim().Replace("\t", string.Empty)).ToList();
+                        dataModel = data.Select((x, y) => {
+                            return getA44_2ViewModel(x, reportDate, titles);
+
+                        }).ToList();
+                        //20200923 alibaba 新增換券資訊 202008210166-00
+                        using (IFRS9DBEntities db = new IFRS9DBEntities())
+                        {
+                            var A44Model = (
+                                                    from q in db.Bond_ISIN_Changed_Info.AsNoTracking()
+                                                                .OrderByDescending(x => x.Processing_Date).AsEnumerable()
+                                                    select DbToA44Model(q)
+                                                ).ToList();
+                     //匯入檔有舊券LOTS
+                            var dataModel_OldLots = (from d in dataModel
+                                                 from A in A44Model
+                                                 where d.Lots_Old != null &&
+                                                       d.Portfolio_Name_Old == A.Portfolio_Name_Old &&
+                                                       d.Bond_Number_Old == A.Bond_Number_Old &&
+                                                       d.Lots_Old == A.Lots_Old
+                                                 select new A44_2ViewModel()
+                                                 {
+                                                     Bond_Number_Old = d.Bond_Number_Old,
+                                                     Portfolio_Name_Old = d.Portfolio_Name_Old,
+                                                     Int_Receivable =Convert.ToString(Math.Round(Convert.ToDouble( d.Int_Receivable),2, MidpointRounding.AwayFromZero)),
+                                                     Int_Receivable_Tw = Convert.ToString(Math.Round(Convert.ToDouble(d.Int_Receivable_Tw), 0, MidpointRounding.AwayFromZero)),
+                                                   
+                                                     Lots_Old = d.Lots_Old,
+                                                     Report_Date = d.Report_Date,
+                                                     Processing_Date = d.Processing_Date,
+                                                     Bond_Number_New = A.Bond_Number_New,
+                                                     Portfolio_Name_New = A.Portfolio_Name_New,
+                                                     Lots_New = A.Lots_New,
+                                                     Ori_Amount_New = d.Ori_Amount_New,
+                                                     Multi_NewBonds = d.Multi_NewBonds,
+                                                     CreateUser = d.CreateUser
+                                                 }).ToList();
+
+                            //找出重複的舊券ISIN、PORTFOLIO_NAME、LOTS, 並註記
+                            var duplicate = dataModel_OldLots.GroupBy(i => new { i.Portfolio_Name_Old, i.Bond_Number_Old, i.Lots_Old })
+                                .Where(g => g.Count() > 1)
+                                .Select(g => new { g.Key.Portfolio_Name_Old, g.Key.Bond_Number_Old, g.Key.Lots_Old }).ToList();
+
+                            dataModel_OldLots.ForEach(x =>
+                            {
+                                if (duplicate.Exists(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                                          y.Portfolio_Name_Old == x.Portfolio_Name_Old &&
+                                                          y.Lots_Old == x.Lots_Old))
+                                {
+                                    x.Multi_NewBonds = "Y";
+                                }
+                            });
+
+
+                    //匯入檔無舊券LOTS，取新券最大的LOTS
+                           //將新舊券已mapping到lots,isin,portfolionamed 的部分依舊券的KEY grouping
+                            var dataModel_OldLots_Grouping = (from d in dataModel_OldLots 
+                                                          group d by new
+                                                          {
+                                                              d.Bond_Number_Old,
+                                                              d.Portfolio_Name_Old,
+                                                              d.Lots_Old
+                                                          } into q
+                                                          select new
+                                                          {
+                                                              q.Key.Bond_Number_Old,
+                                                              q.Key.Portfolio_Name_Old,
+                                                              q.Key.Lots_Old
+                                                          }).ToList();
+
+                            //將新券已mapping到lots,isin,portfolionamed 的部分自A44剔除
+                            var dataModel_Bond_Number_Old = dataModel_OldLots_Grouping.Select(y => y.Bond_Number_Old).ToList();
+                            var dataModel_Portfolio_Name_Old = dataModel_OldLots_Grouping.Select(y => y.Portfolio_Name_Old).ToList();
+                            var dataModel_Lots_Old = dataModel_OldLots_Grouping.Select(y => y.Lots_Old).ToList();
+                            List<A44ViewModel> A44_OldLotsnoMapping = new List<A44ViewModel>();
+
+                            A44Model.ForEach(x =>
+                                        {
+                                            if (!dataModel_Bond_Number_Old.Contains(x.Bond_Number_Old) ||
+                                                !dataModel_Portfolio_Name_Old.Contains(x.Portfolio_Name_Old) ||
+                                                !dataModel_Lots_Old.Contains(x.Lots_Old))
+                                            {
+                                                A44_OldLotsnoMapping.Add(x);
+                                            }
+                                        });
+
+                            //匯入檔舊券無lots, 取得舊券ISIN、PORTFOLIONAME對應至A44新券中最大的新券lots
+                            var A44_lotsMax =
+                                (
+                                from a44 in A44_OldLotsnoMapping
+                                group a44 by new
+                                {
+                                    a44.Portfolio_Name_New,
+                                    a44.Bond_Number_New,
+                                    a44.Portfolio_Name_Old,
+                                    a44.Bond_Number_Old,
+                                } into q
+                                select new
+                                {
+                                    q.Key.Bond_Number_New,
+                                    q.Key.Portfolio_Name_New,
+                                    q.Key.Portfolio_Name_Old,
+                                    q.Key.Bond_Number_Old,
+                                    Lots_New = q.Max(v => v.Lots_New)
+                                }
+                            ).ToList();
+                            
+                            //與新券最大的LOTS join
+                            var dataModel_noOldLots = (from d in dataModel
+                                                   from A in A44_lotsMax
+                                                   where 
+                                                         d.Lots_Old == null &&
+                                                         d.Portfolio_Name_Old == A.Portfolio_Name_Old &&
+                                                         d.Bond_Number_Old == A.Bond_Number_Old
+                                                        
+                                                   select new A44_2ViewModel()
+                                                   {
+                                                       Bond_Number_Old = d.Bond_Number_Old,
+                                                       Portfolio_Name_Old = d.Portfolio_Name_Old,
+                                                       Int_Receivable = Convert.ToString(Math.Round(Convert.ToDouble(d.Int_Receivable), 2, MidpointRounding.AwayFromZero)),
+                                                       Int_Receivable_Tw = Convert.ToString(Math.Round(Convert.ToDouble(d.Int_Receivable_Tw), 0, MidpointRounding.AwayFromZero)),
+                                                       Lots_Old = d.Lots_Old,
+                                                       Report_Date = d.Report_Date,
+                                                       Processing_Date = d.Processing_Date,
+                                                       Bond_Number_New = A.Bond_Number_New,
+                                                       Portfolio_Name_New = A.Portfolio_Name_New,
+                                                       Lots_New = A.Lots_New,
+                                                       Ori_Amount_New = d.Ori_Amount_New,
+                                                       Multi_NewBonds = d.Multi_NewBonds,
+                                                       CreateUser = d.CreateUser
+                                                   }).ToList();
+                            /////20201209 alibaba 不需要判斷新券對應的舊券過去是否有lots，只要符合新券的isin、portfolio_name、lots，即可放進應收息於該新券
+                            ////排除A44_2新券對應的舊券有LOTS的部分 
+                            //var A44_2= (
+                            //                from q in db.Bond_ISIN_Changed_IntRevise.AsNoTracking()
+                            //                            .OrderByDescending(x => x.Processing_Date).AsEnumerable()
+                            //                select q
+                            //            ).ToList();
+
+                            //for (int i = dataModel_noOldLots.Count - 1;i>=0 ; i--)
+                            //{
+                            //    int A44_2count = A44_2.Where(y => y.Bond_Number_New == dataModel_noOldLots[i].Bond_Number_New &&
+                            //                                    y.Lots_New == dataModel_noOldLots[i].Lots_New &&
+                            //                                    y.Portfolio_Name_New == dataModel_noOldLots[i].Portfolio_Name_New &&
+                            //                                    !string.IsNullOrEmpty( y.Lots_Old) ).Select(y => y).Count();
+
+                            //    if (A44_2count > 0) { dataModel_noOldLots.Remove(dataModel_noOldLots[i]); }
+                            //}
+
+                            ///// end 20201209 alibaba  
+                            //找出重複的舊券ISIN、PORTFOLIO_NAME, 並註記
+
+                            var duplicate_2 = dataModel_noOldLots.GroupBy(i => new { i.Portfolio_Name_Old, i.Bond_Number_Old })
+                              .Where(g => g.Count() > 1)
+                              .Select(g => new { g.Key.Portfolio_Name_Old, g.Key.Bond_Number_Old }).ToList();
+
+                            dataModel_noOldLots.ForEach(x =>
+                            {
+                                if (duplicate_2.Exists(y => y.Bond_Number_Old == x.Bond_Number_Old && y.Portfolio_Name_Old == x.Portfolio_Name_Old))
+                                {
+                                    x.Multi_NewBonds = "Y";
+                                }
+                            });
+
+                            dataModel.Clear();
+                            dataModel.AddRange(dataModel_OldLots);
+                            dataModel.AddRange(dataModel_noOldLots);
+                        }
+                        //end 20200923 alibaba
+                    }
+                    else
+                    {
+                        message = "上傳資料重要參數有缺漏(債券編號、Portfolio Name、利息收入)";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                message = ex.exceptionMessage();
+            }
+
+            return new Tuple<string, List<A44_2ViewModel>>(message, dataModel);
+        }
+
+
+        #endregion
 
         #region Excel 資料轉成 A45ViewModel
 
@@ -2913,6 +3403,8 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
             List<Assessment_Sub_Kind_Ticker> A95_1s,
             List<Bond_Category_Info> A45s,
             List<Bond_ISIN_Changed_Info> A44s,
+            //List<Bond_ISIN_Changed_IntRevise> A44_2s,//190628換券應收未收金額修正
+            List<A44_2DetailViewModel> A44_2Ds,//20201216 alibaba 換券一對多按比例調整應收息
             List<Treasury_Securities_Info> A42s,
             DateTime reportDate,
             int version)
@@ -3053,30 +3545,49 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
             if (A41.Bond_Type.IsNullOrWhiteSpace())
                 A41.Bond_Type = "其他債券";
             #endregion
-            #region Principal & Ori_Amount
-            Treasury_Securities_Info A42 = null;
-            //國卷
-            if (!A41.Product.IsNullOrWhiteSpace() && A41.Product.StartsWith("D21"))
-            {
-                A42 = A42s.FirstOrDefault(x =>
-                          x.Security_Name == A41.Security_Name &&
-                          x.Lots == A41.Lots &&
-                          x.Portfolio_Name == A41.Portfolio_Name);
-            }
-            //其他
-            else
-            {
-                A42 = A42s.FirstOrDefault(x =>
-                          x.Bond_Number == A41.Bond_Number &&
-                          x.Lots == A41.Lots &&
-                          x.Portfolio_Name == A41.Portfolio_Name);
-            }
-            if (A42 != null)
-            {
-                A41.Principal = TypeTransfer.doubleNToString(A42.Principal);
-                A41.Ori_Amount = TypeTransfer.doubleNToString(A42.Ori_Amount);
-            }
+            #region Principal & Ori_Amount (A42) 
+            //John A42邏輯調整需求，每次上傳A41都會清空A42內容重新更新資訊，故刪除此段邏輯
+            //Treasury_Securities_Info A42 = null;
+            ////國卷
+            //if (!A41.Product.IsNullOrWhiteSpace() && A41.Product.StartsWith("D21"))
+            //{
+            //    A42 = A42s.FirstOrDefault(x =>
+            //              x.Security_Name == A41.Security_Name &&
+            //              x.Lots == A41.Lots &&
+            //              x.Portfolio_Name == A41.Portfolio_Name);
+            //}
+            ////其他
+            //else
+            //{
+            //    A42 = A42s.FirstOrDefault(x =>
+            //              x.Bond_Number == A41.Bond_Number &&
+            //              x.Lots == A41.Lots &&
+            //              x.Portfolio_Name == A41.Portfolio_Name);
+            //}
+            //if (A42 != null)
+            //{
+            //    A41.Principal = TypeTransfer.doubleNToString(A42.Principal);
+            //    A41.Ori_Amount = TypeTransfer.doubleNToString(A42.Ori_Amount);
+            //}
             #endregion
+            #region A44_2調整 (投會)應收未收利息修正需求
+            //John 190628換券應收未收金額修正
+            //var A44_2 = A44_2s.FirstOrDefault(x => x.Bond_Number_New == A41.Bond_Number && 
+            //                                       x.Portfolio_Name_New == A41.Portfolio_Name && 
+            //                                       x.Lots_New==A41.Lots/*20201126 alibaba 篩選條件由舊券改為新券，且新增新券LOTS篩選條件*/);
+            //20201216 alibaba  換券一對多按比例調整應收息
+            var A44_2D = A44_2Ds.FirstOrDefault(x => x.Bond_Number_New == A41.Bond_Number &&
+                                                   x.Portfolio_Name_New == A41.Portfolio_Name && 
+                                                   x.Lots_New==A41.Lots);
+            //end 20201216 alibaba
+            if (A44_2D != null)//20201216 alibaba  換券一對多按比例調整應收息
+            {
+                //A41.Interest_Receivable_Revise = "Y";
+                A41.Interest_Receivable = TypeTransfer.doubleNToString(TypeTransfer.stringToDouble(A41.Interest_Receivable) + 
+                                                                      Math.Round( TypeTransfer.stringToDouble(A44_2D.IntRevise_perBond_New),2, MidpointRounding.AwayFromZero));
+                A41.Int_Receivable_Tw = TypeTransfer.doubleNToString(TypeTransfer.stringToDouble(A41.Int_Receivable_Tw) +
+                                                                     Math.Round(TypeTransfer.stringToDouble(A44_2D.IntRevise_perBond_Tw_New), 0, MidpointRounding.AwayFromZero));
+            }
             return A41;
         }
 
@@ -3152,10 +3663,56 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                 Security_Name = data.Security_Name,
                 Origination_Date_Old = TypeTransfer.dateTimeNToString(data.Origination_Date_Old),
                 Assessment_Check = data.Assessment_Check
+                //20190903 alibaba 優化需求 第10項 A41 details 
+                ,Ori_Ex_rate_to_USD = TypeTransfer.doubleNToString(data.Ori_Ex_rate_to_USD)
+                ,Ex_rate_to_USD = TypeTransfer.doubleNToString(data.Ex_rate_to_USD)
+                ,Trading_Number=data.Trading_Number
+                //end 20190903 alibaba
             };
         }
 
         #endregion Db 組成 A41ViewModel
+
+
+        #region datarow 組成A44_2ViewModel
+        private A44_2ViewModel getA44_2ViewModel(DataRow item, DateTime reportDate, List<string> tiltes)
+        {
+            /*
+            return new A44_2ViewModel()
+            {
+                Bond_Number_Old = TypeTransfer.objToString(item[2]),
+                Portfolio_Name_Old = TypeTransfer.objToString(item[24]),
+                Interest_Receivable = TypeTransfer.objToString(item[15]),
+                Int_Receivable_Tw = TypeTransfer.objToString(item[20]),
+                Report_Date = TypeTransfer.dateTimeNToString(reportDate),
+                Processing_Date = processingDate.ToString("yyyy/MM/dd")
+            };
+            */
+            if (!tiltes.Any())
+                return new A44_2ViewModel();
+            var A44_2 = new A44_2ViewModel();
+            var A44_2Prop = A44_2.GetType().GetProperties();
+            var a = A44_2Prop[0].GetCustomAttributesData()[0].ConstructorArguments[0].Value;
+            for (int i = 0; i < tiltes.Count(); i++)
+            {
+                string data = null;
+                if (item[i].GetType().Name.Equals("DateTime"))
+                    data = TypeTransfer.objDateToString(item[i]);
+                else
+                    data = TypeTransfer.objToString(item[i]).Trim();
+                if (!data.IsNullOrWhiteSpace())
+                {
+                    var A44_2PInfo = A44_2Prop.Where(x => x.GetCustomAttributesData()[0].ConstructorArguments[0]
+                      .Value.ToString().Trim().ToLower() == (tiltes[i].ToString().Trim().ToLower()))
+                      .FirstOrDefault();
+                    if (A44_2PInfo != null)
+                        A44_2PInfo.SetValue(A44_2, data);
+                }
+            }
+            A44_2.Report_Date = reportDate.ToString("yyyy/MM/dd");
+            return A44_2;
+        }
+        #endregion
 
         #region Db 組成 A45ViewModel
 
@@ -3401,7 +3958,7 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
         #endregion
 
         #region saveA44
-        public MSGReturnModel saveA44(string actionType, A44ViewModel dataModel)
+        public MSGReturnModel saveA44(string actionType, A44ViewModel dataModel, bool isoldbondsave = false)//20200925 alibaba 舊券重複確認是否存檔 202008210166-00
         {
             MSGReturnModel result = new MSGReturnModel();
 
@@ -3451,17 +4008,6 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                         }
 
                         if (A44List
-                            .Any(x => x.Bond_Number_Old == dataModel.Bond_Number_Old
-                                    && x.Lots_Old == dataModel.Lots_Old
-                                    && x.Portfolio_Name_Old == dataModel.Portfolio_Name_Old))
-                        {
-                            result.RETURN_FLAG = false;
-                            result.DESCRIPTION = "資料重複：您輸入的 債券編號_舊、Lots_舊、Portfolio英文_舊 已存在";
-                            return result;
-                        }
-
-
-                        if (A44List
                             .Any(x => x.Bond_Number_Old == dataModel.Bond_Number_New
                                      && x.Lots_Old == dataModel.Lots_New
                                      && x.Portfolio_Name_Old == dataModel.Portfolio_Name_New))
@@ -3470,7 +4016,22 @@ AND B01.Product_Code IN ({reportCodes.stringListToInSql()}); ";
                             result.DESCRIPTION = "您輸入的 債券編號_新、Lots_新、Portfolio英文_新，不可與目前存在的 債券編號_舊、Lots_舊、Portfolio英文_舊 重複";
                             return result;
                         }
+                        //20200925 alibaba 1隻舊券換多隻新券情況,新增警示 202008210166-00
 
+                        if (!isoldbondsave)
+                        {
+                            if (A44List
+                            .Any(x => x.Bond_Number_Old == dataModel.Bond_Number_Old
+                                    && x.Lots_Old == dataModel.Lots_Old
+                                    && x.Portfolio_Name_Old == dataModel.Portfolio_Name_Old))
+                            {
+                                result.RETURN_FLAG = false;
+                                result.DESCRIPTION = "資料重複：您輸入的 債券編號_舊、Lots_舊、Portfolio英文_舊 已存在，請確認是否存檔!";
+                                result.REASON_CODE = "1";
+                                return result;
+                            }
+                        }
+                        //end //20200925 alibaba 
                         editData.Bond_Number_New = dataModel.Bond_Number_New;
                         editData.Lots_New = dataModel.Lots_New;
                         editData.Portfolio_Name_New = dataModel.Portfolio_Name_New;
@@ -4031,5 +4592,263 @@ order by temp2.Report_Date desc
         }
         #endregion
 
+        #endregion
+
+        #region A44_2Save結果寫入Log功能拉出來 
+        //190628 John.投會換券應收未收金額修正
+        public void SaveA44_2TransLog(MSGReturnModel result_Save, string datepicker, DateTime starttime)
+        {
+            DateTime reportdate = DateTime.MinValue;
+            DateTime.TryParse(datepicker, out reportdate);
+            if (result_Save.RETURN_FLAG)
+            {
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    if (db.Transfer_CheckTable.Any(x =>
+                               x.ReportDate == reportdate &&
+                               x.Version == 0 &&
+                               x.File_Name == Table_Type.A44_2.ToString() &&
+                               x.TransferType == "Y"))
+                    {
+                        string sql = string.Empty;
+                        sql += $@"UPDATE Transfer_CheckTable Set TransferType = 'R'
+                        WHERE ReportDate = '{datepicker.Replace("/", "-")}'
+                        AND Version =0
+                        AND TransferType = 'Y'
+                        AND File_Name ='{Table_Type.A44_2.ToString()}' ;";
+                        db.Database.ExecuteSqlCommand(sql);
+                    }
+
+                }
+            }
+            common.saveTransferCheck(Table_Type.A44_2.ToString(), result_Save.RETURN_FLAG, reportdate, 0, starttime, DateTime.Now, result_Save.DESCRIPTION);
+        }
+        #endregion
+
+        #region GetA44_2 Data
+        //190628 John.投會換券應收未收金額修正
+        public List<A44_2ViewModel> GetA44_2(DateTime ReportDate, int Version)
+        {
+            string resultMessage = string.Empty;
+            List<A44_2ViewModel> data = new List<A44_2ViewModel>();
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                data = db.Bond_ISIN_Changed_IntRevise.AsNoTracking()
+                    .Where(x => x.Report_Date == ReportDate && x.Version == Version).AsEnumerable()
+                    .Select(x => DbToA44_2Model(x)).ToList();
+            }
+            return data;
+        }
+
+        //20200929 alibaba 計算DB新券應收息 202008210166-00
+        public List<A44_2DetailViewModel> GetA44_2IntRevise(IEnumerable<Bond_ISIN_Changed_IntRevise> intRevisedata)
+        {
+            List<A44_2DetailViewModel> data = new List<A44_2DetailViewModel>();
+           
+            // 無舊券LOTS
+            var A44_2Deteail_noOldLots = intRevisedata.Where(x => x.Lots_Old == null).Select(x => new A44_2DetailViewModel()
+            {
+                Bond_Number_Old = x.Bond_Number_Old,
+                Portfolio_Name_Old = x.Portfolio_Name_Old,
+                Int_Receivable = x.Interest_Receivable.ToString(),
+                Int_Receivable_Tw = x.Interest_Receivable_Tw.ToString(),
+                Report_Date = TypeTransfer.dateTimeToString(x.Report_Date, true),
+                Bond_Number_New = x.Bond_Number_New,
+                Lots_New = x.Lots_New,
+                Portfolio_Name_New = x.Portfolio_Name_New,
+                /*新券面額佔新券總面額(對應同一筆舊券)的比例，用來計算每筆新券應該分配調整的應收息。*/
+                Ori_Amount_Percentage_New = !string.IsNullOrEmpty(x.Ori_Amount_New.ToString()) && x.Ori_Amount_New.ToString() !="0"?
+                                                                Convert.ToString(Math.Round(TypeTransfer.doubleNToDouble(x.Ori_Amount_New) / intRevisedata.
+                                                                Where(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                                                            y.Portfolio_Name_Old == x.Portfolio_Name_Old &&
+                                                                            y.Ori_Amount_New != null).
+                                                                Sum(y => TypeTransfer.doubleNToDouble(y.Ori_Amount_New)), 4, MidpointRounding.AwayFromZero)).ToString() : 1.ToString(),
+                IntRevise_perBond_New = string.Empty,
+                IntRevise_perBond_Tw_New = string.Empty,
+                Lots_Old = x.Lots_Old,
+                Create_User=x.CreateUser,
+                Ori_Amount_New = x?.Ori_Amount_New.ToString()
+            }).ToList();
+
+            //舊券應收未調整息
+            var OldBondIntRevise_noLots = intRevisedata.Where(x =>string.IsNullOrEmpty(x.Lots_Old)).Select(x =>
+                                                       new
+                                                       {
+                                                           x.Bond_Number_Old,
+                                                           x.Portfolio_Name_Old,
+                                                           x.Interest_Receivable,
+                                                           x.Interest_Receivable_Tw
+                                                       }).
+                                             Distinct().ToList();
+
+            //        //依比例分配舊券應收息至每一隻新券
+           OldBondIntRevise_noLots.ForEach(x =>
+            {
+                double intrevise = x.Interest_Receivable;
+                double intrevise_tw = x.Interest_Receivable_Tw;
+
+                var last = A44_2Deteail_noOldLots.Where(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                                      y.Portfolio_Name_Old == x.Portfolio_Name_Old).LastOrDefault();
+
+
+                A44_2Deteail_noOldLots.
+                    Where(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                    y.Portfolio_Name_Old == x.Portfolio_Name_Old).ToList().
+                    ForEach(y =>
+                    {
+                        if (!y.Equals(last))
+                        {
+                            y.IntRevise_perBond_New = Math.Round(Convert.ToDouble(y.Ori_Amount_Percentage_New) * x.Interest_Receivable,2, MidpointRounding.AwayFromZero).ToString();
+                            y.IntRevise_perBond_Tw_New = Math.Round(Convert.ToDouble(y.Ori_Amount_Percentage_New) * x.Interest_Receivable_Tw,0, MidpointRounding.AwayFromZero).ToString();
+                            intrevise -= Convert.ToDouble(y.IntRevise_perBond_New);
+                            intrevise_tw -= Convert.ToDouble((y.IntRevise_perBond_Tw_New));
+                        }
+                        else
+                        {
+                            y.IntRevise_perBond_New = intrevise.ToString();
+                            y.IntRevise_perBond_Tw_New = intrevise_tw.ToString();
+                        }
+                    }
+                            );
+            });
+            data.AddRange(A44_2Deteail_noOldLots);
+
+            //        有舊券LOTS
+            var A44_2Deteail_OldLots = intRevisedata.Where(x => x.Lots_Old != null).Select(x => new A44_2DetailViewModel()
+            {
+                Bond_Number_Old = x.Bond_Number_Old,
+                Portfolio_Name_Old = x.Portfolio_Name_Old,
+                Int_Receivable = TypeTransfer.doubleNToString(x.Interest_Receivable),
+                Int_Receivable_Tw = TypeTransfer.doubleNToString(x.Interest_Receivable_Tw),
+                Report_Date = TypeTransfer.dateTimeToString(x.Report_Date, true),
+                Bond_Number_New = x.Bond_Number_New,
+                Lots_New = x.Lots_New,
+                Portfolio_Name_New = x.Portfolio_Name_New,
+                /*新券面額佔新券總面額(對應同一筆舊券)的比例，用來計算每筆新券應該分配調整的應收息。*/
+                Ori_Amount_Percentage_New = !string.IsNullOrEmpty(x.Ori_Amount_New.ToString()) && x.Ori_Amount_New.ToString() != "0" ?
+                                                            Math.Round(TypeTransfer.doubleNToDouble(x.Ori_Amount_New) / intRevisedata.
+                                                            Where(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                                                        y.Portfolio_Name_Old == x.Portfolio_Name_Old &&
+                                                                        y.Lots_Old == x.Lots_Old &&
+                                                                        y.Ori_Amount_New != null).
+                                                            Sum(y => TypeTransfer.doubleNToDouble(y.Ori_Amount_New)), 4, MidpointRounding.AwayFromZero).ToString() :1.ToString(),
+                IntRevise_perBond_New = string.Empty,
+                IntRevise_perBond_Tw_New = string.Empty,
+                Lots_Old = x.Lots_Old,
+                Create_User=x.CreateUser,
+                Ori_Amount_New = x?.Ori_Amount_New.ToString()
+            }).ToList();
+
+            //        //舊券應收未調整息
+            var OldBondIntRevise_Lots = intRevisedata.Where(x => x.Lots_Old != string.Empty).Select(x =>
+                                                       new
+                                                       {
+                                                           x.Bond_Number_Old,
+                                                           x.Portfolio_Name_Old,
+                                                           x.Lots_Old,
+                                                           x.Interest_Receivable,
+                                                           x.Interest_Receivable_Tw
+                                                       }).
+                                             Distinct().ToList();
+
+            //        //依比例分配舊券應收息至每一隻新券
+            OldBondIntRevise_Lots.ForEach(x =>
+            {
+                double intrevise = x.Interest_Receivable;
+                double intrevise_tw = x.Interest_Receivable_Tw;
+
+                var last = A44_2Deteail_OldLots.Where(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                                        y.Portfolio_Name_Old == x.Portfolio_Name_Old &&
+                                                        y.Lots_Old == x.Lots_Old).LastOrDefault();
+
+
+                A44_2Deteail_OldLots.
+                    Where(y => y.Bond_Number_Old == x.Bond_Number_Old &&
+                                    y.Portfolio_Name_Old == x.Portfolio_Name_Old &&
+                                    y.Lots_Old == x.Lots_Old).ToList().
+                    ForEach(y =>
+                    {
+                        if (!y.Equals(last))
+                        {
+                            y.IntRevise_perBond_New = Math.Round(Convert.ToDouble(y.Ori_Amount_Percentage_New) * x.Interest_Receivable,2, MidpointRounding.AwayFromZero).ToString();
+                            y.IntRevise_perBond_Tw_New = Math.Round(Convert.ToDouble(y.Ori_Amount_Percentage_New) * x.Interest_Receivable_Tw,0, MidpointRounding.AwayFromZero).ToString();
+                            intrevise -= Convert.ToDouble(y.IntRevise_perBond_New);
+                            intrevise_tw -= Convert.ToDouble(y.IntRevise_perBond_Tw_New);
+                        }
+                        else
+                        {
+                            y.IntRevise_perBond_New = intrevise.ToString();
+                            y.IntRevise_perBond_Tw_New = intrevise_tw.ToString();
+                        }
+                    }
+                            );
+            });
+            data.AddRange(A44_2Deteail_OldLots);
+            return data;
+        }
+        //end 20200929 alibaba
+        public List<A44_2DetailViewModel> GetA44_2Detail(DateTime ReportDate, int Version)
+        {
+            string resultMessage = string.Empty;
+            List<A44_2DetailViewModel> data = new List<A44_2DetailViewModel>();
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                var A44_2data = db.Bond_ISIN_Changed_IntRevise.AsNoTracking().Where(x => x.Report_Date == ReportDate && x.Version == Version);
+                //if (Version != 0)
+                //{
+                //    var A41data = db.Bond_Account_Info.AsNoTracking().Where(x => x.Report_Date == ReportDate && x.Version == Version && x.Lots == "1");
+                //    data = A44_2data.Join(A41data, x => new { x.Bond_Number_Old, x.Portfolio_Name_Old }, y => new { y.Bond_Number_Old, y.Portfolio_Name_Old }
+                //    , (x, y) => new
+                //    {
+                //        x.Bond_Number_Old,
+                //        x.Portfolio_Name_Old,
+                //        Bond_Number_New = y.Bond_Number,
+                //        Int_Receivable = x.Interest_Receivable,
+                //        Int_Receivable_Tw = x.Interest_Receivable_Tw,
+                //        x.Report_Date,
+                //        x.Processing_Date,
+                //        Lots = "1"
+
+                //    }).AsEnumerable().Select(x => new A44_2DetailViewModel()
+                //    {
+                //        Bond_Number_Old = x.Bond_Number_Old,
+                //        Portfolio_Name_Old = x.Portfolio_Name_Old,
+                //        Bond_Number_New = x.Bond_Number_New,
+                //        Int_Receivable = TypeTransfer.doubleNToString(x.Int_Receivable),
+                //        Int_Receivable_Tw = TypeTransfer.doubleNToString(x.Int_Receivable_Tw),
+                //        Report_Date = TypeTransfer.dateTimeToString(x.Report_Date, true),
+                //        Processing_Date = TypeTransfer.dateTimeToString(x.Processing_Date, true),
+                //        Lots = x.Lots
+                //    }).ToList();
+                //}
+                //else
+                //{
+                //    data = A44_2data.AsEnumerable().Select(x => new A44_2DetailViewModel()
+                //    {
+                //        Bond_Number_Old = x.Bond_Number_Old,
+                //        Portfolio_Name_Old = x.Portfolio_Name_Old,
+                //        Int_Receivable = TypeTransfer.doubleNToString(x.Interest_Receivable),
+                //        Int_Receivable_Tw = TypeTransfer.doubleNToString(x.Interest_Receivable_Tw),
+                //        Report_Date = TypeTransfer.dateTimeToString(x.Report_Date, true),
+
+                //    }).ToList();
+                //}
+                return GetA44_2IntRevise(A44_2data.AsEnumerable());
+            }          
+        }
+        #endregion
+        private A44_2ViewModel DbToA44_2Model(Bond_ISIN_Changed_IntRevise data)
+        //190628 John.投會換券應收未收金額修正
+        {
+            return new A44_2ViewModel()
+            {
+                Bond_Number_Old = data.Bond_Number_Old,
+                Portfolio_Name_Old = data.Portfolio_Name_Old,
+                Int_Receivable = data.Interest_Receivable.ToString(),
+                Int_Receivable_Tw = data.Interest_Receivable_Tw.ToString(),
+                Report_Date = TypeTransfer.dateTimeToString(data.Report_Date),
+                Processing_Date = TypeTransfer.dateTimeToString(data.Processing_Date)
+            };
+        }
     }
 }

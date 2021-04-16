@@ -633,7 +633,44 @@
                     GetAllData();
                 }
                 else {
+                       if(result.REASON_CODE=="1")
+                       {
+                            if(confirm(result.DESCRIPTION))
+                            {
+                                SaveData_2(actionType, obj, true);
+                            }
+                        }
+                        else
+                        {
+                            alert(result.DESCRIPTION);
+                        }
+                }
+            });
+        }
+
+             //20200925 alibaba 舊券重複，確定存檔 202008210166-00
+        function SaveData_2(actionType,obj,isoldbondsave)
+        {
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    actionType: actionType,
+                    dataModel: obj,
+                     isoldbondsave:isoldbondsave
+                }),
+                dataType: "json",
+                url: url.saveData,
+                contentType: 'application/json'
+            })
+            .done(function (result) {
+                if (result.RETURN_FLAG) {
                     alert(result.DESCRIPTION);
+                    $("#dialogEdit").dialog("close");
+                    SearchReset();
+                    GetAllData();
+                }
+                else {
+                        alert(result.DESCRIPTION);
                 }
             });
         }

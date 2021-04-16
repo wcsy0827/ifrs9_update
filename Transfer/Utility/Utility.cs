@@ -10,13 +10,18 @@ namespace Transfer.Utility
         /// </summary>
         static SetFile()
         {
+            LoginLog = @"LoginLog.txt"; //LoginInfo儲存txtlog檔名
+            LoginExceptionLog = @"LoginException.txt";//LoginException儲存txtlog檔名
+            IFRS9Log = "Log";//儲存Log文件資料夾名稱
             ProgramName = "Transfer"; //專案名稱
             FileUploads = "FileUploads"; //上傳檔案放置位置
             FileDownloads = "FileDownloads"; //下載檔案放置位置
             QuantifyFile = "QuantifyFile"; //D64 Quantify檔案放置位置
             QualitativeFile = "QualitativeFile"; //D66 Qualitative檔案放置位置
+            RiskControlFile = "RiskControlFile"; //D75 RiskControl檔案放置位置
             A41TransferTxtLog = @"DataRequirementsTransfer.txt"; //A41上傳Txtlog檔名
             A42TransferTxtLog = @"A42Transfer.txt"; //A42上傳Txtlog檔名
+            A44_2TransferTxtLog = @"A44_2Transfer.txt";//A44_2上傳Txtlog檔名(190628換券應收未收金額修正)
             A45TransferTxtLog = @"A45Transfer.txt"; //A45上傳Txtlog檔名
             A46TransferTxtLog = @"A46Transfer.txt"; //A46上傳Txtlog檔名
             A47TransferTxtLog = @"A47Transfer.txt"; //A47上傳Txtlog檔名
@@ -38,6 +43,7 @@ namespace Transfer.Utility
 
         public static string A41TransferTxtLog { get; private set; }
         public static string A42TransferTxtLog { get; private set; }
+        public static string A44_2TransferTxtLog { get; private set; }
         public static string A45TransferTxtLog { get; private set; }
         public static string A46TransferTxtLog { get; private set; }
         public static string A47TransferTxtLog { get; private set; }
@@ -55,17 +61,37 @@ namespace Transfer.Utility
         public static string FileUploads { get; private set; }
         public static string QuantifyFile { get; private set; }
         public static string QualitativeFile { get; private set; }
+        public static string RiskControlFile { get; private set; }
         public static string ProgramName { get; private set; }
         public static string C01TransferTxtLog { get; private set; }
         public static string C10TransferTxtLog { get; private set; }
         public static string D53TransferTxtLog { get; private set; }
         public static string D72TransferTxtLog { get; private set; }
+        public static string LoginLog { get; private set; }
+        public static string LoginExceptionLog { get; private set; }
+        public static string IFRS9Log { get; private set; }
     }
 
     public class SelectOption
     {
         public string Text { get; set; }
         public string Value { get; set; }
+    }
+
+    public class GroupSelectOption
+    {
+        public string MainText { get; set; }
+        public string CommentText { get; set; }
+        public IEnumerable<string> GroupValue { get; set; }
+
+        public string Text
+        {
+            get { return MainText + " (" + CommentText + ")"; }
+        }
+        public string Value
+        {
+            get { return string.Join(",", GroupValue); }
+        }
     }
 
     public class RadioButton
@@ -116,6 +142,22 @@ namespace Transfer.Utility
         public string User_Account { get; set; }
         public DateTime Login_Time { get; set; }
         public DateTime Browse_Time { get; set; }
+    }
+
+    public class SummaryReportInfo
+    {
+        public string RuleID { get; set; }
+        public string RuleDesc { get; set; }
+        public string NumberOfPens { get; set; }
+        public string SummaryReportData()
+        {
+            if (RuleDesc == null)
+            {
+                //RuleDesc = "無說明";
+                return "規則編號" + RuleID + ":"  + NumberOfPens + "筆";
+            }
+            return "規則編號" + RuleID + "(" + RuleDesc + "):"  + NumberOfPens + "筆";
+        }
     }
 
     public class ProcessStatusList

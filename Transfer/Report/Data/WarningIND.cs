@@ -20,7 +20,7 @@ namespace Transfer.Report.Data
                 sql += $@"
 WITH TempD62 AS
 (
-select TOP 1  Version  from Bond_Basic_Assessment where Report_Date = @ReportDate ORDER BY Version DESC
+select TOP 1  Version  from Bond_Basic_Assessment where Report_Date = @ReportDate and Version=@Version ORDER BY Version DESC
 ),
 TempD62All AS
 (
@@ -96,7 +96,9 @@ from TempD62
                 using (var cmd = new SqlCommand(sql, conn))
                 {
                     string reportDate = parms.Where(x => x.key == "ReportDate").FirstOrDefault()?.value ?? string.Empty;
+                    string version = parms.Where(x => x.key == "Version").FirstOrDefault()?.value ?? "0";
                     cmd.Parameters.Add(new SqlParameter("ReportDate", reportDate));
+                    cmd.Parameters.Add(new SqlParameter("Version", version));
                     Extension.NlogSet(cmd.CommandText);
                     conn.Open();
                     var adapter = new SqlDataAdapter(cmd);
@@ -105,15 +107,15 @@ from TempD62
                     var Version = new reportParm()
                     {
                         key = "Version",
-                        value = ""
+                        value = version
                     };
                      
-                    var dt = resultsTable.Tables[0].AsEnumerable();
-                    if (dt.Any())
-                    {
-                        var first = dt.First();
-                        Version.value = first.Field<int>("Version").ToString();
-                    }
+                    //var dt = resultsTable.Tables[0].AsEnumerable();
+                    //if (dt.Any())
+                    //{
+                    //    var first = dt.First();
+                    //    Version.value = first.Field<int>("Version").ToString();
+                    //}
                     extensionParms.Add(Version);
                 }
             }

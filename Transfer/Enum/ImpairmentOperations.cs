@@ -16,7 +16,7 @@ namespace Transfer.Enum
             /// </summary>
             [Description("全部")]
             All = ImpairmentCalculation + BasicRequirements + QuantitativeAssessment +
-                QuantitativeAssessmentReview + QualitativeAssessment + QualitativeAssessmentReview +
+                QuantitativeAssessmentReview + RiskControl + QualitativeAssessment + QualitativeAssessmentReview +
                 StageConfrim,
 
             /// <summary>
@@ -38,28 +38,34 @@ namespace Transfer.Enum
             QuantitativeAssessment = 4,
 
             /// <summary>
-            /// 量化評估複核
+            /// 量化評估覆核
             /// </summary>
-            [Description("量化評估複核")]
+            [Description("量化評估覆核")]
             QuantitativeAssessmentReview = 8,
+
+            /// <summary>
+            /// 風控覆核
+            /// </summary>
+            [Description("風控覆核")]
+            RiskControl = 16,
 
             /// <summary>
             /// 質化評估
             /// </summary>
             [Description("質化評估")]
-            QualitativeAssessment = 16,
+            QualitativeAssessment = 32,
 
             /// <summary>
-            /// 質化評估複核
+            /// 質化評估覆核
             /// </summary>
-            [Description("質化評估複核")]
-            QualitativeAssessmentReview = 32,
+            [Description("質化評估覆核")]
+            QualitativeAssessmentReview = 64,
 
             /// <summary>
             /// 階段調整確認作業
             /// </summary>
             [Description("階段調整確認作業")]
-            StageConfrim = 64,
+            StageConfrim = 128,
         }
     }
 }

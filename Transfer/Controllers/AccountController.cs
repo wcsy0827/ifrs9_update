@@ -1,8 +1,11 @@
 ﻿using BotDetect.Web.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.DirectoryServices.AccountManagement;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
@@ -55,7 +58,8 @@ namespace Transfer.Controllers
         }
 
         // GET: Account
-        //[AllowAnonymous]
+        [AllowAnonymous]
+        [ValidateInput(false)]
         public ActionResult Login()
         {
             return View();
@@ -63,21 +67,48 @@ namespace Transfer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [CaptchaValidation("CaptchaCode", "ExampleCaptcha", "驗證碼不正確!")]
+        [ValidateInput(false)]
+        //[CaptchaValidation("CaptchaCode", "ExampleCaptcha", "驗證碼不正確!")]
         public ActionResult Logon(string userId, string pwd)
         {
-            bool flag = false;
-            var now = DateTime.Now;
-            if (!ModelState.IsValid)
-            {
-                TempData["User"] = userId;
-                TempData["Login"] = Message_Type.login_Captcha_Fail.GetDescription();
-                return RedirectToAction("Login", "Account");
-            }
-            else
-            {
-                MvcCaptcha.ResetCaptcha("ExampleCaptcha");
-                FileRelated.createFile(@"D:\IFRS9Log");
+                Session.Clear();
+                Session.Abandon();
+                Session.RemoveAll();
+                if (Request.Cookies["ASP.NET_SessionId"] != null)
+                {
+                    Response.Cookies["ASP.NET_SessionId"].Value = string.Empty;
+                    Response.Cookies["ASP.NET_SessionId"].Expires = DateTime.Now.AddMonths(-20);
+                }
+                if (Request.Cookies["adAuthCookie"] != null)
+                {
+                    Response.Cookies["adAuthCookie"].Value = string.Empty;
+                    Response.Cookies["adAuthCookie"].Expires = DateTime.Now.AddMonths(-20);
+                }
+                if (Request.Cookies["__RequestVerificationToken"] != null)
+                {
+                    Response.Cookies["__RequestVerificationToken"].Value = string.Empty;
+                    Response.Cookies["__RequestVerificationToken"].Expires = DateTime.Now.AddMonths(-20);
+                }
+
+                bool flag = false;
+                var now = DateTime.Now;
+            #region txtlog 檔案名稱 
+            //191113 John.解金檢議題，加入Hostname相關
+            //加入儲存登入資訊txt檔機制與路徑
+            string Logintxtpath = $"{DateTime.Now.ToString("yyyyMMdd")}_{SetFile.LoginLog}"; //預設txt名稱
+            string LoginExcptiontxtpath = $"{DateTime.Now.ToString("yyyyMMdd")}_{SetFile.LoginExceptionLog}"; //預設txt名稱
+            string LoginDetailInfo = string.Empty;
+            #endregion txtlog 檔案名稱
+            //if (!ModelState.IsValid)
+            //{
+            //    TempData["User"] = userId;
+            //    TempData["Login"] = Message_Type.login_Captcha_Fail.GetDescription();
+            //    return RedirectToAction("Login", "Account");
+            //}
+            //else
+            //{
+            //MvcCaptcha.ResetCaptcha("ExampleCaptcha");
+            FileRelated.createFile(@"D:\IFRS9Log");
                 try
                 {
                     // set up domain context
@@ -89,8 +120,10 @@ namespace Transfer.Controllers
                     //驗證AD帳號 
                     flag = LdapAuthentication.isAuthenticatrd(userId, pwd);
                 }
-                catch
-                { }
+                catch(Exception ex)
+                {
+                    TxtLog.detailtxtLog(false,ex.ToString(), txtLocation(LoginExcptiontxtpath));
+                }
                 var user = new IFRS9_User();
                 using (IFRS9DBEntities db = new IFRS9DBEntities())
                 {
@@ -114,11 +147,32 @@ namespace Transfer.Controllers
                             user.LoginFlag = true;
                             string IP = System.Web.HttpContext.Current.Request
                                 .ServerVariables["HTTP_X_FORWARDED_FOR"];
-                            if (string.IsNullOrEmpty(IP))
+                            if (!string.IsNullOrEmpty(IP))
                             {
-                                IP = System.Web.HttpContext.Current.Request
-                                    .ServerVariables["REMOTE_ADDR"];
+                                string[] addresses = IP.Split(',');
+                                if (addresses.Length != 0)
+                                {
+                                    IP= addresses[0];
+                                }
                             }
+                            else
+                            {
+                                IP= System.Web.HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+                            }
+
+                            //1002 John.解WebInpsect弱點修正_抓hostname
+                            try
+                            {
+                                IPHostEntry ipHostName = Dns.GetHostEntry(IP?.Trim() ?? string.Empty);
+                                var IPAddrMachine = ipHostName.HostName.ToString();
+                                IP = IP + ";Machine:" + IPAddrMachine;
+
+                            }
+                            catch(Exception ex)
+                            {
+                            IP = IP + ";機器名稱不明";
+                            TxtLog.detailtxtLog(false, ex.ToString(), txtLocation(LoginExcptiontxtpath));
+                        }
                             db.IFRS9_User_Log.Add(
                                 new IFRS9_User_Log()
                                 {
@@ -130,8 +184,12 @@ namespace Transfer.Controllers
                             try
                             {
                                 db.SaveChanges();
+                                TxtLog.detailtxtLog(true,string.Format("{0}{1}", $"[{user.User_Account}]", $"[{IP}]"), txtLocation(Logintxtpath));
                             }
-                            catch { }
+                            catch(Exception ex)
+                            {
+                                TxtLog.detailtxtLog(false,ex.ToString(), txtLocation(LoginExcptiontxtpath));
+                            }
                         }
                         else
                         {
@@ -158,8 +216,10 @@ namespace Transfer.Controllers
                 {
                     TempData["User"] = userId;
                     return RedirectToAction("Login", "Account");
-                }
             }
+                
+
+            //}
         }
 
         [AllowAnonymous]
@@ -210,17 +270,35 @@ and FORMAT(Login_Time, N'yyyy/MM/dd HH:mm:ss')   = '{Login_Time}'
 
             }
             //清除所有的 session
+            Session.Clear();
+            Session.Abandon();
             Session.RemoveAll();
+            if (Request.Cookies["ASP.NET_SessionId"] != null)
+            {
+                Response.Cookies["ASP.NET_SessionId"].Value = string.Empty;
+                Response.Cookies["ASP.NET_SessionId"].Expires = DateTime.Now.AddMonths(-20);
+            }
+            if (Request.Cookies["adAuthCookie"] != null)
+            {
+                Response.Cookies["adAuthCookie"].Value = string.Empty;
+                Response.Cookies["adAuthCookie"].Expires = DateTime.Now.AddMonths(-20);
+            }
+            if (Request.Cookies["__RequestVerificationToken"] != null)
+            {
+                Response.Cookies["__RequestVerificationToken"].Value = string.Empty;
+                Response.Cookies["__RequestVerificationToken"].Expires = DateTime.Now.AddMonths(-20);
+            }
 
-            //建立一個同名的 Cookie 來覆蓋原本的 Cookie
-            HttpCookie cookie1 = new HttpCookie(FormsAuthentication.FormsCookieName, "");
-            cookie1.Expires = DateTime.Now.AddYears(-1);
-            Response.Cookies.Add(cookie1);
 
-            //建立 ASP.NET 的 Session Cookie 同樣是為了覆蓋
-            HttpCookie cookie2 = new HttpCookie("ASP.NET_SessionId", "");
-            cookie2.Expires = DateTime.Now.AddYears(-1);
-            Response.Cookies.Add(cookie2);
+            ////建立一個同名的 Cookie 來覆蓋原本的 Cookie
+            //HttpCookie cookie1 = new HttpCookie(FormsAuthentication.FormsCookieName, "");
+            //cookie1.Expires = DateTime.Now.AddYears(-1);
+            //Response.Cookies.Add(cookie1);
+
+            ////建立 ASP.NET 的 Session Cookie 同樣是為了覆蓋
+            //HttpCookie cookie2 = new HttpCookie("ASP.NET_SessionId", "");
+            //cookie2.Expires = DateTime.Now.AddYears(-1);
+            //Response.Cookies.Add(cookie2);
 
             //登出
             FormsAuthentication.SignOut();
@@ -275,7 +353,7 @@ and FORMAT(Login_Time, N'yyyy/MM/dd HH:mm:ss')   = '{Login_Time}'
                 return RedirectToAction("Login", "Account");
             }
         }
-
+        #region PrivateFunction
         private void LoginProcess(string user, bool isRemeber, DateTime dt)
         {
             var ticket = new FormsAuthenticationTicket(
@@ -292,8 +370,25 @@ and FORMAT(Login_Time, N'yyyy/MM/dd HH:mm:ss')   = '{Login_Time}'
             var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encryptedTicket);
             Response.Cookies.Add(cookie);
         }
+        protected string txtLocation(string path) //191113 John.解金檢議題，加入Hostname相關
+        {
+            try
+            {
+                string projectFile = Server.MapPath("~/" + SetFile.IFRS9Log); //預設放Log的資料夾路徑
+                string configTxtLocation = ConfigurationManager.AppSettings["txtLogLocation"];
+                if (!string.IsNullOrWhiteSpace(configTxtLocation))
+                    projectFile = configTxtLocation; //有設定webConfig且不為空就取代
+                FileRelated.createFile(projectFile);
+                string folderPath = Path.Combine(projectFile, path); //合併路徑&檔名
+                return folderPath;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+        #endregion
     }
-
 
     public class MenuModel
     {

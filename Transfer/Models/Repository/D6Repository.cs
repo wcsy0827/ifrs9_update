@@ -11,6 +11,7 @@ using Transfer.Controllers;
 using System.Text;
 using System.IO;
 using System.Data.SqlClient;
+using System.Data.Entity;
 
 namespace Transfer.Models.Repository
 {
@@ -51,7 +52,7 @@ namespace Transfer.Models.Repository
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
                 var query = common.getAssessmentInfo(groupProductCode, tableId, SetAssessmentType.Presented);
-                if (query.Any(x=>x.User_Account == userAccount))
+                if (query.Any(x => x.User_Account == userAccount))
                 {
                     return new Tuple<bool, List<IFRS9_User>>
                     (
@@ -110,7 +111,7 @@ namespace Transfer.Models.Repository
         #endregion
 
         #region DbToD60Model
-        private D60ViewModel DbToD60Model(Bond_Rating_Parm data,List<IFRS9_User> users)
+        private D60ViewModel DbToD60Model(Bond_Rating_Parm data, List<IFRS9_User> users)
         {
             string ruleSetterName = "";
             string auditorName = "";
@@ -150,7 +151,7 @@ namespace Transfer.Models.Repository
             {
                 auditorName = UserData.User_Name;
             }
-            
+
             return new D60ViewModel()
             {
                 Parm_ID = data.Parm_ID.ToString(),
@@ -372,7 +373,7 @@ namespace Transfer.Models.Repository
                              x.Rating_Object == oldData.Rating_Object &&
                              x.Status == "2" &&
                              x.IsActive == "Y")
-                             .Where(x=>x.Rating_Org_Area == oldData.Rating_Org_Area,!oldData.Rating_Org_Area.IsNullOrWhiteSpace());
+                             .Where(x => x.Rating_Org_Area == oldData.Rating_Org_Area, !oldData.Rating_Org_Area.IsNullOrWhiteSpace());
                             foreach (var change in _change)
                             {
                                 change.IsActive = "N";
@@ -395,7 +396,7 @@ namespace Transfer.Models.Repository
                     //}
 
                     result.RETURN_FLAG = true;
-                    if(oldData.Status == "2")
+                    if (oldData.Status == "2")
                         result.DESCRIPTION = Message_Type.Audit_Success.GetDescription();
                     else if (oldData.Status == "3")
                         result.DESCRIPTION = Message_Type.Reject_Success.GetDescription();
@@ -448,12 +449,12 @@ namespace Transfer.Models.Repository
             {
                 ruleSetterName = UserData.User_Name;
             }
-            
+
             UserData = users.Where(x => x.User_Account == data.Auditor).FirstOrDefault();
             if (UserData != null)
             {
                 auditorName = UserData.User_Name;
-            }            
+            }
 
             ProcessStatusList psl = new ProcessStatusList();
             List<SelectOption> selectOptionStatus = psl.statusOption;
@@ -507,7 +508,7 @@ namespace Transfer.Models.Repository
                               .Where(x => x.IsActive == dataModel.IsActive, !dataModel.IsActive.IsNullOrWhiteSpace()).ToList();
                 var users = db.IFRS9_User.AsNoTracking().ToList();
                 return new Tuple<bool, List<D61ViewModel>>(query.Any(),
-                    query.Select(x => { return DbToD61ViewModel(x, users); }).ToList());            
+                    query.Select(x => { return DbToD61ViewModel(x, users); }).ToList());
             }
         }
         #endregion
@@ -583,7 +584,7 @@ namespace Transfer.Models.Repository
                             dataAdd.IsActive = "N"; //失效
                             dataAdd.Change_Status = "I"; //新增
                             db.Bond_Assessment_Parm.Add(dataAdd);
-                        }                
+                        }
                     }
                     else if (actionType == "Modify")
                     {
@@ -658,7 +659,7 @@ namespace Transfer.Models.Repository
                         {
                             result.DESCRIPTION = "已經是刪除狀態等待複核";
                         }
-                        else 
+                        else
                         {
                             query.Rule_setter = AccountController.CurrentUserInfo.Name;
                             query.Rule_setting_Date = DateTime.Now.Date;
@@ -754,13 +755,13 @@ namespace Transfer.Models.Repository
                                     break;
                                 case "U":
                                     oldData.IsActive = "Y";
-                                        db.Bond_Assessment_Parm.
-                                        Where(x => x.Check_Item_Code == checkItemCode &&
-                                        x.Id != Id).ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.IsActive = "N";
-                                        });
+                                    db.Bond_Assessment_Parm.
+                                    Where(x => x.Check_Item_Code == checkItemCode &&
+                                    x.Id != Id).ToList()
+                                    .ForEach(x =>
+                                    {
+                                        x.IsActive = "N";
+                                    });
                                     break;
                             }
                         }
@@ -805,7 +806,7 @@ namespace Transfer.Models.Repository
         #endregion
 
         #region Db 組成 DbToD68ViewModel
-        private D68ViewModel DbToD68ViewModel(Risk_Parm data,List<IFRS9_User> users)
+        private D68ViewModel DbToD68ViewModel(Risk_Parm data, List<IFRS9_User> users)
         {
             string includingIndName = "";
             string applyRangeName = "";
@@ -865,7 +866,7 @@ namespace Transfer.Models.Repository
             {
                 auditorName = UserData.User_Name;
             }
-                
+
             return new D68ViewModel()
             {
                 Rule_ID = data.Rule_ID.ToString(),
@@ -1184,7 +1185,7 @@ namespace Transfer.Models.Repository
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private D69ViewModel DbToD69ViewModel(Basic_Assessment_Parm data,List<IFRS9_User> users)
+        private D69ViewModel DbToD69ViewModel(Basic_Assessment_Parm data, List<IFRS9_User> users)
         {
             string basicPassName = "";
             string ratingOriGoodIndName = "";
@@ -1493,7 +1494,7 @@ namespace Transfer.Models.Repository
                 catch (DbUpdateException ex)
                 {
                     result.RETURN_FLAG = false;
-                    result.DESCRIPTION = Message_Type.Audit_Fail.GetDescription("D69", ex.Message); 
+                    result.DESCRIPTION = Message_Type.Audit_Fail.GetDescription("D69", ex.Message);
                 }
             }
 
@@ -1507,40 +1508,57 @@ namespace Transfer.Models.Repository
                                                         string referenceNbr, string bondNumber,
                                                         string basicPass,
                                                         string watchIND, string warningIND,
-                                                        string chgInSpreadIND, string beforeHasChgInSpread)
+                                                        string chgInSpreadIND, string beforeHasChgInSpread,
+                                                        int version)
         {
             List<D62ViewModel> D62 = new List<D62ViewModel>();
+            List<Bond_Basic_Assessment> queryD62 = new List<Bond_Basic_Assessment>();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
                 if (db.Bond_Basic_Assessment.Any())
                 {
-                    var data = from q in db.Bond_Basic_Assessment.AsNoTracking()
-                               select q;
-
+                    //var data = from q in db.Bond_Basic_Assessment.AsNoTracking()
+                    //           select q;
                     DateTime dateReportDateStart = DateTime.Now.Date;
                     DateTime dateReportDateEnd = DateTime.Now.Date;
+
 
                     if (reportDateStart.IsNullOrWhiteSpace() == false)
                     {
                         dateReportDateStart = DateTime.Parse(reportDateStart);
-                        data = data.Where(x => x.Report_Date >= dateReportDateStart);
+                        //data = data.Where(x => x.Report_Date >= dateReportDateStart);
                     }
 
                     if (reportDateEnd.IsNullOrWhiteSpace() == false)
                     {
                         dateReportDateEnd = DateTime.Parse(reportDateEnd);
-                        data = data.Where(x => x.Report_Date <= dateReportDateEnd);
+                        //data = data.Where(x => x.Report_Date <= dateReportDateEnd);
                     }
 
-                    data = data.Where(x => x.Reference_Nbr == referenceNbr, referenceNbr.IsNullOrWhiteSpace() == false)
+
+                    var reportdates = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date >= dateReportDateStart && x.Report_Date <= dateReportDateEnd).OrderBy(x => x.Report_Date).Select(x => x.Report_Date).Distinct().ToList();
+                    if (version == 0)
+                    {
+                        foreach (var reportdate in reportdates)
+                        {
+                            int maxver = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportdate).Max(x => x.Version);
+                            queryD62.AddRange(db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportdate && x.Version == maxver).ToList());
+                        }
+                    }
+                    else
+                    {
+                        queryD62 = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportdates.FirstOrDefault() && x.Version == version).ToList();
+                    }
+ 
+
+                    List<Bond_Basic_Assessment> dataD62= queryD62.Where(x => x.Reference_Nbr == referenceNbr, referenceNbr.IsNullOrWhiteSpace() == false)
                                .Where(x => x.Bond_Number == bondNumber, bondNumber.IsNullOrWhiteSpace() == false)
                                .Where(x => x.Basic_Pass == basicPass, basicPass.IsNullOrWhiteSpace() == false)
                                .Where(x => x.Watch_IND == watchIND, watchIND.IsNullOrWhiteSpace() == false)
                                .Where(x => x.Warning_IND == warningIND, warningIND.IsNullOrWhiteSpace() == false)
                                .Where(x => x.Chg_In_Spread.ToString() != "", chgInSpreadIND == "Y")
-                               .Where(x => x.Chg_In_Spread.ToString() == "", chgInSpreadIND == "N");
-
-                    List<Bond_Basic_Assessment> dataD62 = data.ToList();
+                               .Where(x => x.Chg_In_Spread.ToString() == "", chgInSpreadIND == "N").ToList();
+                    //List<Bond_Basic_Assessment> dataD62 = data.ToList();
 
                     List<Bond_Basic_Assessment> D62Before = db.Bond_Basic_Assessment.AsNoTracking()
                                                               .Where(x => x.Report_Date >= dateReportDateStart
@@ -1551,10 +1569,10 @@ namespace Transfer.Models.Repository
 
                         for (int i = 0; i < dataD62.Count; i++)
                         {
-                            var oneD62Before =  D62Before.Where(x => x.Report_Date < dataD62[i].Report_Date
-                                                                  && x.Bond_Number == dataD62[i].Bond_Number
-                                                                  && x.Lots == dataD62[i].Lots
-                                                                  && x.Portfolio_Name == dataD62[i].Portfolio_Name)
+                            var oneD62Before = D62Before.Where(x => x.Report_Date < dataD62[i].Report_Date
+                                                                 && x.Bond_Number == dataD62[i].Bond_Number
+                                                                 && x.Lots == dataD62[i].Lots
+                                                                 && x.Portfolio_Name == dataD62[i].Portfolio_Name)
                                                         .OrderByDescending(x => x.Report_Date)
                                                         .FirstOrDefault();
                             if (oneD62Before != null)
@@ -1565,13 +1583,14 @@ namespace Transfer.Models.Repository
                     }
 
                     D62 = dataD62.Distinct()
-                          .OrderBy(x=> x.Bond_Number).OrderBy(x => x.Lots).OrderBy(x => x.Portfolio_Name).OrderByDescending(x => x.Report_Date)
+                          .OrderBy(x => x.Bond_Number).OrderBy(x => x.Lots).OrderBy(x => x.Portfolio_Name).OrderByDescending(x => x.Report_Date)
+                          .Join(db.Version_Info, x => new { x.Report_Date, x.Version }, y => new { y.Report_Date, y.Version }, (x, y) => { return DbToD62Model(x, y); })
                           .AsEnumerable()
-                          .Select(x => {return DbToD62Model(x);}).ToList();
+                          .ToList();
 
-                    List <IFRS9_User> ifrs9UserList = db.IFRS9_User.AsNoTracking().ToList();
+                    List<IFRS9_User> ifrs9UserList = db.IFRS9_User.AsNoTracking().ToList();
 
-                    for (int i=0; i < D62.Count;i++)
+                    for (int i = 0; i < D62.Count; i++)
                     {
                         string Watch_IND_Override_User = D62[i].Watch_IND_Override_User;
                         string Warning_IND_Override_User = D62[i].Warning_IND_Override_User;
@@ -1597,7 +1616,7 @@ namespace Transfer.Models.Repository
 
             if (D62.Any())
             {
-                message = getD62Message(reportDateStart,reportDateEnd);
+                message = getD62Message(reportDateStart, reportDateEnd);
             }
 
             return new Tuple<string, List<D62ViewModel>>(message, D62);
@@ -1606,10 +1625,11 @@ namespace Transfer.Models.Repository
         #endregion
 
         #region Db 組成 D62ViewModel
-        private D62ViewModel DbToD62Model(Bond_Basic_Assessment data)
+        private D62ViewModel DbToD62Model(Bond_Basic_Assessment data, Version_Info versionInfo)
         {
             string Watch_IND_Override_User_Name = "";
             string Warning_IND_Override_User_Name = "";
+
 
             return new D62ViewModel()
             {
@@ -1632,8 +1652,8 @@ namespace Transfer.Models.Repository
                 Curr_Ori_Rating_Diff = data.Curr_Ori_Rating_Diff.ToString(),
                 Basic_Pass = data.Basic_Pass,
                 Map_Rule_Id_D69 = data.Map_Rule_Id_D69.ToString(),
-                Cost_Value = data.Cost_Value.ToString(),
-                Market_Value_Ori = data.Market_Value_Ori.ToString(),
+                Cost_Value = data.Cost_Value.ToString().formateThousand(),
+                Market_Value_Ori = data.Market_Value_Ori.ToString().formateThousand(),
                 Value_Change_Ratio = data.Value_Change_Ratio.ToString(),
                 Value_Change_Ratio_Pass = data.Value_Change_Ratio_Pass,
                 Accumulation_Loss_last_Month = data.Accumulation_Loss_last_Month.ToString(),
@@ -1655,8 +1675,10 @@ namespace Transfer.Models.Repository
                 Warning_IND_Override_DESC = data.Warning_IND_Override_DESC,
                 Warning_IND_Override_Date = TypeTransfer.dateTimeNToString(data.Warning_IND_Override_Date),
                 Warning_IND_Override_User = data.Warning_IND_Override_User,
-                Warning_IND_Override_User_Name = Warning_IND_Override_User_Name
+                Warning_IND_Override_User_Name = Warning_IND_Override_User_Name,
+                ReviewStatus = versionInfo.Risk_Control_Status.ToString()
             };
+
         }
 
         #endregion
@@ -1665,7 +1687,7 @@ namespace Transfer.Models.Repository
         public string getD62Message(string reportDateStart, string reportDateEnd)
         {
             string message = "";
-
+            List<Bond_Basic_Assessment> queryD62 = new List<Bond_Basic_Assessment>();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
                 DateTime dateReportDateStart = DateTime.Parse(reportDateStart);
@@ -1678,18 +1700,20 @@ namespace Transfer.Models.Repository
                 int watchINDNCount = 0;
                 int watchINDNULLCount = 0;
 
-                List<Bond_Basic_Assessment> listBond_Basic_Assessment = db.Bond_Basic_Assessment.AsNoTracking()
-                                                                          .Where(x => x.Report_Date >= dateReportDateStart
-                                                                                   && x.Report_Date <= dateReportDateEnd)
-                                                                          .ToList();
+                //List<Bond_Basic_Assessment> listBond_Basic_Assessment = db.Bond_Basic_Assessment.AsNoTracking().ToList();
+                var reportdates = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date >= dateReportDateStart && x.Report_Date <= dateReportDateEnd).OrderBy(x => x.Report_Date).Select(x => x.Report_Date).Distinct().ToList();
+                foreach (var reportdate in reportdates)
+                {
+                    int maxver = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportdate).Max(x => x.Version);
+                    queryD62.AddRange(db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportdate && x.Version == maxver).ToList());
+                }
+                basicPassYCount = queryD62.Where(x => x.Basic_Pass == "Y").Count();
+                basicPassNCount = queryD62.Where(x => x.Basic_Pass == "N").Count();
+                basicPassNULLCount = queryD62.Where(x => x.Basic_Pass.ToString() == "").Count();
 
-                basicPassYCount = listBond_Basic_Assessment.Where(x => x.Basic_Pass == "Y").Count();
-                basicPassNCount = listBond_Basic_Assessment.Where(x => x.Basic_Pass == "N").Count();
-                basicPassNULLCount = listBond_Basic_Assessment.Where(x => x.Basic_Pass.ToString() == "").Count();
-
-                watchINDYCount = listBond_Basic_Assessment.Where(x => x.Watch_IND == "Y").Count();
-                watchINDNCount = listBond_Basic_Assessment.Where(x => x.Watch_IND == "N").Count();
-                watchINDNULLCount = listBond_Basic_Assessment.Where(x => x.Watch_IND == "" || x.Watch_IND == null).Count();
+                watchINDYCount = queryD62.Where(x => x.Watch_IND == "Y").Count();
+                watchINDNCount = queryD62.Where(x => x.Watch_IND == "N").Count();
+                watchINDNULLCount = queryD62.Where(x => x.Watch_IND == "" || x.Watch_IND == null).Count();
 
                 message = $"基準日：{reportDateStart} ~ {reportDateEnd}，<br/>";
                 message += $@"基本要件通過=Y：{basicPassYCount.ToString()} 筆，<br/>基本要件通過=N：{basicPassNCount.ToString()} 筆，<br/>基本要件通過=空：{basicPassNULLCount.ToString()} 筆。<br/>";
@@ -1873,10 +1897,21 @@ namespace Transfer.Models.Repository
 
                     int intVersion = TypeTransfer.intNToInt(query.Version);
 
+                    //檢核該報導日版本覆核專區狀態
+                    var versioninfo = db.Version_Info.Where(x => x.Report_Date == dateReportDate && x.Version == intVersion).FirstOrDefault();
+                    if (versioninfo != null && versioninfo.Risk_Control_Status != 0)
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = Message_Type.ReviewInProgress.GetDescription();
+                        return result;
+                    }
+
+
+
                     var addData = db.Bond_Account_Info.AsNoTracking().Where(x => x.Report_Date == dateReportDate
                                                                               && x.Version == intVersion
                                                                               && x.IAS39_CATEGORY.StartsWith("FVPL") == false
-                                                                              && x.Assessment_Check!="N") //190510 PG&E需求，排除A41註記為N的部位
+                                                                              && x.Assessment_Check != "N") //190510 PG&E需求，排除A41註記為N的部位
                                                                      .ToList();
                     if (addData.Any() == false)
                     {
@@ -1885,7 +1920,7 @@ namespace Transfer.Models.Repository
                         return result;
                     }
 
-                    if (addData.Where(x=>x.Principal.HasValue == false || x.Market_Value_Ori.HasValue == false).Any())
+                    if (addData.Where(x => x.Principal.HasValue == false || x.Market_Value_Ori.HasValue == false).Any())
                     {
                         result.RETURN_FLAG = false;
                         result.DESCRIPTION = "A41：Bond_Account_Info 有成本價或是市價有空值的狀況";
@@ -1915,7 +1950,7 @@ namespace Transfer.Models.Repository
 
                     result = new MSGReturnModel();
 
-                    var B01Data = db.IFRS9_Main.AsNoTracking().Where(x=>x.Report_Date == dateReportDate).ToList();
+                    var B01Data = db.IFRS9_Main.AsNoTracking().Where(x => x.Report_Date == dateReportDate).ToList();
                     if (!B01Data.Any())
                     {
                         result.RETURN_FLAG = false;
@@ -1980,7 +2015,8 @@ AND Version = @Version ;
 
 DELETE Bond_Qualitative_Assessment_Result
 WHERE Report_Date = @Report_Date
-AND Version = @Version ; ";
+AND Version = @Version ; 
+ ";
 
                     try
                     {
@@ -2002,13 +2038,14 @@ AND Version = @Version ; ";
 
 
                     db.Database.ExecuteSqlCommand(string.Format(@"DELETE FROM Bond_Basic_Assessment 
-                                                                  WHERE Report_Date = '{0}'", reportDate));
+                                                                  WHERE Report_Date = '{0}' and Version='{1}'", reportDate, intVersion));
 
                     StringBuilder sb = new StringBuilder();
+                    StringBuilder sb2 = new StringBuilder();
                     List<IFRS9_Main> ifrs9MainList = B01Data;
                     List<Risk_Parm> riskParmList = D68Data;
                     List<Basic_Assessment_Parm> bapList = D69Data;
-                    List<Bond_Basic_Assessment> bbaList = db.Bond_Basic_Assessment.AsNoTracking().Where(x=> dts.Contains(x.Report_Date)).ToList();
+                    List<Bond_Basic_Assessment> bbaList = db.Bond_Basic_Assessment.AsNoTracking().Where(x => dts.Contains(x.Report_Date)).ToList();
                     List<Watching_List_Parm> ListWatch = db.Watching_List_Parm.AsNoTracking().Where(x => x.IsActive == "Y").ToList();
                     List<Warning_List_Parm> ListWarning = db.Warning_List_Parm.AsNoTracking().Where(x => x.IsActive == "Y").ToList();
                     List<Bond_Spread_Info> ListA96 = db.Bond_Spread_Info.AsNoTracking().Where(x => x.Report_Date == dateReportDate).ToList();
@@ -2173,7 +2210,7 @@ AND Version = @Version ; ";
                                 }
                             }
 
-                            if (Match_Rating_Ori_Good_Ind == "Y" && Match_Rating_Notch == "Y" && Match_Rating_Curr_Good_Ind == "Y" && Match_Ori_Rating_Missing_Ind == "Y") 
+                            if (Match_Rating_Ori_Good_Ind == "Y" && Match_Rating_Notch == "Y" && Match_Rating_Curr_Good_Ind == "Y" && Match_Ori_Rating_Missing_Ind == "Y")
                             {
                                 tempBasic_Pass = itemBAP.Basic_Pass;
                                 tempMap_Rule_Id_D69 = itemBAP.Rule_ID.ToString();
@@ -2208,7 +2245,7 @@ AND Version = @Version ; ";
                         var oneA96 = ListA96.Where(x =>
                                      x.Bond_Number == tempBond_Number &&
                                      x.Lots == tempLots &&
-                                     x.Portfolio_Name == tempPortfolio_Name                    
+                                     x.Portfolio_Name == tempPortfolio_Name
                                      ).FirstOrDefault();
                         if (oneA96 != null)
                         {
@@ -2225,7 +2262,7 @@ AND Version = @Version ; ";
                                                                     && x.Portfolio_Name == tempPortfolio_Name
                                                                     && x.Report_Date == lastReportDate)
                                                            .OrderByDescending(x => x.Version)
-                                                           .FirstOrDefault(); 
+                                                           .FirstOrDefault();
                         if (bba != null)
                         {
                             tempAccumulation_Loss_last_Month = bba.Accumulation_Loss_This_Month.ToString();
@@ -2373,15 +2410,55 @@ AND Version = @Version ; ";
 
                     db.Database.ExecuteSqlCommand(sb.ToString());
 
-                    result.RETURN_FLAG = true;
+                    //重設(或新增)version_Info資訊
 
+                    if (versioninfo != null)
+                    {
+                        versioninfo.Risk_Control_Status = 0;
+                        versioninfo.Version_Content = "";
+                        versioninfo.LastUpdate_User = _UserInfo._user;
+                        versioninfo.LastUpdate_DateTime = DateTime.Now;   
+                    }
+                    else
+                    {
+                        db.Version_Info.Add(new Version_Info()
+                        {
+                            Report_Date = Convert.ToDateTime(reportDate),
+                            Version = Convert.ToInt32(intVersion),
+                            Version_Content = "",
+                            Create_User = _UserInfo._user,
+                            Create_DateTime = DateTime.Now,
+                            LastUpdate_User = null,
+                            LastUpdate_DateTime = null
+                        });
+                    }
+
+                    //刪除D75資訊
+                    DateTime reportdate = TypeTransfer.stringToDateTime(reportDate);
+                    var D75 = db.Bond_Risk_Control_Result.Where(x => x.Report_Date == reportdate && x.Version == intVersion).FirstOrDefault();
+                    if (D75 != null)
+                    {
+                        db.Bond_Risk_Control_Result.Remove(D75);
+                    }
+                    //將D75_1上傳附件資訊檔設為失效
+                    var referenceNbr = $"{reportdate.ToString("yyyyMMdd")}_{intVersion.ToString()}";
+                    List<Bond_Risk_Control_Result_File> BondRiskControlResultFile = db.Bond_Risk_Control_Result_File.Where(x => x.Check_Reference.StartsWith(referenceNbr)).ToList();
+
+                    foreach (Bond_Risk_Control_Result_File file in BondRiskControlResultFile)
+                    {
+                        //刪除DB資訊以及實體檔案
+                        var del_result = DelD75_1File(file.File_Path, file.Check_Reference);
+                    }
+
+                    db.SaveChanges();
+                    result.RETURN_FLAG = true;
                     result.DESCRIPTION = getD62Message(reportDate, reportDate);
                 }
                 catch (Exception ex)
                 {
                     result.RETURN_FLAG = false;
                     result.DESCRIPTION = Message_Type
-                                         .save_Fail.GetDescription("D62",ex.Message);
+                                         .save_Fail.GetDescription("D62", ex.Message);
                 }
             }
 
@@ -2389,6 +2466,46 @@ AND Version = @Version ; ";
         }
 
         #endregion
+
+        public MSGReturnModel DelD75_1File(string path, string Check_Reference)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                var delfile = db.Bond_Risk_Control_Result_File.Where(x => x.Check_Reference == Check_Reference).FirstOrDefault();
+                db.Bond_Risk_Control_Result_File.Remove(delfile);
+                try
+                {
+                    db.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    result.DESCRIPTION = ex.exceptionMessage();
+                    result.RETURN_FLAG = false;
+                    return result;
+                }
+            }
+
+            if (System.IO.File.Exists(path))
+            {
+                try
+                {
+                    System.IO.File.Delete(path);
+
+                }
+                catch (System.IO.IOException ex)
+                {
+                    result.DESCRIPTION = ex.exceptionMessage();
+
+                }
+            }
+            result.RETURN_FLAG = true;
+            return result;
+
+        }
+
+
 
         #region checkD70D71
         public MSGReturnModel checkD70D71()
@@ -3049,7 +3166,7 @@ AND Version = @Version ; ";
                     oldData.Spread_Change_Over = dataModel.Spread_Change_Over;
                     oldData.Chg_In_Spread_This_Month = TypeTransfer.stringToIntN(dataModel.Chg_In_Spread_This_Month);
 
-                    if ((oldData.Watch_IND.ToString() != dataModel.Watch_IND.ToString()) 
+                    if ((oldData.Watch_IND.ToString() != dataModel.Watch_IND.ToString())
                         || (oldData.Watch_IND_Override_Date.ToString().IsNullOrWhiteSpace() == false))
                     {
                         oldData.Watch_IND = dataModel.Watch_IND;
@@ -3184,20 +3301,20 @@ AND Version = @Version ; ";
                      x.Assessment_Result_Version == 1 &&
                      x.Assessment_Sub_Kind != _other)
                     .AsEnumerable()
-                    .Select(x => DbToD63ViewModel(x,Users)));
+                    .Select(x => DbToD63ViewModel(x, Users)));
                 result.AddRange(
                     D63.Where(x => x.Version == version &&
                      x.Assessment_Result_Version == 2 &&
                      x.Assessment_Sub_Kind == _other)
                      .AsEnumerable()
-                     .Select(x => DbToD63ViewModel(x,Users)));
+                     .Select(x => DbToD63ViewModel(x, Users)));
             }
             result.ForEach(x =>
             {
                 if (x.Assessment_Sub_Kind != AssessmentSubKind_Type.Other.GetDescription())
                     x.Status = Evaluation_Status_Type.NotAssess.GetDescription();
             });
-            return result.OrderBy(x=>x.Reference_Nbr).ToList();
+            return result.OrderBy(x => x.Reference_Nbr).ToList();
         }
         #endregion
 
@@ -3218,7 +3335,7 @@ AND Version = @Version ; ";
             }
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                var D62 = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == dt).ToList();                
+                var D62 = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == dt).ToList();
                 var D65 = db.Bond_Qualitative_Assessment.AsNoTracking()
                     .Where(x => x.Report_Date == dt);
                 if (D62.Any())
@@ -3226,7 +3343,7 @@ AND Version = @Version ; ";
                 //version = D65.Max(x => x.Version);
                 var Users = db.IFRS9_User.AsNoTracking().ToList();
                 result = D65.Where(x => x.Version == version).AsEnumerable()
-                    .Select(x=> DbToD65ViewModel(x, Users)).ToList();
+                    .Select(x => DbToD65ViewModel(x, Users)).ToList();
                 result.ForEach(x =>
                 {
                     x.Status = Evaluation_Status_Type.NotAssess.GetDescription();
@@ -3246,28 +3363,27 @@ AND Version = @Version ; ";
         /// <param name="assessmentSubKind">評估次分類</param>
         /// <param name="Send_to_AuditorFlag">是否提交複核</param>
         /// <param name="referenceNbr">帳戶編號</param>
+        /// <param name="ver"
         /// <returns></returns>
         public List<D63ViewModel> getD63(
             DateTime reportDate,
             string boundNumber,
             Evaluation_Status_Type indexFlag,
             string assessmentSubKind,
-            bool Send_to_AuditorFlag = false,
-            string referenceNbr = ""
+            bool Send_to_AuditorFlag= false, string referenceNbr="",int ver=0
             )
         {
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                int version = 0;
-                var D62Version = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportDate).Select(x=>x.Version).ToList();
+                var D62Version = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == reportDate).Select(x => x.Version).ToList();
                 if (!D62Version.Any())
                 {
                     return new List<D63ViewModel>();
                 }
-                version = D62Version.Max();
+                int version = ver == 0 ? D62Version.Max() : ver;
                 var D63Data = db.Bond_Quantitative_Resource.AsNoTracking().Where(x =>
                             x.Report_Date == reportDate && x.Version == version)
-                            .Where(x => x.Bond_Number == boundNumber , !boundNumber.IsNullOrWhiteSpace()) //債券編號                                                              
+                            .Where(x => x.Bond_Number == boundNumber, !boundNumber.IsNullOrWhiteSpace()) //債券編號                                                              
                             .Where(x => x.Assessment_Sub_Kind == assessmentSubKind, assessmentSubKind != "All")  // 評估次分類
                             .Where(x => x.Send_to_Auditor == "Y", Send_to_AuditorFlag)
                             .Where(x => x.Reference_Nbr == referenceNbr, !referenceNbr.IsNullOrWhiteSpace())
@@ -3275,7 +3391,7 @@ AND Version = @Version ; ";
                 var D64s = db.Bond_Quantitative_Result.AsNoTracking().Where(x =>
                             x.Report_Date == reportDate &&
                             x.Version == version).ToList();
-                var D64Files = db.Bond_Quantitative_Result_File.AsNoTracking().Where(x=>x.Status == "Y").ToList();
+                var D64Files = db.Bond_Quantitative_Result_File.AsNoTracking().Where(x => x.Status == "Y").ToList();
                 if (D63Data.Any())
                 {
                     var Users = common.getAllUsers();
@@ -3284,13 +3400,13 @@ AND Version = @Version ; ";
                     if (Send_to_AuditorFlag)
                         result = results.OrderByDescending(x => x.Assessment_Result_Version).ToList();
                     else
-                    result = results.GroupBy(x => x.Reference_Nbr)
-                            .Select(x => x.OrderByDescending(y => y.Auditor_Return != "Y")
-                            .ThenByDescending(y => y.Send_to_Auditor == "Y")
-                            .ThenByDescending(y => y.Assessment_Result_Version).FirstOrDefault()).ToList();
+                        result = results.GroupBy(x => x.Reference_Nbr)
+                                .Select(x => x.OrderByDescending(y => y.Auditor_Return != "Y")
+                                .ThenByDescending(y => y.Send_to_Auditor == "Y")
+                                .ThenByDescending(y => y.Assessment_Result_Version).FirstOrDefault()).ToList();
                     result.ForEach(x =>
                       {
-                          var list = results.Where(y=>y.Reference_Nbr == x.Reference_Nbr).ToList();
+                          var list = results.Where(y => y.Reference_Nbr == x.Reference_Nbr).ToList();
                           var _status = getD63Status(list);
                           var rejectFlag =
                             (_status == Evaluation_Status_Type.ReviewCompleted ||
@@ -3355,12 +3471,12 @@ AND Version = @Version ; ";
                 {
                     var Users = common.getAllUsers();
                     datas = history.AsEnumerable()
-                        .OrderByDescending(x=>x.Assessment_Result_Version)
+                        .OrderByDescending(x => x.Assessment_Result_Version)
                         .Select(x => DbToD63ViewModel(x, Users)).ToList();
                     var _status = getD63Status(datas);
                     datas.ForEach(x =>
                     {
-                        x.Status = 
+                        x.Status =
                         (x.Assessment_Result_Version == "1") ? "第一版不複核" :
                         x.Auditor_Return == "Y" ?
                         Evaluation_Status_Type.Reject.GetDescription() : _status.GetDescription();
@@ -3379,7 +3495,7 @@ AND Version = @Version ; ";
         /// <param name="referenceNbr"></param>
         /// <param name="Assessment_Result_Version"></param>
         /// <returns></returns>
-        public List<D64ViewModel> getD64(string referenceNbr,int Assessment_Result_Version)
+        public List<D64ViewModel> getD64(string referenceNbr, int Assessment_Result_Version)
         {
             var datas = new List<D64ViewModel>();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
@@ -3390,7 +3506,7 @@ AND Version = @Version ; ";
                 var D64Files = db.Bond_Quantitative_Result_File.AsNoTracking().ToList();
                 datas = db.Bond_Quantitative_Result.AsNoTracking()
                     .Where(x => x.Reference_Nbr == referenceNbr && x.Assessment_Result_Version == Assessment_Result_Version)
-                    .AsEnumerable().Select(x => DbToD64ViewModel(x, _Assessor,D64Files)).ToList();
+                    .AsEnumerable().Select(x => DbToD64ViewModel(x, _Assessor, D64Files)).ToList();
             }
             return datas;
         }
@@ -3471,7 +3587,7 @@ AND Version = @Version ; ";
                         result = result.Where(x => x.Status == Evaluation_Status_Type.NotReview.GetDescription()).ToList();
                     if ((indexFlag & Evaluation_Status_Type.Reject) == Evaluation_Status_Type.Reject)
                     {
-                        if(Send_to_AuditorFlag)
+                        if (Send_to_AuditorFlag)
                             result = result.Where(x => x.Status == Evaluation_Status_Type.Reject.GetDescription()).ToList();
                         else
                             result = result.Where(x => x.Status == "複核被退回請重新提交").ToList();
@@ -3617,7 +3733,7 @@ AND Version = @Version ; ";
         /// <param name="Assessment_Kind"></param>
         /// <param name="Assessment_Sub_Kind"></param>
         /// <returns></returns>
-        public List<Tuple<string,string>> getCheckItemCode(
+        public List<Tuple<string, string>> getCheckItemCode(
             string Assessment_Stage,
             string Assessment_Kind,
             string Assessment_Sub_Kind
@@ -3672,7 +3788,7 @@ AND Version = @Version ; ";
             List<Bond_Qualitative_Assessment_Result_File> result = new List<Bond_Qualitative_Assessment_Result_File>();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                result =  db.Bond_Qualitative_Assessment_Result_File.AsNoTracking()
+                result = db.Bond_Qualitative_Assessment_Result_File.AsNoTracking()
                             .Where(x => x.Check_Reference == Check_Reference &&
                             x.Status == "Y").ToList();
             }
@@ -3760,7 +3876,7 @@ AND Version = @Version ; ";
                                 result = D66.Memo;
                         }
                         break;
-                }             
+                }
             }
             return result;
         }
@@ -3835,7 +3951,7 @@ AND Version = @Version ; ";
         /// </summary>
         /// <param name="reportDate"></param>
         /// <returns></returns>
-        public List<D6CheckViewModel> getD6Check(string reportDate)
+        public List<D6CheckViewModel> getD6Check(string reportDate, int _version, string content)
         {
             List<D6CheckViewModel> result = new List<D6CheckViewModel>();
             DateTime dt = DateTime.MinValue;
@@ -3858,7 +3974,8 @@ AND Version = @Version ; ";
             List<string> _D65Refs = new List<string>(); //D65 Refs
             var _Detail = string.Empty;
             var _Job_Details = string.Empty;
-            var _lastVersion = 0;
+            var _lastVersion = _version;
+            var _content = content;
             StringBuilder sb = new StringBuilder();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
@@ -3871,9 +3988,9 @@ AND Version = @Version ; ";
                     sb.AppendLine($@"報導日:{_dtStr}");
                     foreach (var item in C07s.GroupBy(x => new { x.PRJID, x.FLOWID }))
                     {
-                        var version = item.Max(y => y.Version);
-                        var _count = item.Where(y => y.Version == version).Count();
-                        sb.AppendLine($@"專案:{item.Key.PRJID} 流程:{item.Key.FLOWID} 最大版本:{version} 資料筆數:{_count}");
+                        //var version = item.Max(y => y.Version);
+                        var _count = item.Where(y => y.Version == _lastVersion).Count();
+                        sb.AppendLine($@"專案:{item.Key.PRJID} 流程:{item.Key.FLOWID} 版本:{_lastVersion} 資料筆數:{_count}");
                     }
                     AddD6CheckView(result, _Job_Details, _completed, sb); //減損計算:已完成
                 }
@@ -3892,14 +4009,14 @@ AND Version = @Version ; ";
                 }
                 else
                 {
-                    var D62s = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == dt).ToList();
+                    var D62s = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == dt&&x.Version==_lastVersion).ToList();
                     if (D62s.Any())
                     {
-                        _lastVersion = D62s.Max(x => x.Version);
-                        var _D62s = D62s.Where(x => x.Version == _lastVersion).ToList();
-                        var _watching = _D62s.Where(x => x.Watch_IND == "Y").Count();
-                        sb.AppendLine($@"報導日:{_dtStr} 資料版本:{_lastVersion} 資料處理日期:{_D62s.First().Processing_Date.ToString("yyyy/MM/dd")}");
-                        sb.AppendLine($@"總資料數:{_D62s.Count()} 觀察名單筆數:{_watching} 預警名單筆數:{_D62s.Where(x => x.Warning_IND == "Y").Count()}");
+                        //_lastVersion = D62s.Max(x => x.Version);
+                        //var _D62s = D62s.Where(x => x.Version == _lastVersion).ToList();
+                        var _watching = D62s.Where(x => x.Watch_IND == "Y").Count();
+                        sb.AppendLine($@"報導日:{_dtStr} 資料版本:{_lastVersion} 資料處理日期:{D62s.First().Processing_Date.ToString("yyyy/MM/dd")}");
+                        sb.AppendLine($@"總資料數:{D62s.Count()} 觀察名單筆數:{_watching} 預警名單筆數:{D62s.Where(x => x.Warning_IND == "Y").Count()}");
                         if (_watching > 0)
                             _WatchFlag = true;
                         AddD6CheckView(result, _Job_Details, _completed, sb); //基本要件及監控名單產出:已完成
@@ -3930,7 +4047,7 @@ AND Version = @Version ; ";
                             _D63Refs = D63s.GroupBy(x => x.Reference_Nbr).Select(x => x.Key).ToList(); //帳戶數
                             foreach (var Ref in _D63Refs)
                             {
-                                //每一個帳戶都有一筆提交複核(Send_to_Auditor == "Y"),且無被退回(Auditor_Return == null)
+                                //每一個帳戶都有一筆提交覆核(Send_to_Auditor == "Y"),且無被退回(Auditor_Return == null)
                                 if (!D63s.Any(x => x.Reference_Nbr == Ref && x.Send_to_Auditor == "Y" && x.Auditor_Return == null))
                                 {
                                     confirmflag = false;
@@ -3944,7 +4061,7 @@ AND Version = @Version ; ";
                         }
                         if (confirmflag)
                         {
-                            sb.AppendLine($@"報導日:{_dtStr} 最大評估日期:{D63s.Max(x => x.Assessment_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D63Refs.Count}");
+                            sb.AppendLine($@"報導日:{_dtStr} 評估日期:{D63s.Max(x => x.Assessment_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D63Refs.Count}");
                             AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成量化評估:已完成
                         }
                         else
@@ -3959,29 +4076,29 @@ AND Version = @Version ; ";
                     }
                 }
                 #endregion
-                #region 是否完成量化評估複核
+                #region 是否完成量化評估覆核
                 sb = new StringBuilder();
                 _Job_Details = Impairment_Operations_Type.QuantitativeAssessmentReview.GetDescription();
                 if (_UuDoneFlag)
                 {
-                    AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成量化複核:未完成
+                    AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成量化覆核:未完成
                 }
                 else
                 {
                     if (_WatchFlag) //有觀察名單
                     {
-                        var confirmflag = true; //是否複核完成
-                        var _AuditorCount = 0; //完成複核數
+                        var confirmflag = true; //是否覆核完成
+                        var _AuditorCount = 0; //完成覆核數
                         if (D63s.Any())
                         {
                             foreach (var Ref in _D63Refs)
                             {
-                                //每一個帳戶都有一筆複核完成(Assessment_Result_Version == Result_Version_Confirm)
+                                //每一個帳戶都有一筆覆核完成(Assessment_Result_Version == Result_Version_Confirm)
                                 var _D63 = D63s.FirstOrDefault(x => x.Reference_Nbr == Ref && x.Assessment_Result_Version == x.Result_Version_Confirm);
                                 if (_D63 != null)
                                 {
                                     _AuditorCount += 1;
-                                    //複核後狀態不通過(Quantitative_Pass_Confirm == "N")
+                                    //覆核後狀態不通過(Quantitative_Pass_Confirm == "N")
                                     if (_D63.Quantitative_Pass_Confirm == "N")
                                         _D65Flag = true;
                                 }
@@ -3991,7 +4108,7 @@ AND Version = @Version ; ";
                                     break;
                                 }
                             }
-                            sb.AppendLine($@"報導日:{_dtStr} 最大複核日期:{D63s.Max(x => x.Audit_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D63Refs.Count} 完成複核帳戶數:{_AuditorCount}");
+                            sb.AppendLine($@"報導日:{_dtStr} 版本:{_version} 覆核日期:{D63s.Max(x => x.Audit_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D63Refs.Count} 完成覆核帳戶數:{_AuditorCount}");
                         }
                         else
                         {
@@ -3999,18 +4116,112 @@ AND Version = @Version ; ";
                         }
                         if (confirmflag)
                         {
-                            AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成量化複核:已完成
+                            AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成量化覆核:已完成
                         }
                         else
                         {
                             _UuDoneFlag = true;
-                            AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成量化複核:未完成
+                            AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成量化覆核:未完成
                         }
                     }
                     else
                     {
-                        AddD6CheckView(result, _Job_Details, _NoneReview, sb); //是否完成量化複核:無須複核
+                        AddD6CheckView(result, _Job_Details, _NoneReview, sb); //是否完成量化覆核:無須覆核
                     }
+                }
+                #endregion
+                #region 是否完成風控覆核
+                sb = new StringBuilder();
+                _Job_Details = Impairment_Operations_Type.RiskControl.GetDescription();
+                if (_UuDoneFlag)
+                {
+                    AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成風控覆核:未完成
+                }
+                else
+                {
+                    //改成判斷Bond_Risk_Control_Result有沒有內容
+                    //若該版本有內容，則檢查status欄位
+                    var _status = db.Version_Info.Where(x => x.Report_Date == dt && x.Version == _version).Select(x => x.Risk_Control_Status).FirstOrDefault();
+                    if (_status == 5)
+                    {
+                        var D75s = db.Bond_Risk_Control_Result.Where(x => x.Report_Date == dt && x.Version == _version).FirstOrDefault();
+                        string second_order_info = D75s.Second_Order_Name == "以紙本覆核" ? $@"{D75s.Second_Order_Name}" : $@"{D75s.Second_Order_Name}({D75s.Second_Order_Date.Value.ToShortDateString()})";
+                        var ReviewInfo = $@"部主管:{second_order_info}、覆核:{D75s.First_Order_Name}({D75s.First_Order_Date.Value.ToShortDateString()})";
+                        var HandleInfo = $@"經辦:{D75s.Create_User_Name}({D75s.Create_Date.Value.ToShortDateString()})";
+                        sb.AppendLine($@"報導日:{_dtStr}  版本:{_version}  版本內容:{_content}"); //覆核人員、經辦
+                        sb.AppendLine($@"{ReviewInfo}");
+                        sb.AppendLine($@"{HandleInfo}");
+                        AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成風控覆核:已完成
+                        //加入覆核資訊
+
+                    }
+                    else
+                    {
+                        switch (_status)
+                        {
+                            case 0:
+                                AddD6CheckView(result, _Job_Details, "尚未呈送覆核", sb);
+                                break;
+                            case 1:
+                                AddD6CheckView(result, _Job_Details, "待覆核", sb);
+                                break;
+                            case 3:
+                                AddD6CheckView(result, _Job_Details, "退回", sb);
+                                break;
+                            case 4:
+                                AddD6CheckView(result, _Job_Details, "待核定", sb);
+                                break;
+
+                        };
+                        _UuDoneFlag = true;
+
+                        //AddD6CheckView(result, _Job_Details, _NoneReview, sb); //是否完成風控覆核:覆核作業未完成
+                    }
+                    //if (_WatchFlag) //有待覆核名單
+                    //{
+                    //    var confirmflag = true; //是否覆核完成
+                    //    var _AuditorCount = 0; //完成覆核數
+                    //    if (D63s.Any())
+                    //    {
+                    //        foreach (var Ref in _D63Refs)
+                    //        {
+                    //            //每一個帳戶都有一筆覆核完成(Status == 2 || Status == 3)
+                    //            var _D63 = D63s.FirstOrDefault(x => x.Reference_Nbr == Ref && x.Assessment_Result_Version == x.Result_Version_Confirm);
+                    //            if (_D63 != null)
+                    //            {
+                    //                _AuditorCount += 1;
+                    //                //覆核後狀態不通過(Status == "3")
+                    //                if (_D63.Quantitative_Pass_Confirm == "N")
+                    //                    _D65Flag = true;
+                    //            }
+                    //            else
+                    //            {
+                    //                confirmflag = false;
+                    //                break;
+                    //            }
+                    //        }
+                    //        sb.AppendLine($@"報導日:{_dtStr} 最大覆核日期:{D63s.Max(x => x.Audit_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D63Refs.Count} 完成覆核帳戶數:{_AuditorCount}");
+
+
+                    //    }
+                    //    else
+                    //    {
+                    //        confirmflag = false;
+                    //    }
+                    //    if (confirmflag)
+                    //    {
+                    //        AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成風控覆核:已完成
+                    //    }
+                    //    else
+                    //    {
+                    //        _UuDoneFlag = true;
+                    //        AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成風控覆核:待覆核
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    AddD6CheckView(result, _Job_Details, _NoneReview, sb); //是否完成風控覆核:尚未呈送覆核
+                    //}
                 }
                 #endregion
                 #region 是否完成質化評估
@@ -4066,19 +4277,19 @@ AND Version = @Version ; ";
                 _Job_Details = Impairment_Operations_Type.QualitativeAssessmentReview.GetDescription();
                 if (_UuDoneFlag)
                 {
-                    AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成質化複核:未完成
+                    AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成質化覆核:未完成
                 }
                 else
                 {
                     if (_WatchFlag && _D65Flag) //有觀察名單 & 需進行質化評估
                     {
-                        var confirmflag = true; //是否複核完成
-                        var _AuditorCount = 0; //完成複核數
+                        var confirmflag = true; //是否覆核完成
+                        var _AuditorCount = 0; //完成覆核數
                         if (D65s.Any())
                         {
                             foreach (var Ref in _D65Refs)
                             {
-                                //每一個帳戶都有一筆複核完成(Assessment_Result_Version == Result_Version_Confirm)
+                                //每一個帳戶都有一筆覆核完成(Assessment_Result_Version == Result_Version_Confirm)
                                 var _D65 = D65s.FirstOrDefault(x => x.Reference_Nbr == Ref && x.Assessment_Result_Version == x.Result_Version_Confirm);
                                 if (_D65 != null)
                                 {
@@ -4090,7 +4301,7 @@ AND Version = @Version ; ";
                                     break;
                                 }
                             }
-                            sb.AppendLine($@"報導日:{_dtStr} 最大複核日期:{D65s.Max(x => x.Audit_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D65Refs.Count} 完成複核帳戶數:{_AuditorCount}");
+                            sb.AppendLine($@"報導日:{_dtStr} 最大覆核日期:{D65s.Max(x => x.Audit_date)?.ToString("yyyy/MM/dd")} 帳戶數:{_D65Refs.Count} 完成覆核帳戶數:{_AuditorCount}");
                         }
                         else
                         {
@@ -4098,17 +4309,17 @@ AND Version = @Version ; ";
                         }
                         if (confirmflag)
                         {
-                            AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成質化複核:已完成
+                            AddD6CheckView(result, _Job_Details, _completed, sb); //是否完成質化覆核:已完成
                         }
                         else
                         {
                             _UuDoneFlag = true;
-                            AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成質化複核:未完成
+                            AddD6CheckView(result, _Job_Details, _undone, sb); //是否完成質化覆核:未完成
                         }
                     }
                     else
                     {
-                        AddD6CheckView(result, _Job_Details, _NoneReview, sb); //是否完成質化複核:無須評估
+                        AddD6CheckView(result, _Job_Details, _NoneReview, sb); //是否完成質化覆核:無須評估
                     }
                 }
                 #endregion
@@ -4215,7 +4426,7 @@ AND Version = @Version ; ";
         /// </summary>
         /// <param name="reportDate"></param>
         /// <returns></returns>
-        public List<ReELViewModel> getReEL(string reportDate ,string Group_Product_Code)
+        public List<ReELViewModel> getReEL(string reportDate, string Group_Product_Code)
         {
             List<ReELViewModel> result = new List<ReELViewModel>();
             string _reportDate = string.Empty;
@@ -4275,18 +4486,31 @@ AND Version = @Version ; ";
                 return result;
             }
             using (IFRS9DBEntities db = new IFRS9DBEntities())
-            {               
+            {
                 if (getD54Check(dt))
                 {
                     result.DESCRIPTION = Message_Type.already_Save_D54.GetDescription($"{dt.ToString("yyyyMMdd")}資料");
                     return result;
                 }
-              
                 var D62 = db.Bond_Basic_Assessment.AsNoTracking().Where(x => x.Report_Date == dt).ToList();
                 if (D62.Any())
                 {
                     version = D62.Max(x => x.Version);
+                    //檢核覆核專區狀態                    
+                    var RiskControlStatus_Result = GetVersionRiskControlStatus(reportDate,version);
+                    if (RiskControlStatus_Result.Item1.RETURN_FLAG != true)
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = RiskControlStatus_Result.Item1.DESCRIPTION.ToString();
+                        return result;
 
+                    }
+                    if (RiskControlStatus_Result.Item1.RETURN_FLAG = true && RiskControlStatus_Result.Item2 != 0)
+                    {
+                        result.RETURN_FLAG = false;
+                        result.DESCRIPTION = "該版本風控覆核專區尚在流程中，若欲執行D63，請先於風控覆核專區銷案。";
+                        return result;
+                    }
                     var _cr = $"{ dt.ToString("yyyyMMdd")}_V{version}";
 
                     var D64Files = db.Bond_Quantitative_Result_File
@@ -4321,7 +4545,7 @@ AND Version = @Version ; ";
 
                     db.Bond_Quantitative_Result_File.RemoveRange(D64Files);
                     db.Bond_Qualitative_Assessment_Result_File.RemoveRange(D66Files);
-                
+
                     if (!D62.Any(x => x.Watch_IND == "Y" && x.Version == version))
                     {
                         string delSql = string.Empty;
@@ -4351,7 +4575,7 @@ AND Version = @Version ; ";
                                   new SqlParameter("Report_Date", dt.ToString("yyyy-MM-dd")),
                                   new SqlParameter("Version", version.ToString())
                                 }.ToArray());
-                        
+
                             db.SaveChanges();
                         }
                         catch
@@ -5055,12 +5279,12 @@ FROM TEMP ";
                 Int32.TryParse(model.Version, out version);
                 using (IFRS9DBEntities db = new IFRS9DBEntities())
                 {
-                    var D63s = db.Bond_Quantitative_Resource.Where(x => 
+                    var D63s = db.Bond_Quantitative_Resource.Where(x =>
                                 x.Reference_Nbr == model.Reference_Nbr &&
                                 x.Version == version);
                     var D63 = D63s.FirstOrDefault(x => x.Assessment_Result_Version == 1);
                     var lastVersion = 0;
-                    lastVersion = D63s.Max(x => x.Assessment_Result_Version) + 1;                          
+                    lastVersion = D63s.Max(x => x.Assessment_Result_Version) + 1;
                     if (D63 != null && D63.Result_Version_Confirm == null)
                     {
                         Bond_Quantitative_Resource D63Add =
@@ -5073,7 +5297,7 @@ FROM TEMP ";
                                 x.Assessment_Sub_Kind == D63.Assessment_Sub_Kind && // Assessment_Sub_Kind == D63.Assessment_Sub_Kind
                                 x.IsActive == "Y" //生效
                             ).ToList();
-                        if(D61s.Any())
+                        if (D61s.Any())
                             //排序 把 Pass_Count_% 排到最後 要做 pass_value 相加用
                             D61s = D61s.OrderBy(x => x.Check_Item_Code.StartsWith(checkItemCode)).ToList();
 
@@ -5130,10 +5354,10 @@ FROM TEMP ";
                         D63Add.LastUpdate_User = null;
                         D63Add.LastUpdate_Date = null;
                         D63Add.LastUpdate_Time = null;
-                        
+
                         double totalPassValue = 0d;
                         List<string> passCode = new List<string>(); //比對X53,X54 使用,獲取通過的Check_Item_Code
-                        List<string> expassCode = new List<string>() {"X53","X54"};
+                        List<string> expassCode = new List<string>() { "X53", "X54" };
                         D61s.ForEach(x =>
                         {
                             //量化指標值
@@ -5149,12 +5373,12 @@ FROM TEMP ";
                             D64.Check_Item = x.Check_Item;
                             D64.Check_Item_Memo = x.Check_Item_Memo;
                             D64.Check_Reference = string.Format("{0}_V{1}_{2}_ARV{3}_{4}",
-                            D64.Report_Date.ToString("yyyyMMdd"), 
+                            D64.Report_Date.ToString("yyyyMMdd"),
                             D64.Version.ToString(),
                             D64.Reference_Nbr,
-                            lastVersion.ToString(), 
+                            lastVersion.ToString(),
                             D64.Check_Item_Code);
-                            D64.Assessment_Result_Version = lastVersion;                          
+                            D64.Assessment_Result_Version = lastVersion;
                             // Pass_Count_X5 特殊例外  X53 & X54 都符合時
                             if (D64.Check_Item_Code.StartsWith(checkItemCode) &&
                             expassCode.Intersect(passCode).Count() == expassCode.Count)
@@ -5167,8 +5391,8 @@ FROM TEMP ";
                             D64.Check_Item_Value = D64.Check_Item_Code.StartsWith(checkItemCode) ?
                             totalPassValue : _Check_Item_Value;
                             D64.Pass_Value = D64.Check_Item_Code.StartsWith(checkItemCode) ? //Pass_Count_% 為 total
-                            D64PassValue(x,totalPassValue ,D63Add):
-                            _Check_Item_Value.HasValue ? D64PassValue(x,_Check_Item_Value.Value, D63Add) : 0d;                               
+                            D64PassValue(x, totalPassValue, D63Add) :
+                            _Check_Item_Value.HasValue ? D64PassValue(x, _Check_Item_Value.Value, D63Add) : 0d;
                             D64.Check_Symbol = x.Check_Symbol;
                             D64.Threshold = D64Threshold(x, D63Add);
                             D64.Bond_Number = D63.Bond_Number;
@@ -5188,7 +5412,7 @@ FROM TEMP ";
                             if (!D64.Check_Item_Code.StartsWith(checkItemCode))
                                 totalPassValue += D64.Pass_Value.Value;
                             if (D64.Pass_Value != null && D64.Pass_Value != 0)
-                                passCode.Add(D64.Check_Item_Code);                                
+                                passCode.Add(D64.Check_Item_Code);
                         });
                         D63Add.Assessment_Result_Version = lastVersion;
                         D63Add.Processing_Date = startDt;
@@ -5197,7 +5421,7 @@ FROM TEMP ";
                         D63Add.Auditor = Auditor;
                         D63Add.Create_User = _UserInfo._user;
                         D63Add.Create_Date = _UserInfo._date;
-                        D63Add.Create_Time = _UserInfo._time;                       
+                        D63Add.Create_Time = _UserInfo._time;
                         db.Bond_Quantitative_Resource.Add(D63Add);
                         db.Bond_Quantitative_Result.AddRange(D64Datas);
                         try
@@ -5292,10 +5516,10 @@ FROM TEMP ";
                         D66.Check_Item = x.Check_Item;
                         D66.Check_Item_Memo = x.Check_Item_Memo;
                         D66.Check_Reference = string.Format("{0}_V{1}_{2}_ARV{3}_{4}",
-                            D66.Report_Date.ToString("yyyyMMdd"), 
+                            D66.Report_Date.ToString("yyyyMMdd"),
                             D66.Version.ToString(),
                             D66.Reference_Nbr,
-                            lastVersion.ToString(), 
+                            lastVersion.ToString(),
                             D66.Check_Item_Code);
                         D66.Assessment_Result_Version = lastVersion;
                         D66.Check_Symbol = x.Check_Symbol;
@@ -5352,22 +5576,23 @@ FROM TEMP ";
         /// <param name="Reference_Nbr"></param>
         /// <param name="Check_Reference"></param>
         /// <param name="FileName"></param>
-        /// <param name="type">D64.D66</param>
+        /// <param name="type">D64.D66.D75</param>
         /// <param name="File_path">檔案位置</param>
         /// <returns></returns>
-        public MSGReturnModel SaveQualitativeFile(string Check_Reference, string FileName,Table_Type type,string File_path)
+        public MSGReturnModel SaveQualitativeFile(string Check_Reference, string FileName, Table_Type type, string File_path)
         {
             MSGReturnModel result = new MSGReturnModel();
             result.RETURN_FLAG = false;
-            if (!(type  == Table_Type.D64
-                || type  == Table_Type.D66))
+            if (!(type == Table_Type.D64
+                || type == Table_Type.D66
+                || type == Table_Type.D75))
             {
                 result.DESCRIPTION = Message_Type.parameter_Error.GetDescription();
                 return result;
             }
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                if (type  == Table_Type.D64)
+                if (type == Table_Type.D64)
                 {
                     var D64 = db.Bond_Quantitative_Result.AsNoTracking()
                         .Where(x => x.Check_Reference == Check_Reference).FirstOrDefault() ?? new Bond_Quantitative_Result();
@@ -5408,7 +5633,7 @@ FROM TEMP ";
                         });
                     }
                 }
-                if (type  == Table_Type.D66)
+                if (type == Table_Type.D66)
                 {
                     var D66 = db.Bond_Qualitative_Assessment_Result.AsNoTracking()
                             .Where(x => x.Check_Reference == Check_Reference).FirstOrDefault() ?? new Bond_Qualitative_Assessment_Result();
@@ -5439,16 +5664,50 @@ FROM TEMP ";
                         db.Bond_Qualitative_Assessment_Result_File.Add(
                         new Bond_Qualitative_Assessment_Result_File()
                         {
-                        Check_Reference = Check_Reference,
-                        File_Name = FileName,
-                        Create_User = _UserInfo._user,
-                        Create_Date = _UserInfo._date,
-                        Create_Time = _UserInfo._time,
-                        File_path = File_path,
-                        Status = "Y"
+                            Check_Reference = Check_Reference,
+                            File_Name = FileName,
+                            Create_User = _UserInfo._user,
+                            Create_Date = _UserInfo._date,
+                            Create_Time = _UserInfo._time,
+                            File_path = File_path,
+                            Status = "Y"
                         });
                     }
-
+                }
+                if (type == Table_Type.D75)
+                {
+                    var D75File = db.Bond_Risk_Control_Result_File
+                        .FirstOrDefault(x => x.Check_Reference == Check_Reference &&
+                        x.File_Name == FileName);
+                    if (D75File != null && D75File.Status == "Y")
+                    {
+                        result.DESCRIPTION = Message_Type.already_Save.GetDescription();
+                        return result;
+                    }
+                    if (D75File != null && D75File.Status == "N")
+                    {
+                        D75File.Create_User = _UserInfo._user;
+                        D75File.Create_Date = _UserInfo._date;
+                        D75File.Create_Time = _UserInfo._time;
+                        D75File.Last_Update_User = null;
+                        D75File.Last_Update_Date = null;
+                        D75File.Last_Update_Time = null;
+                        D75File.Status = "Y";
+                    }
+                    else
+                    {
+                        db.Bond_Risk_Control_Result_File.Add(
+                            new Bond_Risk_Control_Result_File()
+                            {
+                                Check_Reference = Check_Reference,
+                                File_Name = FileName,
+                                Create_User = _UserInfo._user,
+                                Create_Date = _UserInfo._date,
+                                Create_Time = _UserInfo._time,
+                                File_Path = File_path,
+                                Status = "Y"
+                            });
+                    }
                 }
                 try
                 {
@@ -5511,12 +5770,12 @@ FROM TEMP ";
                             var sms = new SendMail.SendMailSelf();
                             //sms.smtpServer = "msa.hinet.net";
                             sms.smtpPort = 25;
-                            sms.smtpServer = Properties.Settings.Default["smtpServer"]?.ToString(); 
+                            sms.smtpServer = Properties.Settings.Default["smtpServer"]?.ToString();
                             sms.mailAccount = Properties.Settings.Default["mailAccount"]?.ToString();
                             //sms.mailPwd = Properties.Settings.Default["mailPwd"]?.ToString();
                             //var mail = db.Notice_Info.AsNoTracking()
                             //    .FirstOrDefault(x => x.IsActive == "Y" && x.Notice_Name == "量化作業已完成");
-                           var _Notice_ID = TypeTransfer.stringToInt(Properties.Settings.Default["D63MailID"].ToString());
+                            var _Notice_ID = TypeTransfer.stringToInt(Properties.Settings.Default["D63MailID"].ToString());
                             var mail = db.Notice_Info.AsNoTracking()
                                .FirstOrDefault(x => x.Notice_ID == _Notice_ID);
                             if (mail != null)
@@ -5534,15 +5793,15 @@ FROM TEMP ";
                                     log = log.Substring(0, log.Length - 1);
                                 var _msg = sms.Mail_Send(
                                 //new Tuple<string, string>("glsisys.life@fbt.com", "測試帳號-glsisys"),
-                                new Tuple<string, string>(sms.mailAccount,"IFRS9系統帳號"),
+                                new Tuple<string, string>(sms.mailAccount, "IFRS9系統帳號"),
                                 mailtos,
                                 null,
                                 $"{mail.Mail_Title}  {_reportDate}",
                                 $"{mail.Mail_Msg}  {_reportDate}");
-                                if (_msg.IsNullOrWhiteSpace())                              
+                                if (_msg.IsNullOrWhiteSpace())
                                     log += " 結果:傳送郵件成功。";
                                 else
-                                    log += " 結果:傳送郵件失敗。";                                                            
+                                    log += " 結果:傳送郵件失敗。";
                                 Extension.NlogSet($"寄信 : {_msg}");
                             }
                             else
@@ -5585,20 +5844,20 @@ FROM TEMP ";
             result = D6ReviewMethod(
                 Reference_Nbr,
                 Assessment_Result_Version,
-                Table_Type.D65, 
+                Table_Type.D65,
                 status);
             return result;
         }
         #endregion
 
         /// <summary>
-        /// 刪除D64orD66附件檔案
+        /// 刪除D64orD66orD75附件檔案
         /// </summary>
         /// <param name="type"></param>
         /// <param name="Check_Reference"></param>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public MSGReturnModel DelQuantifyAndQualitativeFile(string type,string Check_Reference,string fileName)
+        public MSGReturnModel DelQuantifyAndQualitativeFile(string type, string Check_Reference, string fileName, string user = null)
         {
             MSGReturnModel result = new MSGReturnModel();
             result.RETURN_FLAG = false;
@@ -5630,16 +5889,40 @@ FROM TEMP ";
                         D66.LastUpdate_User = _UserInfo._user;
                         D66.LastUpdate_Date = _UserInfo._date;
                         D66.LastUpdate_Time = _UserInfo._time;
-                    }              
+                    }
                 }
-                if (D64 != null || D66 != null)
+                Bond_Risk_Control_Result_File D75 = null;
+                if (type == "D75")
+                {
+
+                    D75 = db.Bond_Risk_Control_Result_File
+                        .FirstOrDefault(x => x.Check_Reference == Check_Reference &&
+                        x.File_Name == fileName);
+                    if (D75.Create_User != user)
+                    {
+                        result.DESCRIPTION = "無法刪除非本人上傳附件!";
+                        return result;
+
+                    }
+                    if (D75 != null)
+                    {
+                        D75.Status = "N";
+                        D75.Last_Update_User = _UserInfo._user;
+                        D75.Last_Update_Date = _UserInfo._date;
+                        D75.Last_Update_Time = _UserInfo._time;
+                    }
+                }
+                if (D64 != null || D66 != null || D75 != null)
                 {
                     try
                     {
-                        if(D64 != null)
+                        if (D64 != null)
                             System.IO.File.Delete(D64.File_path);
                         if (D66 != null)
                             System.IO.File.Delete(D66.File_path);
+                        if (D75 != null)
+                            System.IO.File.Delete(D75.File_Path);
+
                         db.SaveChanges();
                         result.RETURN_FLAG = true;
                         result.DESCRIPTION = Message_Type.delete_Success.GetDescription();
@@ -5682,7 +5965,7 @@ FROM TEMP ";
         {
             MSGReturnModel result = new MSGReturnModel();
             result.RETURN_FLAG = false;
-            if (!( table == Table_Type.D64
+            if (!(table == Table_Type.D64
                 || table == Table_Type.D66
                 || table == Table_Type.D63
                 || table == Table_Type.D65
@@ -5731,7 +6014,7 @@ FROM TEMP ";
                             x.Check_Item_Code == Check_Item_Code);
                         break;
                 }
-                if (D63 != null || D64 !=null || D65 != null || D66 != null)
+                if (D63 != null || D64 != null || D65 != null || D66 != null)
                 {
                     switch (table)
                     {
@@ -5788,10 +6071,10 @@ FROM TEMP ";
         }
         #endregion
 
-        public MSGReturnModel AutoInsertD65ExtraCase(List<Bond_Account_Info>A41Datas,string reportdate)
+        public MSGReturnModel AutoInsertD65ExtraCase(List<Bond_Account_Info> A41Datas, string reportdate)
         {
             MSGReturnModel result = new MSGReturnModel();
-            int _A41Ver = A41Datas.Max(x => x.Version).Value ;
+            int _A41Ver = A41Datas.Max(x => x.Version).Value;
             DateTime _ReportDate = new DateTime();
             DateTime.TryParse(reportdate, out _ReportDate);
             result.RETURN_FLAG = false;
@@ -5800,8 +6083,8 @@ FROM TEMP ";
             int num_repeated = 0;
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                var _D62 = db.Bond_Basic_Assessment.Where(x => x.Report_Date == _ReportDate);               
-                if(_D62.Any()&&_A41Ver==_D62.Max(x=>x.Version))
+                var _D62 = db.Bond_Basic_Assessment.Where(x => x.Report_Date == _ReportDate);
+                if (_D62.Any() && _A41Ver == _D62.Max(x => x.Version))
                 {
 
                     foreach (var item in A41Datas)
@@ -5904,7 +6187,8 @@ FROM TEMP ";
                 if (_first != null)
                 {
                     db.Bond_Qualitative_Assessment.Add(
-                        new Bond_Qualitative_Assessment() {
+                        new Bond_Qualitative_Assessment()
+                        {
                             Reference_Nbr = _first.Reference_Nbr,
                             Version = _first.Version.Value,
                             Report_Date = _first.Report_Date.Value,
@@ -5925,7 +6209,7 @@ FROM TEMP ";
                     {
                         db.SaveChanges();
                         result.RETURN_FLAG = true;
-                        result.DESCRIPTION = Message_Type.save_Success.GetDescription(null,"請自查詢頁面查詢");
+                        result.DESCRIPTION = Message_Type.save_Success.GetDescription(null, "請自查詢頁面查詢");
                     }
                     catch (Exception ex)
                     {
@@ -5999,7 +6283,7 @@ FROM TEMP ";
             }
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                var ver = db.IFRS9_EL.Where(x=>x.Report_Date==_reportDate).Max(x => x.Version).ToString();
+                var ver = db.IFRS9_EL.Where(x => x.Report_Date == _reportDate).Max(x => x.Version).ToString();
                 string sql = string.Empty;
                 sql = $@"
                 delete IFRS9_EL
@@ -6041,7 +6325,7 @@ FROM TEMP ";
                             result.DESCRIPTION = "刪除筆數為0";
                         }
                     }
-                 ModC10Log(result, reportDate, Convert.ToInt16(ver)); //190620 PGE需求新增
+                    ModC10Log(result, reportDate, Convert.ToInt16(ver)); //190620 PGE需求新增
 
                 }
                 catch (Exception ex)
@@ -6157,15 +6441,15 @@ FROM TEMP ";
             result.RETURN_FLAG = false;
             result.DESCRIPTION = Message_Type.already_Change.GetDescription();
             if (!(status == Evaluation_Status_Type.NotReview ||
-                status  == Evaluation_Status_Type.Review ||
-                status  == Evaluation_Status_Type.Reject ||
-                status  == Evaluation_Status_Type.ReviewCompleted))
+                status == Evaluation_Status_Type.Review ||
+                status == Evaluation_Status_Type.Reject ||
+                status == Evaluation_Status_Type.ReviewCompleted))
             {
                 return result;
             }
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
-                if (type  == Table_Type.D63)
+                if (type == Table_Type.D63)
                 {
                     var D63 = db.Bond_Quantitative_Resource.FirstOrDefault(x =>
                     x.Reference_Nbr == Reference_Nbr &&
@@ -6222,7 +6506,7 @@ FROM TEMP ";
                 }
                 else if (type == Table_Type.D65)
                 {
-                    var D65 = db.Bond_Qualitative_Assessment.FirstOrDefault(x=>
+                    var D65 = db.Bond_Qualitative_Assessment.FirstOrDefault(x =>
                     x.Reference_Nbr == Reference_Nbr &&
                     x.Assessment_Result_Version == Assessment_Result_Version);
                     var D66 = db.Bond_Qualitative_Assessment_Result.FirstOrDefault(x =>
@@ -6321,7 +6605,7 @@ FROM TEMP ";
         /// <param name="flag">複核後選擇版本(已確認最後複核)</param>
         /// <param name="Users">Users</param>
         /// <returns></returns>
-        private D63ViewModel DbToD63ViewModel(Bond_Quantitative_Resource data,List<IFRS9_User> Users)
+        private D63ViewModel DbToD63ViewModel(Bond_Quantitative_Resource data, List<IFRS9_User> Users)
         {
             return new D63ViewModel()
             {
@@ -6374,7 +6658,7 @@ FROM TEMP ";
                 Pass_Confirm_Flag = data.Assessment_Result_Version > 1 ? "Y" : "N",
                 Quantitative_Pass_Confirm = data.Quantitative_Pass_Confirm,
                 Assessor = data.Assessor,
-                Assessor_Name = common.getUserName(Users,data.Assessor),
+                Assessor_Name = common.getUserName(Users, data.Assessor),
                 Assessment_date = TypeTransfer.dateTimeNToString(data.Assessment_date),
                 Auditor = data.Auditor,
                 Auditor_Name = common.getUserName(Users, data.Auditor),
@@ -6382,7 +6666,7 @@ FROM TEMP ";
                 Send_to_Auditor = data.Send_to_Auditor,
                 Send_Time = TypeTransfer.dateTimeNToString(data.Send_Time),
                 Result_Version_Confirm = TypeTransfer.intNToString(data.Result_Version_Confirm),
-                Auditor_Return = data.Auditor_Return           
+                Auditor_Return = data.Auditor_Return
             };
         }
         #endregion Db 組成 D63ViewModel
@@ -6393,7 +6677,7 @@ FROM TEMP ";
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private D64ViewModel DbToD64ViewModel(Bond_Quantitative_Result data,string Assessor,List<Bond_Quantitative_Result_File> files)
+        private D64ViewModel DbToD64ViewModel(Bond_Quantitative_Result data, string Assessor, List<Bond_Quantitative_Result_File> files)
         {
             return new D64ViewModel()
             {
@@ -6421,7 +6705,7 @@ FROM TEMP ";
                 Assessment_Result = data.Assessment_Result,
                 Assessment_Stage = data.Assessment_Stage,
                 Version = data.Version.ToString(),
-                FileCount = files.Count(x=>x.Check_Reference == data.Check_Reference && x.Status == "Y").ToString()
+                FileCount = files.Count(x => x.Check_Reference == data.Check_Reference && x.Status == "Y").ToString()
             };
         }
         #endregion Db 組成 D64ViewModel
@@ -6471,7 +6755,7 @@ FROM TEMP ";
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private D66ViewModel DbToD66ViewModel(Bond_Qualitative_Assessment_Result data,string Assessor, List<Bond_Qualitative_Assessment_Result_File> files)
+        private D66ViewModel DbToD66ViewModel(Bond_Qualitative_Assessment_Result data, string Assessor, List<Bond_Qualitative_Assessment_Result_File> files)
         {
             return new D66ViewModel()
             {
@@ -6499,7 +6783,7 @@ FROM TEMP ";
 
         private string getResultVersionConfirmFlag(Evaluation_Status_Type status)
         {
-            return ((status & Evaluation_Status_Type.ReviewCompleted) == Evaluation_Status_Type.ReviewCompleted) ? "Y" : "N"; 
+            return ((status & Evaluation_Status_Type.ReviewCompleted) == Evaluation_Status_Type.ReviewCompleted) ? "Y" : "N";
         }
 
         #endregion
@@ -6607,7 +6891,7 @@ FROM TEMP ";
                 else if (item_code == "X45" && model.SHORT_AND_LONG_TERM_DEBT.HasValue && model.Total_Equity.HasValue)
                 {
                     //if (model.Total_Equity.HasValue)
-                        return model.SHORT_AND_LONG_TERM_DEBT.Value / (model.SHORT_AND_LONG_TERM_DEBT.Value + model.Total_Equity.Value);
+                    return model.SHORT_AND_LONG_TERM_DEBT.Value / (model.SHORT_AND_LONG_TERM_DEBT.Value + model.Total_Equity.Value);
                     //else
                     //    return model.SHORT_AND_LONG_TERM_DEBT.Value / model.SHORT_AND_LONG_TERM_DEBT.Value;
                 }
@@ -6698,7 +6982,7 @@ FROM TEMP ";
                 model.Assessment_Sub_Kind == AssessmentSubKind_Type.Financial_Debts.GetDescription() ||
                 model.Assessment_Sub_Kind == AssessmentSubKind_Type.Financial_Debt_Bond.GetDescription() ||
                 model.Assessment_Sub_Kind == AssessmentSubKind_Type.Life_Or_Property_Insurance_Company.GetDescription() ||
-                model.Assessment_Sub_Kind == AssessmentSubKind_Type.Sovereign_Government_Debt.GetDescription() 
+                model.Assessment_Sub_Kind == AssessmentSubKind_Type.Sovereign_Government_Debt.GetDescription()
                 )
             {
                 //過去4年政府債務/GD增加數
@@ -6781,7 +7065,7 @@ FROM TEMP ";
         /// <param name="D61">D61</param>
         /// <param name="PassValue">通過給定值</param>
         /// <returns></returns>
-        private string D64QuantitativePass(Bond_Assessment_Parm D61, double Check_Item_Value,double PassValue,double? CFO)
+        private string D64QuantitativePass(Bond_Assessment_Parm D61, double Check_Item_Value, double PassValue, double? CFO)
         {
             //只有 Check_Item_Code like '%Pass_Count_' 才可以比對
             if (D61.Check_Item_Code.StartsWith(checkItemCode))
@@ -6806,7 +7090,7 @@ FROM TEMP ";
         /// <param name="Threshold">門檻</param>
         /// <param name="Check_Symbol">檢查條件</param>
         /// <returns></returns>
-        private string D66QuantitativePass(string item_code, double PassValue, string stage,string stageFlag,double? Threshold,string Check_Symbol)
+        private string D66QuantitativePass(string item_code, double PassValue, string stage, string stageFlag, double? Threshold, string Check_Symbol)
         {
             string N = "N";
             string Y = "Y";
@@ -6841,7 +7125,7 @@ FROM TEMP ";
         /// <param name="Check_Symbol">檢查條件</param>
         /// <param name="Threshold">門檻</param>
         /// <returns></returns>
-        private bool setPassValue(double CheckItem, string Check_Symbol,double? Threshold)
+        private bool setPassValue(double CheckItem, string Check_Symbol, double? Threshold)
         {
             var flag = false;
             if (!Threshold.HasValue || Check_Symbol.IsNullOrWhiteSpace())
@@ -6931,7 +7215,7 @@ FROM TEMP ";
                 D63Models.Any(x => x.Send_to_Auditor == "Y" && x.Auditor_Return.IsNullOrWhiteSpace()), //已提交複核(複核者未回覆)
                 D63Models.Any(x => x.Auditor_Return == "Y"), //複核被退回請重新提交
                 D63Models.Where(x => x.Auditor_Return != "Y").Count() >= 2 //尚未提交複核(已評估)
-                );          
+                );
         }
 
         /// <summary>
@@ -6956,7 +7240,7 @@ FROM TEMP ";
         /// <param name="Review">已提交複核(複核者未回覆)</param>
         /// <param name="NotReview">尚未複核(已評估)</param>
         /// <returns></returns>
-        private Evaluation_Status_Type getStatus(bool ReviewCompleted,bool Review,bool Reject, bool NotReview)
+        private Evaluation_Status_Type getStatus(bool ReviewCompleted, bool Review, bool Reject, bool NotReview)
         {
             Evaluation_Status_Type Status = Evaluation_Status_Type.NotAssess;
             if (ReviewCompleted)
@@ -6975,13 +7259,13 @@ FROM TEMP ";
         /// </summary>
         /// <param name="datas"></param>
         /// <returns></returns>
-        private List<D64ViewModel> D63GetD64(List<D63ViewModel> datas)
+        public List<D64ViewModel> D63GetD64(List<D63ViewModel> datas)
         {
             List<D64ViewModel> results = new List<D64ViewModel>();
             datas.ForEach(x =>
             {
                 int ARV = Int32.Parse(x.Assessment_Result_Version);
-                results.AddRange(getD64(x.Reference_Nbr,ARV));
+                results.AddRange(getD64(x.Reference_Nbr, ARV));
             });
             return results;
         }
@@ -7240,14 +7524,14 @@ FROM TEMP ";
                                     .Where(x => x.Report_Date == dateReportDate
                                              && x.Version == intVersion)
                                     .GroupBy(x => new
-                                                {
-                                                    x.Report_Date,
-                                                    x.Version,
-                                                    x.Bond_Number,
-                                                    x.ISSUER,
-                                                    x.PRODUCT,
-                                                    x.Bond_Aera
-                                                }
+                                    {
+                                        x.Report_Date,
+                                        x.Version,
+                                        x.Bond_Number,
+                                        x.ISSUER,
+                                        x.PRODUCT,
+                                        x.Bond_Aera
+                                    }
                                             )
                                     .ToList();
 
@@ -7267,8 +7551,8 @@ FROM TEMP ";
 
                     var A57Data = db.Bond_Rating_Info.AsNoTracking().Where(x => x.Report_Date == dateReportDate
                                                                              && x.Version == intVersion
-                                                                             //&& x.Rating_Type == "評估日最近信評"
-                                                                             //&& x.Rating_Object == "債項"
+                                                                          //&& x.Rating_Type == "評估日最近信評"
+                                                                          //&& x.Rating_Object == "債項"
                                                                           )
                                                                     .ToList();
                     //if (!A57Data.Any())
@@ -7479,7 +7763,7 @@ FROM TEMP ";
 
                         var oneD62BeforeSixMonth = D62BeforeSixMonthData
                                                    .Where(x => x.Bond_Number == tempBond_Number && x.Curr_Ori_Rating_Diff > 2)
-                                                   .OrderBy(x=>x.Report_Date)
+                                                   .OrderBy(x => x.Report_Date)
                                                    .FirstOrDefault();
                         if (oneD62BeforeSixMonth != null)
                         {
@@ -7488,7 +7772,7 @@ FROM TEMP ";
 
                         if (tempPD_Grade.IsNullOrWhiteSpace() == false)
                         {
-                            if (tempRating_diff_Over_Ind == "Y" 
+                            if (tempRating_diff_Over_Ind == "Y"
                                 && tempBond_Area == "國外"
                                 && (int.Parse(tempPD_Grade) >= int.Parse(tempRating_diff_Over_F)))
                             {
@@ -7580,7 +7864,7 @@ FROM TEMP ";
                                                                                 tempReport_Date,
                                                                                 tempVersion,
                                                                                 tempBond_Number,
-                                                                                tempISSUER.Replace("'","''"),
+                                                                                tempISSUER.Replace("'", "''"),
                                                                                 tempPRODUCT,
                                                                                 tempProduct_Group_1,
                                                                                 tempProduct_Group_2,
@@ -7625,7 +7909,7 @@ FROM TEMP ";
 
             if (isRTG_Bloomberg_Field == "Y")
             {
-                bondRatingInfoList = bondRatingInfoList.Where(x => x.RTG_Bloomberg_Field == "RTG_MDY_SEN_UNSECURED_DEBT" 
+                bondRatingInfoList = bondRatingInfoList.Where(x => x.RTG_Bloomberg_Field == "RTG_MDY_SEN_UNSECURED_DEBT"
                                                                 || x.RTG_Bloomberg_Field == "RTG_FITCH_SEN_UNSECURED"
                                                          ).ToList();
             }
@@ -7759,5 +8043,69 @@ FROM TEMP ";
         }
         #endregion
 
+        /// <summary>
+        /// Version_Info(版本/版本內容)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public List<SelectOption> GetD6Version(DateTime data)
+        {
+            List<SelectOption> result = new List<SelectOption>();
+
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                result = db.Version_Info
+                    .AsNoTracking()
+                    .Where(x => x.Report_Date == data)
+                    .Select(x => new SelectOption
+                    {
+                        Text = x.Version.ToString(),
+                        Value = x.Version_Content
+                    })
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+
+            return result;
+        }
+
+        #region GetVersionRiskControlStatus
+
+        /// <summary>
+        /// 查詢Version_Info覆核專區狀態
+        /// </summary>
+        /// <param name="reportdate">前端傳入報導日</param>
+        /// <param name="version">D62最大版本</param>
+        /// <returns></returns>
+        private Tuple<MSGReturnModel ,int > GetVersionRiskControlStatus(string reportdate,int version=0)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            result.RETURN_FLAG = false;
+            DateTime dt = DateTime.MinValue;
+            var RiskControlStatus = 0;
+            if (!DateTime.TryParse(reportdate, out dt))
+            {
+                result.DESCRIPTION = Message_Type.parameter_Error.GetDescription();
+                return new Tuple<MSGReturnModel,int>(result, RiskControlStatus);
+            }
+            try
+            {
+                using (IFRS9DBEntities db = new IFRS9DBEntities())
+                {
+                    RiskControlStatus = db.Version_Info.Where(x => x.Report_Date == dt && x.Version == version).Select(x => x.Risk_Control_Status).FirstOrDefault();//由Version_Info取覆核狀態
+                    result.RETURN_FLAG = true;
+                }
+            }
+            catch(Exception ex)
+            {
+                result.RETURN_FLAG = false;
+                result.DESCRIPTION = Message_Type.not_Find_Data.GetDescription( "取得覆核專區版本出現錯誤",ex.ToString());
+            }
+
+                return new Tuple<MSGReturnModel, int>(result, RiskControlStatus);
+        }
+
+        #endregion
     }
 }

@@ -1,0 +1,1122 @@
+﻿@{
+    ViewBag.Menu = "D6Main";
+    ViewBag.SubMenu = "D75HandleSub";
+    ViewBag.Title = "D75風控覆核專區(經辦)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" id="main">
+    <div class="row main_hand">
+        <div class="col-md-12 main_hand_div" style="">
+            <form id="myForm">
+                <table>
+                    <tr>
+                        <td style="padding-top:5px;" class="form-group">
+                            <label>評估基準日/報導日 : </label>
+                            <input type="text" id="datepicker" name="datepicker">
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>版本 : </label>
+                            <select class="form-control" style="display:inline-block" id="version"></select>
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>版本內容 : </label>
+                            <select class="form-control" style="display:inline-block" id="content"></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:5px;">
+                            <label>覆核狀態 : </label>&emsp;&emsp;&nbsp;&emsp;&emsp;&nbsp;
+                            <select class="form-control" style="display:inline-block" id="status"></select>
+                        </td>
+                        <td style="padding-top:5px;">
+                            <label>產品 : </label>
+                            <select class="form-control" style="display:inline-block" id="product"></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top:10px;">
+                            <input type="button" class="btn btn-primary" value="查詢" id="search" style="margin-right:10px;" />
+                        </td>
+                        <td style="padding-top:10px;">
+                            <i class="fa fa-exclamation-circle title" style="font-size:15px;" id="message" alt="無資料">表單資訊:</i>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+    <div class="row main_body" style="overflow:auto;height:100%">
+        <div class="col-md-12">
+            <div class="viewDetail">
+                @*表單*@
+                <div id="formDiv"></div>
+                @*附件*@
+                <div id="annexDiv" style="display:none">
+                    <table style="width:100%">
+                        <tr class="fileUpLoad">
+                            <td style="padding-top:10px">
+                                @using (Ajax.BeginForm("UpLoadQualitativeFile", "D6",
+                                    new AjaxOptions { HttpMethod = "POST" },
+                                    new { enctype = "multipart/form-data", @id = "annexField" }))
+                                {
+                                    <input type="file" class="filestyle" data-buttonName="btn-primary" id="openAnnexFile" data-buttonText="開啟檔案" />}
+                            </td>
+                            <td style="padding-top:10px">
+                                <input type="button" class="btn btn-primary" style="margin-right:10px" id="annexFileUpLoad" value="檔案上傳" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div id="annexListDiv" class="jqd" style="padding-top:10px; width:100%"></div>
+                            </td>
+                        <tr style="display:none">
+                            <td colspan="2">
+                                <input type="hidden" id="annexFileFolder" />
+                            </td>
+                        </tr>
+                        <tr style="display:none">
+                            <td colspan="2">
+                                <input type="hidden" id="annexName" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                @*簽核*@
+                <div id="signOffDiv" style="display:none">
+                    <table style="width:100%">
+                        <tr>
+                            <td colspan="2">
+                                <textarea style="overflow-y: scroll; white-space:pre-wrap;max-width:100%;width:100%;height:135px;" maxlength="3000" id="signOffTextarea"></textarea>
+                            </td>
+                        </tr>
+                        <tr class="textareaEdit">
+                            <td style="padding-top:10px;">
+                                <input type="button" class="btn btn-primary" id="signOffSave" value="存檔" />
+                            </td>
+                            <td style="padding-top:10px;float:right;">
+                                <input type="button" class="btn btn-primary" id="signOffCancel" value="取消" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div class="jqd" style="padding-top:10px; width:100%" id="opinionListDiv"></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                @*覆核*@
+                <div id="reviewDiv" style="display:none">
+                    <span id="firstOrderReview_return" style="display:none"></span>
+                    <span id="secondOrderReview_return" style="display:none"></span>
+                    <span id="firstOrderReviewName_return" style="display:none"></span>
+                    <span id="secondOrderReviewName_return" style="display:none"></span>
+                    <table style="width:100%">
+                        <tr>
+                            <td width="450px">
+                                <label>一階覆核人員 : </label>
+                                @Html.DropDownList("firstOrderReview",
+                               (SelectList)ViewBag.UserList,
+                               new { @class = "form-control", @style = "display:inline-block" })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="450px">
+                                <label>二階覆核人員 : </label>
+                                @Html.DropDownList("SecondOrderReview",
+                               (SelectList)ViewBag.UserList,
+                               new { @class = "form-control", @style = "display:inline-block" })
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top:10px;">
+                                <input type="button" class="btn btn-primary" id="reviewConfirm" value="確定" />
+                            </td>
+                            <td style="padding-top:10px;float:right;">
+                                <input type="button" class="btn btn-primary" id="reviewCancel" value="取消" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="remarkdiv"></div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        // 註冊URL
+        var url = {};
+        url.version = '@Url.Action("GetD75Version", "D7")';
+        url.content = '@Url.Action("GetD75Content", "D7")';
+        url.status = '@Url.Action("GetD75Status", "D7")';
+        url.product = '@Url.Action("GetD75Product", "D7")';
+        url.handle = '@Url.Action("GetD75Handle", "D7")';
+        url.getFile = '@Url.Action("GetD75File", "D7")';
+        url.uplFile = '@Url.Action("UpLoadQualitativeFile", "D6")';
+        url.delFile = '@Url.Action("DelFile","D6")';
+        url.submit = '@Url.Action("SubmitD75Review", "D7")';
+        url.review = '@Url.Action("GetD75Review", "D7")';
+        url.close = '@Url.Action("CloseD75Review", "D7")';//銷案
+        url.approved = '@Url.Action("ApproveD75Review", "D7")';//結案
+        // 註冊URL
+        var checkSignOffFile = false;
+
+        //datepicker 觸發行為
+        var versionFun = function () {
+            customerUtility.clrSelectData(['version', 'content', 'status', 'product']);
+            customerUtility.setAttr('message', 'alt', '無資料');
+            customerUtility.clrForm('formDiv');
+            customerUtility.addSelectData('version', "0", "");
+            customerUtility.getSelectData('version', [$('#datepicker').val(),""], url.version);
+        }
+        var contentFun = function () {
+            customerUtility.clrSelectData(['content', 'status', 'product']);
+            customerUtility.setAttr('message', 'alt', '無資料');
+            customerUtility.clrForm('formDiv');
+            customerUtility.getSelectData('content', [$('#datepicker').val(), $('#version').find(':selected').val()], url.content);
+            customerUtility.getSelectData('status', [$('#datepicker').val(), $('#version').find(':selected').val(),'Handle'], url.status);
+            customerUtility.getSelectData('product', [$('#datepicker').val(), $('#version').find(':selected').val()], url.product);
+        }
+        // 增加二階覆核人員紙本覆核選項
+        $("#SecondOrderReview").append("<option value='以紙本覆核'> 以紙本覆核</option >");
+        // 註冊datepicker
+        created.createDatepicker('datepicker', true, '', versionFun);
+        // 註冊verified
+        verified.datepicker("myForm", "datepicker", true, $('#datepicker').val());
+        // 註冊click事件
+        $('input:button').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'search':
+                    $('#' + id).on('click', function () { search() });
+                    break;
+                case 'annexFileUpLoad':
+                    $('#' + id).on('click', function () { annexFileUpLoad() });
+                    break;
+                case 'signOffSave':
+                    $('#' + id).on('click', function () { signOffSave() });
+                    break;
+                case 'signOffCancel':
+                    $('#' + id).on('click', function () { signOffCancel() });
+                    break;
+                case 'reviewConfirm':
+                    $('#' + id).on('click', function () { reviewConfirm() });
+                    break;
+                case 'reviewCancel':
+                    $('#' + id).on('click', function () { reviewCancel() });
+                    break;
+            }
+        })
+        // 註冊click事件
+
+        //註冊select事件
+        $('select').each(function () {
+            var id = $(this).attr('id');
+            switch (id) {
+                case 'version':
+                    $('#' + id).on('change', function () {
+                        contentFun();
+                    })
+                    break;
+                case 'status':
+                    $('#' + id).on('change', function () {
+                        customerUtility.clrForm('formDiv');
+                    })
+                case 'product':
+                    $('#' + id).on('change', function () {
+                        $('#formTable').jqGrid('setRowData', 1, { Product: '<br><br><br><br>' + $('#product').find(':selected').text() });
+                    })
+            }
+        })
+
+        //報表資料
+        var reportData = null;
+
+        //簽核資料
+        var date = new Date();
+        var signOffData = null;
+        var signOffLevel = null;
+        var signOffDate = date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' : '') + (date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' : '') + date.getDate();
+
+        //查詢量化評估需求資訊檔
+        //查詢風控覆核專區
+        function search() {
+            customerUtility.clrForm('formDiv');
+            var message = "無資料";
+            if ($('#version').find(':selected').text() == "" ||
+                $('#status').find(':selected').text() == "") {
+                alert("請篩選查詢條件!");
+                return;
+            }
+            $('#status').find(':selected').val() == "0" ? url.url = url.handle : url.url = url.review;
+            if ($('#myForm').valid()) {
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({
+                        data: [$('#datepicker').val(),
+                            $('#version').find(':selected').val(),
+                            $('#status').find(':selected').val()]
+                    }),
+                    dataType: "json",
+                    url: url.url,
+                    contentType: 'application/json'
+                })
+                    .done(function (result) {
+                        if (result.RETURN_FLAG) {
+                            reportData = result.Datas.Data[0];
+                            signOffData = @Html.Raw(Json.Encode(ViewBag.FieldName));
+                            for (var i = 0; i < Object.keys(signOffData).length; i++) {
+                                signOffData[Object.keys(signOffData)[i]] = reportData[Object.keys(signOffData)[i]];
+                            }
+                            if ($('#status').find(':selected').val() != 0) {
+                                if (reportData.Create_User != '@ViewBag.User' &&
+                                    reportData.First_Order != '@ViewBag.User' &&
+                                    reportData.Second_Order != '@ViewBag.User') {
+                                    alert("您無此表單的 編輯/查詢 權限!");
+                                    return;
+                                }
+                                else {
+                                    reportData.First_Order_Status == "1" ? reportData.First_Order_Status = "待覆核" : reportData.First_Order_Status == "2" ? reportData.First_Order_Status = "已覆核" : reportData.First_Order_Status = "退回";
+                                    reportData.Second_Order_Status == "1" ? reportData.Second_Order_Status = "待覆核" : reportData.Second_Order_Status == "2" ? reportData.Second_Order_Status = "已覆核" : reportData.Second_Order_Status = "退回";
+                                    message = "表單建立人員 : " + reportData.Create_User_Name;
+                                    message += "\n一階覆核人員 : " + reportData.First_Order_Name + " (" + reportData.First_Order_Status + ")";
+                                    $('#firstOrderReview_return').text(reportData.First_Order);
+                                    $('#firstOrderReviewName_return').text(reportData.First_Order_Name);
+                                    message += "\n二階覆核人員 : " + reportData.Second_Order_Name + " (" + reportData.Second_Order_Status + ")";
+                                    $('#secondOrderReview_return').text(reportData.Second_Order);
+                                    $('#secondOrderReviewName_return').text(reportData.Second_Order_Name);
+                                }
+                            }
+                            createForm();
+                            $("#message").attr("alt", message);
+                            signOffLevel = ["Handle", "Create_User", "Create_Date", "Create_User_Name", '@ViewBag.User' + "%0"];
+                        }
+                        else {
+                            customerUtility.alert(result.DESCRIPTION, 'e');
+                        }
+                    })
+            }
+        }
+
+        //取得附件
+        function getAnnex(checkReference) {
+            var annexData = {};
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    data: checkReference
+                }),
+                async: false,
+                dataType: "json",
+                url: url.getFile,
+                contentType: 'application/json'
+            })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        annexData = result.Datas.Data;
+                    }
+                })
+            return annexData;
+        }
+
+        //匯出報表
+        function exportReport(reportInfo) {
+            var parms = [], extensionParms = [],
+                cName = "", eName = "";
+            cName = reportInfo[0];
+            eName = reportInfo[1];
+            if (eName == 'D63' || eName == 'D64') {
+                cName = "量化測試(" + eName + ")";
+                eName = "D63_D64";
+            }
+            parms.push(customerUtility.reportParm('ClassName', reportInfo[1]));
+            parms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
+            parms.push(customerUtility.reportParm('ReferenceNbr', reportData.Reference_Nbr));
+            parms.push(customerUtility.reportParm('Version', $('#version').find(':selected').val()));
+            parms.push(customerUtility.reportParm('ProductCode', $('#product').find(':selected').val()));
+            parms.push(customerUtility.reportParm('GroupProductName', $('#product').find(':selected').text()));
+            extensionParms.push(customerUtility.reportParm('Format', reportInfo[3]));
+            extensionParms.push(customerUtility.reportParm('ReportDate', $('#datepicker').val()));
+            extensionParms.push(customerUtility.reportParm('Version', $('#version').find(':selected').val()));
+            if (reportInfo[1] == "Summary" ) {
+                extensionParms.push(customerUtility.reportParm('cTitle', 'IFRS9金融工具-預期信用損失估算表'));
+                extensionParms.push(customerUtility.reportParm('Content', $('#content').find(':selected').text()));
+                extensionParms.push(customerUtility.reportParm('GroupProductName', $('#product').find(':selected').text()));
+            }
+            if (reportInfo[1] == "SignOff") {
+                extensionParms.push(customerUtility.reportParm('cTitle', reportInfo[2]));
+                extensionParms.push(customerUtility.reportParm('Content', $('#content').find(':selected').text()));
+                extensionParms.push(customerUtility.reportParm('GroupProductName', $('#product').find(':selected').text()));
+                eName = ["Summary", "C07Advanced", "D62", "WarningIND", "WatchIND", "D63_D64"];
+            }
+            var isArray = [].concat(eName || []);
+            for (var i = 0; i < isArray.length; i++) {
+                let handle = "", firstOrder = "", secondOrder = "", reportDate = "",
+                    handleOpinion = "", firstOrderOpinion = "", secondOrderOpinion = "";
+
+                reportDate = reportData.Create_Date;
+                handleOpinion = reportData[isArray[i] + '_Handle_Opinion'];
+                if (reportData.Create_User_Name != null) { handle = reportData.Create_User_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+                reportDate = reportData.First_Order_Date;
+                firstOrderOpinion = reportData[isArray[i] + '_First_Order_Opinion'];
+                if (reportData.First_Order_Name != null) { firstOrder = reportData.First_Order_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+                reportDate = reportData.Second_Order_Date;
+                secondOrderOpinion = reportData[isArray[i] + '_Second_Order_Opinion'];
+                if (reportData.Second_Order_Name != null) { secondOrder = reportData.Second_Order_Name + " (" + reportDate.replace('-', '/').replace('-', '/') + ")"; }
+
+                extensionParms.push(customerUtility.reportParm('Handle', handle));
+                extensionParms.push(customerUtility.reportParm('Handle' + isArray[i], handleOpinion));
+                extensionParms.push(customerUtility.reportParm('FirstOrder', firstOrder));
+                extensionParms.push(customerUtility.reportParm('FirstOrder' + isArray[i], firstOrderOpinion));
+                extensionParms.push(customerUtility.reportParm('SecondOrder', secondOrder));
+                extensionParms.push(customerUtility.reportParm('SecondOrder' + isArray[i], secondOrderOpinion));
+                extensionParms.push(customerUtility.reportParm('FirstOrderStatus', reportData.First_Order_Status));
+                extensionParms.push(customerUtility.reportParm('SecondOrderStatus', reportData.Second_Order_Status));
+                extensionParms.push(customerUtility.reportParm('Status', reportData.Status));
+            }
+            customerUtility.report(
+                customerUtility.reportModel(cName, reportInfo[1]),
+                parms,
+                extensionParms
+            );
+            $("#remarkdiv").html('');
+        }
+
+        //開啟附件
+        var annexColNames = null;
+        var annexColModel = null;
+        function delFile(cellvalue, options, rdata) {
+            var str = '';
+            str += '<div class="btn actionDeleIcon2" style="padding-right:4px;padding-left:4px;padding-bottom:0px;padding-top:0px;" id="' + options.rowId + '" title="刪除">';
+            str += '<i class="fa fa-trash fa-lg"></i></div>';
+            return str;
+        }
+        function getFile(cellvalue, options, rdata) {
+            return "<a href='javascript:void(0)' class='openDialog dlfile'>" + cellvalue + "</a>";
+        }
+        function openAnnex(checkReference, annexName) {
+            $('#annexFileFolder').val('');
+            var title = annexName + " : 上傳附件";
+            customerUtility.clrForm('annexListDiv');
+            $('#openAnnexFile').next().find('input').val('');
+            annexColNames = ["刪除", "附件名稱"];
+            annexColModel = [
+                {//刪除
+                    name: "Delete", index: "Delete", width: 40, sortable: false, align: "center", formatter: delFile
+                },
+                {//附件名稱
+                    name: "File_Name", index: "File_Name", width: 440, sortable: false, align: "center", formatter: getFile
+                }
+            ];
+            if ($('#status').find(':selected').val() == "1" || $('#status').find(':selected').val() == "2") {
+                $('.fileUpLoad').hide();
+                title = annexName + " : 檢視附件";
+                annexColModel.shift();
+                annexColModel[0].width = "480";
+                annexColNames = ["附件名稱"];
+            }
+            else {
+                $('.fileUpLoad').show();
+            }
+            $("#annexDiv").dialog({
+                modal: true,
+                width: 'auto',
+                title: title,
+                autoOpen: false,
+                resizable: false,
+                position: { my: "center top", at: "center top", of: window }
+            });
+            $("#annexDiv").dialog("open");
+            $('#annexFileFolder').val(checkReference);
+            createAnnexList(getAnnex(checkReference));
+        }
+
+        //檔案上傳
+        function annexFileUpLoad() {
+            var isSame = "N";
+            var formData = new FormData();
+            if ($('#openAnnexFile').next().find('input').val() == "") {
+                customerUtility.alert('請選擇檔案!', 'w');
+                return false;
+            }
+            $.each($('#annexTable').getGridParam('data'), function (i, v) {
+                if ($('#openAnnexFile').next().find('input').val() == v.File_Name) {
+                    isSame = "Y";
+                }
+            })
+            if (isSame == "Y") {
+                if (!confirm("已經有檔名為 " + $('#openAnnexFile').next().find('input').val() + " ,是否取代?")) {
+                    return false;
+                }
+            }
+            if ($("#annexField").attr("enctype") == "multipart/form-data") {
+                formData.append("UploadedFile", $("#openAnnexFile").get(0).files[0]);
+                formData.append("Check_Reference", $('#annexFileFolder').val());
+                formData.append("sameFlag", isSame);
+                formData.append("type", "D75");
+            }
+            $.ajax({
+                type: "POST",
+                data: formData,
+                dataType: "json",
+                url: url.uplFile,
+                contentType: false,
+                processData: false
+            })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $('#UploadView_' + $('#annexFileFolder').val().split('_')[2]).text('上傳或檢視(' + result.Datas.Data.length + ')');
+                        $('#openAnnexFile').val('');
+                        $('#openAnnexFile').next().find('input').val('');
+                        customerUtility.alert("檔案上傳成功!", 's');
+                        customerUtility.clrForm('annexListDiv');
+                        createAnnexList(result.Datas.Data);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                    }
+                })
+        }
+
+        //檔案刪除
+        function annexFileDelete(checkReference, fileName) {
+            if (!confirm("確定刪除檔案?")) {
+                return false;
+            }
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    fileName: fileName,
+                    type: 'D75',
+                    Check_Reference: checkReference,
+                    user:'@ViewBag.user'
+                }),
+                dataType: "json",
+                url: url.delFile,
+                contentType: 'application/json'
+            })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        $('#UploadView_' + $('#annexFileFolder').val().split('_')[2]).text('上傳或檢視(' + result.Datas.Data.length + ')');
+                        $('#openAnnexFile').val('');
+                        customerUtility.alert(result.DESCRIPTION, 's');
+                        customerUtility.clrForm('annexListDiv');
+                        createAnnexList(result.Datas.Data);
+                    }
+                    else {
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                    }
+                });
+        }
+
+        //開啟簽核
+        var Opinion = "";
+        function getOpinion(cellvalue, options, rdata) {
+            return '<div class="openDialog getText" id="' + options.rowId + '">' + cellvalue + '</div>';
+        }
+        var signOffColModel = [
+            {//刪除
+                name: "Delete", index: "Delete", width: 40, sortable: false, align: "center", formatter: delFile
+            },
+            {//意見
+                name: "Opinion", index: "Opinion", width: 348, sortable: false, align: "left", formatter: getOpinion
+            },
+            {//簽辦人員
+                name: "Signatory", index: "Signatory", width: 95, sortable: false, align: "left"
+            }
+        ];
+        function openSignOff(opinion, signOffName) {
+            Opinion = opinion.replace('、', '_');
+            $('.textareaEdit').show();
+            $('#signOffTextarea').val('');
+            $('#signOffSave').attr('value', '存檔');
+            $("#signOffDiv").dialog({
+                modal: true,
+                width: 'auto',
+                title: signOffName + ' : 簽核意見/說明',
+                autoOpen: false,
+                resizable: false,
+                position: { my: "center top", at: "center top", of: window }
+            });
+            $("#signOffDiv").dialog("open");
+            createOpinionList();
+        }
+
+        //儲存簽核
+        function signOffSave() {
+            if ($('#signOffTextarea').val().trim() == '') {
+                alert("請輸入簽核意見!");
+                return false;
+            }
+            signOffData[Opinion + "_" + signOffLevel[0] + "_Opinion"] = $('#signOffTextarea').val();
+            signOffData[signOffLevel[2]] = signOffDate;
+            signOffData[signOffLevel[1]] = '@ViewBag.User';
+            signOffData[signOffLevel[3]] = '@ViewBag.UserName';
+            $('#signOffTextarea').val('');
+            createOpinionList();
+        }
+
+        //取消簽核
+        function signOffCancel() {
+            $("#signOffDiv").dialog("close");
+        }
+
+        //刪除簽核
+        function signOffDelete() {
+            if (!confirm("確定刪除簽核?")) {
+                return false;
+            }
+            $('.textareaEdit').show();
+            $('#signOffTextarea').val('');
+            $('#signOffSave').attr('value', '存檔');
+            signOffData[Opinion + "_" + signOffLevel[0] + "_Opinion"] = null;
+            createOpinionList();
+        }
+
+        //覆核確認
+        function reviewConfirm() {
+            if (($('#firstOrderReview').find(':selected').val() == "" ||$('#SecondOrderReview').find(':selected').val() == "") &&
+                ($('#firstOrderReview_return').text() == "" || $('#secondOrderReview_return').text() == "")) {
+                alert("請選擇覆核人員!");
+                return;
+            }
+            if (!confirm("確定呈送覆核?")) {
+                return false;
+            }
+            for (var i = 0; i < Object.keys(signOffData).length; i++) {
+                reportData[Object.keys(signOffData)[i]] = signOffData[Object.keys(signOffData)[i]];
+            }
+            reportData["Status"] = $('#status').find(':selected').val();
+            reportData["ProductCode"] = $('#product').find(':selected').val();
+            reportData["Create_User_Name"] = '@ViewBag.UserName';
+            if ($('#status').find(':selected').text() != '退回') {
+                reportData["Version_Content"] = $('input:radio:checked[name="content"]').val()
+                reportData["First_Order"] = $('#firstOrderReview').find(':selected').text().split(' ')[0];
+                reportData["First_Order_Name"] = $('#firstOrderReview').find(':selected').text().split(' ')[1].replace('(', '').replace(')', '');
+                reportData["Second_Order"] = $('#SecondOrderReview').find(':selected').text().split(' ')[0];
+                reportData["Second_Order_Name"] = $('#SecondOrderReview').find(':selected').text().split(' ')[1].replace('(', '').replace(')', '');
+                $("#reviewDiv").dialog("close");
+            }
+            else {
+                reportData["Version_Content"] = $('#content').find(':selected').text();
+                reportData["First_Order"] = $('#firstOrderReview_return').text();
+                reportData["First_Order_Name"] = $('#firstOrderReviewName_return').text();
+                reportData["Second_Order"] = $('#secondOrderReview_return').text();
+                reportData["Second_Order_Name"] = $('#secondOrderReviewName_return').text();     
+            };
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify({
+                    data: reportData
+                }),
+                dataType: "json",
+                url: url.submit,
+                contentType: 'application/json'
+            })
+                .done(function (result) {
+                    if (result.RETURN_FLAG) {
+                        contentFun();
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                    }
+                    else {
+                        search();
+                        customerUtility.alert(result.DESCRIPTION, 'e');
+                    }
+                });
+        }
+
+        //覆核取消
+        function reviewCancel() {
+            $("#reviewDiv").dialog("close");
+        }
+
+        //查詢表單
+        function createForm() {
+            var htm = "";
+            var num = 0;
+            var htmRadio = "<div><input type='radio' name='content' value='_value'>_text</div>";
+            var radioName = ["空白", "一關(自結)", "二關(自結)"];
+            var checkboxId = ["Summary", "C07Advanced", "D62", "WarningIND", "WatchIND", "D63、D64", "All"];
+            var checkboxName = ["預期信用損失估算表", "減損計算(C07_Advanced)", "基本要件測試(D62)", "預警名單", "觀察名單", "量化測試(D63、D64)", "全部"];
+            var htmLink = "<a href='javascript:void(0)' class='openDialog' id='_id' name='_name'>_text</a >";
+            var linkId = ["Summary", "C07Advanced", "D62", "WarningIND", "WatchIND", "D63、D64"];
+            var linkName = ["1.預期信用損失估算表", "2.減損計算(C07_Advanced)", "3.基本要件測試(D62)", "4.預警名單", "5.觀察名單", "6.量化測試(D63、D64)", "上傳或檢視(_num)", '修改或檢視(_num)'];
+            var htmButton = "<input type='button' class='btn btn-primary' style='width:83px;' id='_id' value='_value'>";
+            var htmButton_SignOff = "<input type='button' class='btn btn-primary' style='width:120px;' id='_id' value='_value'>";
+            var buttonId = ["Excel", "PDF", "SignOff", "Submit", "Close","Approved"];
+            var buttonName = ["匯出Excel", "匯出PDF", "下載簽核意見/說明", "呈送覆核", "銷案","結案"];
+            var formColModel = [
+                {//覆核狀態
+                    name: "Status", index: "Status", width: 85, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'Status' + rowId + "\'"; }},
+                {//評估基準日/報導日
+                    name: "Date", index: "Date", width: 85, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'Date' + rowId + "\'"; }},
+                {//版本
+                    name: "Version", index: "Version", width: 40, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'Version' + rowId + "\'"; }},
+                {//版本內容
+                    name: "Content", index: "Content", width: 80, sortable: false, align: "left",
+                    cellattr: function (rowId) { return 'id=\'Content' + rowId + "\'"; }},
+                {//產品
+                    name: "Product", index: "Product", width: 210, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'Product' + rowId + "\'"; }},
+                {//匯出
+                    name: "Export", index: "Export", width: 40, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'Export' + rowId + "\'"; },
+                    editable: true, edittype: "checkbox", editoptions: { value: "True:False" },
+                    formatter: "checkbox", formatoptions: { disabled: false }},
+                {//報表
+                    name: "Report", index: "Report", width: 180, sortable: false, align: "left",
+                    cellattr: function (rowId) { return 'id=\'Report' + rowId + "\'"; }},
+                {//附件
+                    name: "Annex", index: "Annex", width: 90, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'Annex' + rowId + "\'"; }},
+                {//簽核意見
+                    name: "SignOff", index: "SignOff", width: 130, sortable: false, align: "center",
+                    cellattr: function (rowId) { return 'id=\'SignOff' + rowId + "\'"; }},
+                {//執行動作
+                    name: "Action", index: "Action", width: 90, sortable: false, align: "left",
+                    cellattr: function (rowId) { return 'id=\'Action' + rowId + "\'"; }}
+            ];
+
+            //顯示表單
+            $('#formDiv').append('<table id=formTable></table>');
+            $('#formTable').jqGrid({
+                datatype: "local",
+                shrinkToFit: false,
+                caption: "風控覆核專區(經辦)",
+                width: jqgridCustom.getwidth(),
+                height: "auto",
+                data: [{}, {}, {}, {}, {}, {}, {}],
+                colNames: ["覆核狀態", "評估基準日<br/>/報導日", "版本", "版本內容", "產品", "匯出", "報表", "附件", "簽核意見/說明", "執行動作"],
+                colModel: formColModel,
+                loadComplete: function () {
+                    //覆核狀態
+                    customerUtility.rowMerge('formTable', 'Status', 1, 7);
+                    $('#formTable').jqGrid('setRowData', 1, { Status: '<br><br><br><br>' + $('#status').find(':selected').text() });
+                    //評估基準日/報導日
+                    customerUtility.rowMerge('formTable', 'Date', 1, 7);
+                    $('#formTable').jqGrid('setRowData', 1, { Date: '<br><br><br><br>' + $('#datepicker').val() });
+                    //版本
+                    customerUtility.rowMerge('formTable', 'Version', 1, 7);
+                    $('#formTable').jqGrid('setRowData', 1, { Version: '<br><br><br><br>' + $('#version').find(':selected').text() });
+                    //版本內容
+                    customerUtility.rowMerge('formTable', 'Content', 1, 7);
+                    if ($('#status').find(':selected').val() == "0") {
+                        for (var i = 0; i < radioName.length; i++) {
+                            htm += htmRadio.replace('_value', radioName[i]).replace('_text', radioName[i]);
+                        }
+                        customerUtility.clrSelectData('content');
+                        $('#formTable').jqGrid('setRowData', 1, { Content: '<br><br><br>' + htm });
+                    }
+                    else {
+                        $('#formTable').jqGrid('setRowData', 1, { Content: '<br><br><br><br>' + $('#content').find(':selected').text() });
+                    }
+                    //產品
+                    customerUtility.rowMerge('formTable', 'Product', 1, 7);
+                    $('#formTable').jqGrid('setRowData', 1, { Product: '<br><br><br><br>' + $('#product').find(':selected').text() });
+                    //匯出
+                    $('#formTable').find('input:checkbox').each(function (index) {
+                        $(this).attr('id', checkboxId[index]);
+                        $(this).attr('name', checkboxName[index]);
+                    });
+                    //報表
+                    for (var i = 0; i < linkId.length; i++) {
+                        htm = htmLink.replace('_id', 'Preview_' + linkId[i]).replace('_name', checkboxName[i].split('/')[1]).replace('_text', linkName[i].split('/')[0]);
+                        $('#formTable').jqGrid('setRowData', i + 1, { Report: htm });
+                    }
+                    htm = htmButton.replace('_id', buttonId[0]).replace('_value', buttonName[0]);
+                    htm += '&nbsp;' + htmButton.replace('_id', buttonId[1]).replace('_value', buttonName[1]);
+                    $('#formTable').jqGrid('setRowData', 7, { Report: htm });
+                    //附件
+                    for (var i = 0; i < linkId.length; i++) {
+                        if (linkId[i] != "D63、D64") {
+                            var checkReference = reportData.Reference_Nbr + "_" + linkId[i];
+                            num = getAnnex(checkReference).length == undefined ? 0 : getAnnex(checkReference).length;
+                            htm = htmLink.replace('_id', 'UploadView_' + linkId[i]).replace('_name', linkName[i].split('/')[0]).replace('_text', linkName[6].replace('_num', num));
+                            $('#formTable').jqGrid('setRowData', i + 1, { Annex: htm });
+                        };
+                    }
+                    //簽核意見
+                    for (var i = 0; i < linkId.length; i++) {
+                        if (linkId[i] != "D63、D64") {
+                            num = 0;
+                            reportData[linkId[i].replace('、', '_') + "_Handle_Opinion"] == null ? num = num : num++;
+                            reportData[linkId[i].replace('、', '_') + "_First_Order_Opinion"] == null ? num = num : num++;
+                            reportData[linkId[i].replace('、', '_') + "_Second_Order_Opinion"] == null ? num = num : num++;
+                            htm = htmLink.replace('_id', 'ModifyView_' + linkId[i]).replace('_name', linkName[i].split('/')[0]).replace('_text', linkName[7].replace('_num', num));
+                            $('#formTable').jqGrid('setRowData', i + 1, { SignOff: htm });
+                            htm = htmButton_SignOff.replace('_id', buttonId[2]).replace('_value', buttonName[2]);
+                            $('#formTable').jqGrid('setRowData', 7, { SignOff: htm });
+                        }
+                    }
+                    //執行動作
+                    customerUtility.rowMerge('formTable', 'Action', 2, 7);
+                    $('#formTable').jqGrid("setRowData", 1, { Action: '經辦:' });
+                    htm = htmButton.replace('_id', buttonId[3]).replace('_value', buttonName[3]);
+                    htm += '<br><br>' + htmButton.replace('_id', buttonId[5]).replace('_value', buttonName[5]);//結案
+                    htm += '<br><br>' + htmButton.replace('_id', buttonId[4]).replace('_value', buttonName[4]);//銷案
+                    $('#formTable').jqGrid("setRowData", 2, { Action: htm });
+                    switch ($('#status').find(':selected').val()) {
+                        case "0":  //尚未呈送覆核
+                            $('#Submit').prop('disabled', false);
+                            $('#Approved').prop('disabled', true);
+                            $('#Close').prop('disabled', true);
+                            break;
+                        case "1": //待覆核
+                            $('#Submit').prop('disabled', true);
+                            $('#Close').prop('disabled', false);
+                            $('#Approved').prop('disabled', true);
+                            if (reportData.Create_User != '@ViewBag.User') {
+                                $('#Submit').prop('disabled', true);
+                                $('#Approved').prop('disabled', true);
+                                $('#Close').prop('disabled', true);
+                            }
+                            break;
+                        case "3": //退回
+                            $('#Submit').prop('disabled', false);
+                            $('#Close').prop('disabled', false);
+                            $('#Approved').prop('disabled', true);
+                            if (reportData.Create_User != '@ViewBag.User') {
+                                $('#Submit').prop('disabled', true);
+                                $('#Close').prop('disabled', true);
+                                $('#Approved').prop('disabled', true);
+                            }
+                            break;
+                        case "4": //待核定
+                            $('#Submit').prop('disabled', true);
+                            $('#Close').prop('disabled', false);
+                            checkSignOffFile ? $('#Approved').prop('disabled', false) : $('#Approved').prop('disabled', true);                            
+                            if (reportData.Create_User != '@ViewBag.User') {
+                                $('#Submit').prop('disabled', true);
+                                $('#Close').prop('disabled', true);
+                                $('#Approved').prop('disabled', true);
+                            };
+                            break;
+                        case "5": //已完成
+                            $('#Submit').prop('disabled', true);
+                            $('#Close').prop('disabled', true);
+                            $('#Approved').prop('disabled', true);
+                            break;
+                    }
+                    //註冊radio事件
+                    $('#formTable').find('input:radio').change(function () {
+                        customerUtility.clrSelectData('content');
+                        customerUtility.addSelectData('content', $(this).val(), $(this).val());
+                    });
+                    //註冊checkbox事件
+                    $('#formTable').find('input:checkbox').each(function () {
+                        $(this).change(function () {
+                            if ($(this).attr('id') != "All") {
+                                $('#All').attr("checked", false);
+                            }
+                            else {
+                                $('#formTable').find('input:checkbox').not(this).prop('checked', this.checked);
+                            }
+                        });
+                    })
+                    //註冊link事件
+                    $('#formTable').find('a').each(function () {
+                        var id = $(this).attr('id');
+                        var colName = id.split('_')[0];
+                        switch (colName) {
+                            case 'Preview':
+                                $('#' + id).on('click', function () {
+                                    var cName = $(this).text().split('.')[1];
+                                    var eName = $(this).attr('id').split('_')[1];
+                                    eName = eName.split('、');
+                                    var isArray = [].concat(eName || []);
+                                    var cTitle = $(this).attr('name');
+                                    cTitle == 'undefined' ? cTitle = cName : cTitle = cTitle;
+                                    var format = $(this).attr('id').split('_')[0];
+                                    for (var i = 0; i < isArray.length; i++) {
+                                        var reportInfo = [cName, isArray[i], cTitle, format];
+                                        exportReport(reportInfo);
+                                    }
+                                })
+                                break;
+                            case 'UploadView':
+                                $('#' + id).on('click', function () {
+                                    var checkReference = reportData.Reference_Nbr + "_" + $(this).attr('id').split('_')[1];
+                                    openAnnex(checkReference, $(this).attr('name'));
+                                })
+                                break;
+                            case 'ModifyView':
+                                $('#' + id).on('click', function () {
+                                    var opinion = $(this).attr('id').split('_')[1];
+                                    openSignOff(opinion, $(this).attr('name'));
+                                })
+                                break;
+                        }
+                    })
+                    //註冊click事件
+                    $('input:button').each(function () {
+                        var id = $(this).attr('id');
+                        switch (id) {
+                            case 'PDF':
+                            case 'Excel':
+                                $('#' + id).on('click', function () {
+                                    var checked = 0;
+                                    var format = $(this).attr('id');
+                                    $('#formTable').find(':checked').each(function () {
+                                        checked++;
+                                        var cName = $(this).attr('name').split('/')[0];
+                                        var eName = $(this).attr('id');
+                                        eName = eName.split('、');
+                                        var isArray = [].concat(eName || []);
+                                        var cTitle = $(this).attr('name').split('/')[1];
+                                        cTitle == undefined ? cTitle = cName : cTitle = cTitle;
+                                        for (var i = 0; i < isArray.length; i++) {
+                                            if (isArray[i] != "All") {
+                                                var reportInfo = [cName, isArray[i], cTitle, format];
+                                                exportReport(reportInfo);
+                                            }
+                                        }
+                                    })
+                                    if (checked == 0) { customerUtility.alert('請至少選擇一份報表!', 'e'); }
+                                });
+                                break;
+                            case 'SignOff':
+                                $('#' + id).on('click', function () {
+                                    var cName = "摘要 簽核意見/說明";
+                                    var eName = "SignOff";
+                                    var cTitle = "IFRS9金融工具-預期信用損失估算表 簽核意見/說明";
+                                    var format = "PDF";
+                                    var reportInfo = [cName, eName, cTitle, format];
+                                    exportReport(reportInfo);
+                                })
+                                break;
+                            case 'Submit':
+                                $('#' + id).on('click', function () {
+                                    if ($('#status').find(':selected').text()!='退回'&&$('input:radio:checked[name="content"]').val() == undefined) {
+                                        alert("請選擇版本內容!");
+                                        return;
+                                    }
+                                    if ($('#status').find(':selected').text() == '退回') {
+                                        if (confirm("覆核人員已選取，如需異動，請按「取消」，後續請點選「銷案」並重新「呈送覆核」選取覆核人員！" + "\n" +
+                                            "覆核：" + $('#firstOrderReviewName_return').text() + "、部主管：" + $('#secondOrderReviewName_return').text())) {
+                                            reviewConfirm();
+                                        }                                        
+                                    }
+                                    else {
+                                        $('#firstOrderReview').val('');
+                                        $('#SecondOrderReview').val('');
+                                        $("#reviewDiv").dialog({
+                                            modal: true,
+                                            width: 'auto',
+                                            title: '覆核確認',
+                                            autoOpen: false,
+                                            resizable: false,
+                                            position: { my: "center top", at: "center top", of: window }
+                                        });
+                                        $("#reviewDiv").dialog("open");
+                                    }
+
+                                })
+                                break;
+                            case 'Close':
+                                $('#' + id).on('click', function () {
+                                    if (!confirm("確定銷案?")) {
+                                        return false;
+                                    }
+                                    $.ajax({
+                                        type: "POST",
+                                        data: JSON.stringify({
+                                            data: reportData
+                                        }),
+                                        dataType: "json",
+                                        url: url.close,
+                                        contentType: 'application/json'
+                                    })
+                                        .done(function (result) {
+                                            if (result.RETURN_FLAG) {
+                                                contentFun();
+                                                customerUtility.alert(result.DESCRIPTION, 'e');
+                                            }
+                                            else {
+                                                search();
+                                                customerUtility.alert(result.DESCRIPTION, 'e');
+                                            }
+                                        });
+                                })
+                                break;
+                            case 'Approved':
+                                $('#' + id).on('click', function () {
+                                    if (!confirm("確定結案?")) {
+                                        return false;
+                                    }
+                                    if (!checkSignOffFile) {
+                                        customerUtility.alert('請確認已上傳PDF簽核檔','w');
+                                        return false;
+                                    }
+                                    $.ajax({
+                                        type: "POST",
+                                        data: JSON.stringify({
+                                            data: reportData
+                                        }),
+                                        dataType: "json",
+                                        url: url.approved,
+                                        contentType: 'application/json'
+                                    })
+                                        .done(function (result) {
+                                            if (result.RETURN_FLAG) {
+                                                contentFun();
+                                                customerUtility.alert(result.DESCRIPTION, 'e');
+                                            }
+                                            else {
+                                                search();
+                                                customerUtility.alert(result.DESCRIPTION, 'e');
+                                            }
+                                        });
+                                })
+                                break;
+                        }
+                    })
+                }
+            })
+        }
+
+        //顯示附件清單
+        function createAnnexList(annexData) {
+            $('#annexListDiv').append('<table id=annexTable></table>');
+            $('#annexListDiv').append('<div id=annexPager></div>');
+            $('#annexTable').jqGrid({
+                datatype: "local",
+                shrinkToFit: false,
+                caption: "附件清單",
+                width: 485,
+                height: 290,
+                data: annexData,
+                colNames: annexColNames,
+                colModel: annexColModel,
+                rowNum: 10,
+                pager: '#annexPager',
+                autoencode: true,
+                sortorder: 'desc',
+                viewrecords: true,
+                viewsortcols: [true, 'vertical', true],
+                loadComplete: function () {
+                    var table = $(this);
+                    jqgridCustom.updatePagerIcons(table);
+                    if ($('#annexTable > tbody > tr:gt(0) ').length > 0) {
+                        $('#annexTable > tbody > tr:gt(0) ').each(function () {
+                            var fileName = $(this).find($.validator.format('td[aria-describedby$={0}_File_Name]', 'annexTable')).text();
+                            fileName == '預期信用損失估算表_紙本簽核.pdf' ? checkSignOffFile = true : checkSignOffFile = false;
+                            if ($('#status').find(':selected').val() == 4 && checkSignOffFile) {
+                                $('#Approved').prop('disabled', false);
+                            }
+                            else {
+                                $('#Approved').prop('disabled', true);
+                            };
+                            $(this).find('td').find('a.dlfile').each(function () {
+                                $(this).on('click', function () {
+                                    customerUtility.onbeforeunloadFlag = false;
+                                    window.location.href = "@Url.RouteUrl(new
+                                                   { Controller = "D6", Action = "DLRiskControlFile" })/?Check_Reference="
+                                        + $('#annexFileFolder').val() + "&fileName=" + fileName;
+                                });
+                            });
+                            $(this).find('td').find('div.actionDeleIcon2').each(function () {
+                                $(this).on('click', function () {
+                                    annexFileDelete($('#annexFileFolder').val(), fileName);
+                                });
+                            });
+                        });
+                    }
+                    else {
+                        checkSignOffFile = false;
+                        $('#Approved').prop('disabled', true);
+                    }
+
+                }
+            })
+            $("#annexTable").jqGrid('navGrid', '#annexPager', { edit: false, add: false, del: false, search: false, refresh: false });
+        }
+
+        //顯示簽核清單
+        function createOpinionList() {
+            customerUtility.clrForm('opinionListDiv');
+            $('#opinionListDiv').append('<table id=opinionTable></table>');
+            $('#opinionTable').jqGrid({
+                datatype: "local",
+                shrinkToFit: false,
+                caption: "意見/說明清單",
+                width: 485,
+                height: 130,
+                colNames: ["刪除", "意見/說明", "簽辦人員"],
+                colModel: signOffColModel,
+                autoencode: true,
+                sortorder: 'desc',
+                viewsortcols: [true, 'vertical', true],
+                loadComplete: function () {
+                    var num = 0;
+                    if ($('#status').find(':selected').val() == "1" || $('#status').find(':selected').val() == "4" || $('#status').find(':selected').val() == "5") {
+                        $('.textareaEdit').hide();
+                        $('#signOffTextarea').prop('readonly', true);
+                    }
+                    else {
+                        $('.textareaEdit').show();
+                        $('#signOffTextarea').prop('readonly', false);
+                    }
+                    if (signOffData[Opinion + "_Handle_Opinion"] != null) {
+                        if (signOffLevel[0] == "Handle") { $('.textareaEdit').hide(); }
+                        $('#opinionTable').jqGrid('addRowData', signOffData.Create_User + "%0", { Delete: "" });
+                        $('#opinionTable').jqGrid('setRowData', signOffData.Create_User + "%0", { Opinion: signOffData[Opinion + "_Handle_Opinion"] });
+                        $('#opinionTable').jqGrid('setRowData', signOffData.Create_User + "%0", { Signatory: signOffData.Create_User_Name + "\n(" + signOffData.Create_Date.replace('-', '/').replace('-', '/') + ")" });
+                        num++;
+                    }
+                    if (signOffData[Opinion + "_First_Order_Opinion"] != null) {
+                        if (signOffLevel[0] == "First_Order") { $('.textareaEdit').hide(); }
+                        $('#opinionTable').jqGrid('addRowData', signOffData.First_Order + "%1", { Delete: "" });
+                        $('#opinionTable').jqGrid('setRowData', signOffData.First_Order + "%1", { Opinion: signOffData[Opinion + "_First_Order_Opinion"] });
+                        $('#opinionTable').jqGrid('setRowData', signOffData.First_Order + "%1", { Signatory: signOffData.First_Order_Name + "\n(" + signOffData.First_Order_Date.replace('-', '/').replace('-', '/') + ")" });
+                        num++;
+                    }
+                    if (signOffData[Opinion + "_Second_Order_Opinion"] != null) {
+                        if (signOffLevel[0] == "Second_Order") { $('.textareaEdit').hide(); }
+                        $('#opinionTable').jqGrid('addRowData', signOffData.Second_Order + "%2", { Delete: "" });
+                        $('#opinionTable').jqGrid('setRowData', signOffData.Second_Order + "%2", { Opinion: signOffData[Opinion + "_Second_Order_Opinion"] });
+                        $('#opinionTable').jqGrid('setRowData', signOffData.Second_Order + "%2", { Signatory: signOffData.Second_Order_Name + "\n(" + signOffData.Second_Order_Date.replace('-', '/').replace('-', '/') + ")" });
+                        num++;
+                    }
+                    $('#ModifyView_' + Opinion.replace('_', '、')).text('修改或檢視(' + num + ')');
+                    $('#opinionTable > tbody > tr:gt(0) ').each(function () {
+                        $(this).find('td').find('div.actionDeleIcon2').each(function () {
+                            $(this).on('click', function () {
+                                if ($('#status').find(':selected').text() == "尚未呈送覆核" ||
+                                    $('#status').find(':selected').text() == "退回") {
+                                    if (signOffLevel[4] == $(this).attr('id')) {
+                                        signOffDelete();
+                                    }
+                                    else {
+                                        alert("您無此簽核的刪除權限!");
+                                    }
+                                }
+                            });
+                        });
+                        $(this).find('td').find('div.getText').each(function () {
+                            $(this).on('click', function () {
+                                $('#signOffTextarea').val($(this).text());
+                                if ($('#status').find(':selected').text() == "尚未呈送覆核" ||
+                                    $('#status').find(':selected').text() == "退回") {
+                                    if (signOffLevel[4] == $(this).attr('id')) {
+                                        $('.textareaEdit').show();
+                                        $('#signOffSave').attr('value', '修改');
+                                        $('#signOffTextarea').prop('readonly', false);
+                                    }
+                                    else {
+                                        $('.textareaEdit').hide();
+                                        $('#signOffTextarea').prop('readonly', true);
+                                        alert("您無此簽核的修改權限!");
+                                    }
+                                }
+                            });
+                        });
+                    })
+                }
+            })
+        }
+    });
+</script>

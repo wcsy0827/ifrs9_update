@@ -84,8 +84,9 @@ namespace Transfer.Controllers
         {
             ViewBag.ProductCode = new SelectList(C0Repository.getProduct(GroupProductCode.B), "Value", "Text");
 
-            List<string> listVersion = C0Repository.getC07Version(Transfer.Enum.Ref.GroupProductCode.B.GetDescription(), "", "");
-            listVersion.Insert(0, "");
+            //List<string> listVersion = C0Repository.getC07Version(Transfer.Enum.Ref.GroupProductCode.B.GetDescription(), "", "");
+            //List<string> listVersion=new Insert(0, "");
+            List<string> listVersion = new List<string>() ;
 
             ViewBag.Version = new SelectList(listVersion.Select(x => new { Text = x, Value = x }), "Value", "Text");
 
@@ -101,8 +102,9 @@ namespace Transfer.Controllers
         {
             ViewBag.ProductCode = new SelectList(C0Repository.getProduct(GroupProductCode.M), "Value", "Text");
 
-            List<string> listVersion = C0Repository.getC07Version(Transfer.Enum.Ref.GroupProductCode.M.GetDescription(), "", "");
-            listVersion.Insert(0, "");
+            //List<string> listVersion = C0Repository.getC07Version(Transfer.Enum.Ref.GroupProductCode.M.GetDescription(), "", "");
+            //listVersion.Insert(0, "");
+            List<string> listVersion = new List<string>();
 
             ViewBag.Version = new SelectList(listVersion.Select(x => new { Text = x, Value = x }), "Value", "Text");
 
@@ -118,10 +120,10 @@ namespace Transfer.Controllers
         {
             ViewBag.ProductCode = new SelectList(C0Repository.getProduct(GroupProductCode.B), "Value", "Text");
 
-            List<string> listVersion = C0Repository.getC07Version(Transfer.Enum.Ref.GroupProductCode.B.GetDescription(), "", "");
-            listVersion.Insert(0, "");
+            //List<string> listVersion = C0Repository.getC07Version(Transfer.Enum.Ref.GroupProductCode.B.GetDescription(), "", "");
+            //listVersion.Insert(0, "");
+            List<string> listVersion = new List<string>();
             ViewBag.Version = new SelectList(listVersion.Select(x => new { Text = x, Value = x }), "Value", "Text");
-
             List<string> listAssessment_Sub_Kind = C0Repository.getA41AdvancedAssessment_Sub_Kind();
             listAssessment_Sub_Kind.Insert(0, "");
             ViewBag.Assessment_Sub_Kind = new SelectList(listAssessment_Sub_Kind.Select(x => new { Text = x, Value = x }), "Value", "Text");

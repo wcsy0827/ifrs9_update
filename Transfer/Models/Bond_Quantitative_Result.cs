@@ -16,6 +16,7 @@ namespace Transfer.Models
     {
         public string Reference_Nbr { get; set; }
         public System.DateTime Report_Date { get; set; }
+        public int Version { get; set; }
         public string Assessment_Kind { get; set; }
         public string Assessment_Sub_Kind { get; set; }
         public string Assessment_Stage { get; set; }
@@ -24,6 +25,7 @@ namespace Transfer.Models
         public string Check_Item_Memo { get; set; }
         public string Check_Reference { get; set; }
         public int Assessment_Result_Version { get; set; }
+        public string Assessment_Result { get; set; }
         public Nullable<double> Check_Item_Value { get; set; }
         public Nullable<double> Pass_Value { get; set; }
         public string Quantitative_Pass { get; set; }
@@ -35,8 +37,6 @@ namespace Transfer.Models
         public string Portfolio { get; set; }
         public Nullable<System.DateTime> Origination_Date { get; set; }
         public string Portfolio_Name { get; set; }
-        public int Version { get; set; }
-        public string Assessment_Result { get; set; }
         public string Create_User { get; set; }
         public Nullable<System.DateTime> Create_Date { get; set; }
         public Nullable<System.TimeSpan> Create_Time { get; set; }

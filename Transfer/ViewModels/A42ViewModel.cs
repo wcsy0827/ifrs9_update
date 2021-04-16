@@ -10,8 +10,10 @@
         public string Ori_Amount { get; set; }
         public string Principal { get; set; }
         public string Amort_value { get; set; }
+        public string Amort_value_Tw { get; set; }
         public string Processing_Date { get; set; }
         public string Report_Date { get; set; }
         public string Security_Name { get; set; }
+        public string Amort_Amt_Tw { get; set; }
     }
 }

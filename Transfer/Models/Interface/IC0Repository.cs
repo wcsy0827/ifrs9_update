@@ -50,12 +50,14 @@ namespace Transfer.Models.Interface
 
         List<string> getA41AdvancedAssessment_Sub_Kind();
 
-        Tuple<string, List<C07AdvancedViewModel>> getC07Advanced(string groupProductCode, string productCode, string reportDate, string version, string assessmentSubKind, string watchIND);
+        Tuple<string, List<C07AdvancedViewModel>> getC07Advanced(string groupProductCode, string productCode, string reportDate, string version, string assessmentSubKind, string watchIND,bool isReport=false);
 
         MSGReturnModel DownloadC07AdvancedExcel(string type, string path, List<C07AdvancedViewModel> dbDatas);
 
         Tuple<bool, List<C07AdvancedSumViewModel>> getC07AdvancedSum(string reportDate, string version, string groupProductCode, string groupProductName, string referenceNbr,string assessmentSubKind, string watchIND,string productCode);
+        //Tuple<bool, List<SummaryViewModel>> getSum(string reportDate, string version, string groupProductCode, string groupProductName, string referenceNbr, string assessmentSubKind, string watchIND, string productCode);
 
+        //SummaryViewModel
         MSGReturnModel DownloadC07AdvancedSumExcel(string type, string path, List<C07AdvancedSumViewModel> dbDatas);
 
         /// <summary>

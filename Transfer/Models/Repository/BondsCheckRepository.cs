@@ -75,6 +75,8 @@ namespace Transfer.Models.Repository
             _resources.Add(Check_Table_Type.Bonds_C01_VN_Transfer_Check, C01HK_VNdbModelCheck);
             _resources.Add(Check_Table_Type.Bonds_C07_Transfer_Check, C07dbModelCheck);
             _resources.Add(Check_Table_Type.Bonds_C10_UpLoad_Check, C10ViewModelCheck);
+            _resources.Add(Check_Table_Type.Bonds_A44_2_UpLoad, A44_2TransferCheck); //A44上傳檔檢核
+
         }
 
         #region (一)資料上傳 
@@ -198,7 +200,6 @@ namespace Transfer.Models.Repository
 
 
                 var _bondNumber_Count = data.Select(x => x.Bond_Number).Distinct().Count();
-                var reportDate = data.First();
                 var _Report_Date = TypeTransfer.stringToDateTime(data.First().Report_Date);
                 var _year = _Report_Date.Year;
                 var _month = _Report_Date.Month;
@@ -238,6 +239,7 @@ namespace Transfer.Models.Repository
                 //}
                 //sb.AppendLine($@"2.#61 是否為換券  ISIN_Changed_Ind=’Y (By ISIN)’債券數 : {_ISIN_Changed_Infos.Select(x=>x.Bond_Number).Distinct().Count()} 筆");
                 var changInd = 0;
+                bool A42flag = false;
                 using (IFRS9DBEntities db = new IFRS9DBEntities())
                 {
                     foreach (var A44 in db.Bond_ISIN_Changed_Info.AsNoTracking())
@@ -245,11 +247,29 @@ namespace Transfer.Models.Repository
                         if (A44.Change_Date.Year == _year && A44.Change_Date.Month == _month)
                             changInd += 1;
                     }
+                    var reportdate = TypeTransfer.stringToDateTime(data.Select(x=>x.Report_Date).FirstOrDefault());
+                    if( db.IFRS9_Log.Where(x => x.Table_type == "A42" && x.Report_Date == reportdate).Any())
+                    { A42flag = true; }
                 }
                 sb.AppendLine($@"2. 本月換券資料:共{changInd}筆");
+                if (A42flag)
+                { sb.AppendLine($@"3. 本月有手動上傳A42記錄，A41轉檔及信評作業完成後，請通知投資會計進行A42作業。"); }
+                else
+                { sb.AppendLine($@"3. 本月沒有手動上傳A42記錄。"); }
 
                 sb.AppendLine(string.Empty);
                 sb.AppendLine($@"F.不進行基本要件評估債券數量:{_Assessment_Check_Count}");
+                //加入A44_2檢核訊息
+                //sb.AppendLine(string.Empty);
+                //var _Interest_Receivable_Revise_Infos = data.Where(x => x.Interest_Receivable_Revise == "Y").ToList();
+                //if (_Interest_Receivable_Revise_Infos.Count() > 0)
+                //{
+                //    sb.Append($@"G.應收未收息修正部位數量:共{_Interest_Receivable_Revise_Infos.Count}筆");
+                //}
+                //else
+                //{
+                //    sb.Append($@"G.應收未收修正部位數量:無應收未收息調整");
+                //}
                 _customerStr_End = sb.ToString();
 
             }
@@ -1121,6 +1141,14 @@ A.檢查A59上傳資料是否有異常評等資料 (A57:Rating)",
                 if(A59_1.data != null && A59_1.data.Values.Any())
                     _checkFlag = true;
             }
+            return result;
+        }
+        #endregion
+
+        #region A44_2上傳檢核
+        private List<messageTable> A44_2TransferCheck()
+        {
+            List<messageTable> result = new List<messageTable>();
             return result;
         }
         #endregion

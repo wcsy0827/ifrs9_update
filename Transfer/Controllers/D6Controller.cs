@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Web.Mvc;
 using Transfer.Infrastructure;
@@ -20,6 +19,7 @@ namespace Transfer.Controllers
         private ID0Repository D0Repository;
         private ID5Repository D5Repository;
         private ID6Repository D6Repository;
+        private ID7Repository D7Repository;
         private List<SelectOption> actions = null;
         private string productCode = Assessment_Type.B.GetDescription();
         DateTime startTime = DateTime.MinValue;
@@ -30,10 +30,10 @@ namespace Transfer.Controllers
                 Value = x.ToString()
             }).ToList();
 
-            ////new List<SelectOption>() {
-            ////    new SelectOption() { Text = "全部",Value = "All"},
-            ////    new SelectOption() { Text = "已完成評估",Value = "Y"},
-            ////    new SelectOption() { Text = "尚未完成評估",Value = "N"}};
+        ////new List<SelectOption>() {
+        ////    new SelectOption() { Text = "全部",Value = "All"},
+        ////    new SelectOption() { Text = "已完成評估",Value = "Y"},
+        ////    new SelectOption() { Text = "尚未完成評估",Value = "N"}};
 
         public D6Controller()
         {
@@ -41,6 +41,7 @@ namespace Transfer.Controllers
             this.D0Repository = new D0Repository();
             this.D5Repository = new D5Repository();
             this.D6Repository = new D6Repository();
+            this.D7Repository = new D7Repository();
             startTime = DateTime.Now;
         }
 
@@ -416,7 +417,7 @@ namespace Transfer.Controllers
             ViewBag.action = new SelectList(actions = new List<SelectOption>() {
                 new SelectOption() {Text="查詢",Value="search" },
                 new SelectOption() {Text="載入觀察名單資料",Value="transfer" }}, "Value", "Text");
-            var jqgridInfo = new D63ViewModel().TojqGridData(new int[] { 70,170 }, null, true);
+            var jqgridInfo = new D63ViewModel().TojqGridData(new int[] { 70, 170 }, null, true);
             ViewBag.jqgridColNames = jqgridInfo.colNames;
             jqgridInfo.colModel.hideColModel(new List<string>() { "Quantitative_Pass_Confirm", "Send_to_Auditor" });
             ViewBag.jqgridColModel = jqgridInfo.colModel;
@@ -439,7 +440,7 @@ namespace Transfer.Controllers
             }, "Value", "Text");
             var jqgridInfo = new D63ViewModel().TojqGridData(new int[] { 70, 170 }, null, true);
             ViewBag.jqgridColNames = jqgridInfo.colNames;
-            jqgridInfo.colModel.hideColModel(new List<string>() { "Pass_Confirm_Flag", "Result_Version_Confirm_Flag" , "Send_to_Auditor" });
+            jqgridInfo.colModel.hideColModel(new List<string>() { "Pass_Confirm_Flag", "Result_Version_Confirm_Flag", "Send_to_Auditor" });
             ViewBag.jqgridColModel = jqgridInfo.colModel;
             var _User_Account = AccountController.CurrentUserInfo.Name;
             ViewBag.Account = _User_Account;
@@ -459,7 +460,7 @@ namespace Transfer.Controllers
             ViewBag.assessmentSubKinds = new SelectList(getAssessmentSubKind_Type(AssessmentKind_Type.Qualitative), "Value", "Text");
             var jqgridInfo = new D65ViewModel().TojqGridData(new int[] { 100, 170 }, null, true);
             ViewBag.jqgridColNames = jqgridInfo.colNames;
-            jqgridInfo.colModel.hideColModel(new List<string>() { "Quantitative_Pass_Confirm",  "Assessment_Kind", "Send_to_Auditor" });
+            jqgridInfo.colModel.hideColModel(new List<string>() { "Quantitative_Pass_Confirm", "Assessment_Kind", "Send_to_Auditor" });
             ViewBag.jqgridColModel = jqgridInfo.colModel;
             ViewBag.action = new SelectList(actions = new List<SelectOption>() {
                 new SelectOption() { Text="查詢",Value="search" },
@@ -486,7 +487,7 @@ namespace Transfer.Controllers
             }, "Value", "Text");
             var jqgridInfo = new D65ViewModel().TojqGridData(new int[] { 70, 170 }, null, true);
             ViewBag.jqgridColNames = jqgridInfo.colNames;
-            jqgridInfo.colModel.hideColModel(new List<string>() { "Pass_Confirm_Flag", "Result_Version_Confirm_Flag",  "Assessment_Kind", "Send_to_Auditor" });
+            jqgridInfo.colModel.hideColModel(new List<string>() { "Pass_Confirm_Flag", "Result_Version_Confirm_Flag", "Assessment_Kind", "Send_to_Auditor" });
             ViewBag.jqgridColModel = jqgridInfo.colModel;
             var _User_Account = AccountController.CurrentUserInfo.Name;
             ViewBag.Account = _User_Account;
@@ -553,7 +554,7 @@ namespace Transfer.Controllers
                     Text = x.GetDescription(),
                     Value = x.ToString()
                 }).ToList(), "Value", "Text");
-           
+
             return View();
         }
 
@@ -950,7 +951,7 @@ namespace Transfer.Controllers
         #region DeleteD61
         [BrowserEvent("D61刪除資料")]
         [HttpPost]
-        public JsonResult DeleteD61(string checkItemCode,string Id)
+        public JsonResult DeleteD61(string checkItemCode, string Id)
         {
             MSGReturnModel result = new MSGReturnModel();
 
@@ -1029,7 +1030,7 @@ namespace Transfer.Controllers
         #region D61Audit
         [BrowserEvent("D61複核確認/退回")]
         [HttpPost]
-        public JsonResult D61Audit(string checkItemCode, string status ,string Ids)
+        public JsonResult D61Audit(string checkItemCode, string status, string Ids)
         {
             MSGReturnModel result = new MSGReturnModel();
 
@@ -1894,7 +1895,12 @@ namespace Transfer.Controllers
                     _type = Table_Type.D66;
                     projectFile = Server.MapPath("~/" + SetFile.QualitativeFile); //D66專案資料夾
                 }
-                
+                else if (type == "D75")
+                {
+                    _type = Table_Type.D75;
+                    projectFile = Server.MapPath("~/" + SetFile.RiskControlFile); //D75專案資料夾
+                }
+
                 FileRelated.createFile(projectFile); //檢查是否有資料夾,如果沒有就新增
 
                 string projectFileSub = Path.Combine(projectFile, Check_Reference);
@@ -1911,7 +1917,7 @@ namespace Transfer.Controllers
                 #endregion 檢查是否有FileUploads資料夾,如果沒有就新增 並加入 excel 檔案
 
                 if (sameFlag != "Y") //Y(有重複檔名) or N(需加入資料表)  
-                    result = D6Repository.SaveQualitativeFile(Check_Reference, fileName,_type, path);
+                    result = D6Repository.SaveQualitativeFile(Check_Reference, fileName, _type, path);
 
                 if (result.RETURN_FLAG)
                 {
@@ -1919,6 +1925,8 @@ namespace Transfer.Controllers
                         result.Datas = Json(D6Repository.getQuantifyFile(Check_Reference));
                     if (type == "D66")
                         result.Datas = Json(D6Repository.getQualitativeFile(Check_Reference));
+                    if (type == "D75")
+                        result.Datas = Json(D7Repository.GetD75File(Check_Reference));
                 }
                 #endregion 上傳檔案
             }
@@ -1992,31 +2000,48 @@ namespace Transfer.Controllers
             }
         }
 
+        [HttpGet]
+        public ActionResult DLRiskControlFile(string Check_Reference, string fileName)
+        {
+            try
+            {
+                string path = Path.Combine(Path.Combine(Server.MapPath("~/" + SetFile.RiskControlFile), Check_Reference), fileName);
+                return System.IO.File.Exists(path) ? File(path, System.Net.Mime.MediaTypeNames.Application.Octet, fileName) : (ActionResult)Content("檔案已遺失!");
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.exceptionMessage());
+            }
+        }
+
         #region DelFile
         /// <summary>
-        /// 刪除D64orD66附件檔案
+        /// 刪除D64orD66orD75附件檔案
         /// </summary>
-        /// <param name="type">D64 or D66</param>
+        /// <param name="type">D64 or D66 or D75</param>
         /// <param name="Check_Reference">Check_Reference</param>
         /// <param name="fileName">File_Name</param>
         /// <returns></returns>
-        [BrowserEvent("刪除D64orD66附件檔案")]
+        [BrowserEvent("刪除D64orD66orD75附件檔案")]
         [HttpPost]
         public JsonResult DelFile(
             string type,
             string Check_Reference,
-            string fileName
+            string fileName,
+            string user=null
             )
         {
             MSGReturnModel result = new MSGReturnModel();
             result.RETURN_FLAG = false;
-            result = D6Repository.DelQuantifyAndQualitativeFile(type, Check_Reference, fileName);
+            result = D6Repository.DelQuantifyAndQualitativeFile(type, Check_Reference, fileName,user);
             if (result.RETURN_FLAG)
             {
                 if (type == "D64")
                     result.Datas = Json(D6Repository.getQuantifyFile(Check_Reference));
                 if (type == "D66")
                     result.Datas = Json(D6Repository.getQualitativeFile(Check_Reference));
+                if (type == "D75")
+                    result.Datas = Json(D7Repository.GetD75File(Check_Reference));
             }
             return Json(result);
         }
@@ -2334,7 +2359,8 @@ namespace Transfer.Controllers
             if (datas.Any())
             {
                 Cache.Invalidate(CacheList.D63SearchCache);//清除
-                Cache.Set(CacheList.D63SearchCache, new D6SearchCache() {
+                Cache.Set(CacheList.D63SearchCache, new D6SearchCache()
+                {
                     dt = dt,
                     bondNumber = bondNumber,
                     EST = _index,
@@ -2415,13 +2441,13 @@ namespace Transfer.Controllers
                 var _datas = new List<D63ViewModel>();
                 if (D63SearchCache != null)
                 {
-                     _datas = D6Repository.getD63(
-                        D63SearchCache.dt,
-                        D63SearchCache.bondNumber,
-                        D63SearchCache.EST,
-                        D63SearchCache.type,
-                        D63SearchCache.Send_to_AuditorFlag,
-                        D63SearchCache.referenceNbr);
+                    _datas = D6Repository.getD63(
+                       D63SearchCache.dt,
+                       D63SearchCache.bondNumber,
+                       D63SearchCache.EST,
+                       D63SearchCache.type,
+                       D63SearchCache.Send_to_AuditorFlag,
+                       D63SearchCache.referenceNbr);
                     if (datas.Any())
                     {
                         Cache.Invalidate(CacheList.D63DbfileData); //清除
@@ -2539,7 +2565,7 @@ namespace Transfer.Controllers
                 if (datas.Any())
                 {
                     if (table == Table_Type.D63)
-                    {                   
+                    {
                         result.RETURN_FLAG = true;
                         Cache.Invalidate(CacheList.D63DbfileHistoryData); //清除
                         Cache.Set(CacheList.D63DbfileHistoryData, datas); //把資料存到 Cache
@@ -2690,7 +2716,7 @@ namespace Transfer.Controllers
             )
         {
             MSGReturnModel result = new MSGReturnModel();
-            result.RETURN_FLAG = false;         
+            result.RETURN_FLAG = false;
             var datas = D6Repository.getD66(referenceNbr, version);
             if (datas.Any())
             {
@@ -2704,10 +2730,10 @@ namespace Transfer.Controllers
                 {
                     _datas =
                         D6Repository.getD65(
-                            D65SearchCache.dt, 
-                            D65SearchCache.bondNumber, 
-                            D65SearchCache.referenceNbr, 
-                            D65SearchCache.EST, 
+                            D65SearchCache.dt,
+                            D65SearchCache.bondNumber,
+                            D65SearchCache.referenceNbr,
+                            D65SearchCache.EST,
                             D65SearchCache.type,
                             D65SearchCache.Send_to_AuditorFlag);
                     if (datas.Any())
@@ -2717,7 +2743,7 @@ namespace Transfer.Controllers
                     }
                 }
             }
-            if(!result.RETURN_FLAG)
+            if (!result.RETURN_FLAG)
                 result.DESCRIPTION = Message_Type.not_Find_Data.GetDescription();
             return Json(result);
         }
@@ -2771,7 +2797,7 @@ namespace Transfer.Controllers
             string assessmentSubKind,
             string bondNumber,
             string index,
-            string referenceNbr  
+            string referenceNbr
             )
         {
             MSGReturnModel result = new MSGReturnModel();
@@ -2933,7 +2959,7 @@ namespace Transfer.Controllers
             var users = getAssessment(productCode, tableId, SetAssessmentType.Auditor)
                 .Select(x => new SelectOption()
                 {
-                    Text = $"{x.User_Account}({x.User_Name})" ,
+                    Text = $"{x.User_Account}({x.User_Name})",
                     Value = x.User_Account
                 }).ToList();
             if (users.Any())
@@ -2985,7 +3011,7 @@ namespace Transfer.Controllers
         /// <returns></returns>
         [BrowserEvent("查詢ReEL")]
         [HttpPost]
-        public JsonResult GetReEL(string reportDate,string Group_Product_Code)
+        public JsonResult GetReEL(string reportDate, string Group_Product_Code)
         {
             MSGReturnModel result = new MSGReturnModel();
             var data = D6Repository.getReEL(reportDate, Group_Product_Code);
@@ -3040,14 +3066,14 @@ namespace Transfer.Controllers
             assessmentSubKind = D6Repository.getAssessmentSubKind(type);
             return assessmentSubKind;
         }
-       
+
         public class D6SearchCache
         {
             public DateTime dt { get; set; }
             public string bondNumber { get; set; }
             public Evaluation_Status_Type EST { get; set; }
             public string type { get; set; }
-            public bool Send_to_AuditorFlag { get; set;}
+            public bool Send_to_AuditorFlag { get; set; }
             public string referenceNbr { get; set; }
         }
 
@@ -3385,18 +3411,18 @@ namespace Transfer.Controllers
 
         [BrowserEvent("查詢減損作業狀態")]
         [HttpPost]
-        public JsonResult GetD6Check(string reportdate, string Impairment)
+        public JsonResult GetD6Check(string reportdate, string Impairment,int version,string content)
         {
             MSGReturnModel result = new MSGReturnModel();
             result.RETURN_FLAG = false;
             result.DESCRIPTION = Message_Type.not_Find_Any.GetDescription();
-            List<D6CheckViewModel> datas = D6Repository.getD6Check(reportdate);
+            List<D6CheckViewModel> datas = D6Repository.getD6Check(reportdate,version,content);
             if (datas.Any())
             {
                 if (Impairment != "All")
                 {
                     var Job_Details = EnumUtil.GetValues<Impairment_Operations_Type>().FirstOrDefault(x => x.ToString() == Impairment).GetDescription();
-                    datas = datas.Where(x => x.Job_Details == Job_Details).ToList();                
+                    datas = datas.Where(x => x.Job_Details == Job_Details).ToList();
                 }
                 if (datas.Any())
                 {
@@ -3406,6 +3432,31 @@ namespace Transfer.Controllers
             }
             return Json(result);
         }
+
+        /// <summary>
+        /// Version_Info(版本/版本內容)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public JsonResult GetD6Version(string data)
+        {
+            MSGReturnModel result = new MSGReturnModel();
+            List<SelectOption> version = new List<SelectOption>();
+            DateTime reportDate = DateTime.Parse(data);
+
+            result.RETURN_FLAG = false;
+            result.DESCRIPTION = "版本/版本內容 : " + Message_Type.not_Find_Data.GetDescription();
+            version = D6Repository.GetD6Version(reportDate);
+
+            if (version.Any())
+            {
+                result.RETURN_FLAG = true;
+                result.Datas = Json(version);
+            }
+
+            return Json(result);
+        }
+
         #endregion
 
         #region D6Mail 相關
@@ -3427,7 +3478,7 @@ namespace Transfer.Controllers
         {
             int version = 0;
             version = D6Repository.GetA41Version(date);
-            return Json(version); 
+            return Json(version);
         }
 
 
@@ -3435,14 +3486,14 @@ namespace Transfer.Controllers
         public JsonResult GetA41AssessmentCheck(string date, int version)
         {
             int number = 0;
-            number= D6Repository.GetA41AssessmentCheck(date, version).Count();
+            number = D6Repository.GetA41AssessmentCheck(date, version).Count();
             return Json(number);
         }
         public JsonResult AutoAddExtraCase(string reportDate, int version)
         {
-            var ExtraCase = D6Repository.GetA41AssessmentCheck(reportDate, version);       
-            MSGReturnModel result = new MSGReturnModel();            
-            result = D6Repository.AutoInsertD65ExtraCase(ExtraCase,reportDate);
+            var ExtraCase = D6Repository.GetA41AssessmentCheck(reportDate, version);
+            MSGReturnModel result = new MSGReturnModel();
+            result = D6Repository.AutoInsertD65ExtraCase(ExtraCase, reportDate);
             return Json(result);
         }
         #endregion
@@ -3454,7 +3505,7 @@ namespace Transfer.Controllers
             return Json(result);
         }
 
-        public JsonResult DelExtraCase(string referenceNbr,int version)
+        public JsonResult DelExtraCase(string referenceNbr, int version)
         {
             MSGReturnModel result = new MSGReturnModel();
 

@@ -46,5 +46,8 @@ namespace Transfer.Models
         public Nullable<System.DateTime> LastUpdate_Date { get; set; }
         public Nullable<System.TimeSpan> LastUpdate_Time { get; set; }
         public Nullable<double> PD_Int { get; set; }
+        public Nullable<double> Ori_Ex_rate_to_USD { get; set; }
+        public Nullable<double> Ex_rate_to_USD { get; set; }
+        public string Trading_Number { get; set; }
     }
 }

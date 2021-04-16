@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -49,6 +48,10 @@ namespace Transfer.Utility
                 builder.MergeAttribute("name", name);
                 builder.MergeAttribute("class", "styled");
                 builder.InnerHtml = string.Format(" <label>{0}</label> ", info.DisplayText);
+
+                //Joe:註冊 CheckBoxID
+                builder.MergeAttribute("id", info.Value);
+
                 sb.Append(
                     string.Format("<td><div class='checkbox checkbox-info'>{0}</div></td>",
                     builder.ToString(TagRenderMode.Normal)));
@@ -453,7 +456,7 @@ namespace Transfer.Utility
                     jqgridParams.colNames.Add(str.formateTitle(titles));
                     widthIndex += 1;
                     alignIndex += 1;
-                }            
+                }
             }
             return jqgridParams;
         }
@@ -461,7 +464,7 @@ namespace Transfer.Utility
         public static void hideColModel(this List<jqGridColModel> colModel, List<string> hideTitles = null, bool userFlag = true)
         {
             var _titles = new List<string>();
-            if(userFlag)
+            if (userFlag)
                 _titles.AddRange(new List<string>()
             {
                 "Create_User",
@@ -487,7 +490,7 @@ namespace Transfer.Utility
         {
             string result = string.Empty;
             if (errors.Any())
-                result = string.Join(",", errors.First().ValidationErrors.Select(x=>x.ErrorMessage));
+                result = string.Join(",", errors.First().ValidationErrors.Select(x => x.ErrorMessage));
             return result;
         }
 
@@ -498,7 +501,7 @@ namespace Transfer.Utility
         /// <param name="strStartLen">從第幾碼開始遮蔽</param>
         /// <param name="len">遮蔽幾位數</param>
         /// <returns></returns>
-        public static string Shading(this string value,int strStartLen = 5 , int len = 3)
+        public static string Shading(this string value, int strStartLen = 5, int len = 3)
         {
             string result = value;
             if (!result.IsNullOrWhiteSpace() && strStartLen > 0 && len > 0)
@@ -536,7 +539,7 @@ namespace Transfer.Utility
                 {
                     if (value.IndexOf(".") > -1)
                     {
-                        Int64 strNumberWithoutDecimals = Convert.ToInt64( value.Substring(0, value.IndexOf(".")).Replace(",",""));
+                        Int64 strNumberWithoutDecimals = Convert.ToInt64(value.Substring(0, value.IndexOf(".")).Replace(",", ""));
                         string strNumberDecimals = value.Substring(value.IndexOf("."));
                         return strNumberWithoutDecimals.ToString("#,##0") + strNumberDecimals;
                     }
@@ -570,7 +573,7 @@ namespace Transfer.Utility
         public static string stringToStrSql(this string par)
         {
             if (!par.IsNullOrWhiteSpace())
-                return $" '{par.Replace("'","''")}' ";
+                return $" '{par.Replace("'", "''")}' ";
             return " null ";
         }
 
@@ -617,8 +620,8 @@ namespace Transfer.Utility
 
         public static string dateTimeToStr(this DateTime? par)
         {
-            if(par.HasValue)
-            return par.Value.ToString("yyyy/MM/dd HH:mm:ss");
+            if (par.HasValue)
+                return par.Value.ToString("yyyy/MM/dd HH:mm:ss");
             return string.Empty;
         }
 
@@ -629,8 +632,8 @@ namespace Transfer.Utility
 
         public static string timeSpanNToStr(this TimeSpan? ts)
         {
-            if(ts.HasValue)
-            return ts.Value.ToString(@"hh\:mm\:ss");
+            if (ts.HasValue)
+                return ts.Value.ToString(@"hh\:mm\:ss");
             return string.Empty;
         }
 
@@ -639,7 +642,7 @@ namespace Transfer.Utility
             if (!par.IsNullOrWhiteSpace())
             {
                 var dt = TypeTransfer.stringToDateTimeN(par, i);
-                if(dt!=null)
+                if (dt != null)
                     return $" '{dt.Value.ToString("yyyy/MM/dd")}' ";
             }
             return " null ";
@@ -650,7 +653,7 @@ namespace Transfer.Utility
             if (!par.IsNullOrWhiteSpace())
             {
                 var dl = TypeTransfer.stringToDoubleN(par);
-                if(dl != null)
+                if (dl != null)
                     return $" {dl.Value.ToString()} ";
             }
             return " null ";
@@ -662,7 +665,8 @@ namespace Transfer.Utility
                 return string.Empty.stringToStrSql();
             List<string> pars = new List<string>();
             string sql = string.Empty;
-            datas.ForEach(x => {
+            datas.ForEach(x =>
+            {
                 if (!x.IsNullOrWhiteSpace())
                 {
                     pars.Add(string.Format("'{0}'", x.Replace("'", "''")));
@@ -697,7 +701,7 @@ namespace Transfer.Utility
                 return tableName;
             Table_Type t = EnumUtil.GetValues<Table_Type>().First(x => x.ToString() == tableName);
             result = tableNameGetDescription(t);
-            return result ;
+            return result;
         }
 
         public static string tableNameGetDescription(this Table_Type type)
@@ -764,8 +768,8 @@ namespace Transfer.Utility
         public static IQueryable<T> Where<T>
             (this IQueryable<T> source, Expression<Func<T, bool>> predicate, bool flag)
         {
-            if(flag)
-                return source.Where(predicate) ;
+            if (flag)
+                return source.Where(predicate);
             return source;
         }
 
@@ -777,7 +781,7 @@ namespace Transfer.Utility
             return source;
         }
 
-        public static List<dynamic> DynamicSqlQuery(this Database database, string sql, System.Data.Common.DbTransaction transaction = null , params object[] parameters)
+        public static List<dynamic> DynamicSqlQuery(this Database database, string sql, System.Data.Common.DbTransaction transaction = null, params object[] parameters)
         {
             TypeBuilder builder = createTypeBuilder(
                     "MyDynamicAssembly", "MyDynamicModule", "MyDynamicType");
@@ -787,9 +791,9 @@ namespace Transfer.Utility
                 try
                 {
                     if (database.Connection.State != ConnectionState.Open)
-                    database.Connection.Open();
-                    if(transaction != null)
-                    command.Transaction = transaction;
+                        database.Connection.Open();
+                    if (transaction != null)
+                        command.Transaction = transaction;
                     command.CommandText = sql;
                     command.CommandTimeout = command.Connection.ConnectionTimeout;
 
@@ -930,7 +934,7 @@ namespace Transfer.Utility
                 case Nlog.Fatal:
                     logger.Fatal(message);
                     break;
-            }            
+            }
         }
     }
 }

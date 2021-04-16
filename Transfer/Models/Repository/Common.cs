@@ -12,7 +12,7 @@ namespace Transfer.Models.Repository
     public class Common : ICommon
     {
         public static IFRS9DBEntities AddToContext<T>(IFRS9DBEntities context,
-          T entity, int count, int commitCount, bool recreateContext) where T :class
+          T entity, int count, int commitCount, bool recreateContext) where T : class
         {
             context.Set<T>().Add(entity);
 
@@ -167,7 +167,7 @@ namespace Transfer.Models.Repository
                 if (//當 fileName,checkName 都為 A41 不用檢查(為最先動作)
                     ((fileName == Table_Type.A41.ToString() &&
                       checkName == Table_Type.A41.ToString()) ||
-                                          //檢查上一動作有無成功(A53 只有一版),前置動作檢查檔案為A53版本為A53最大版
+                      //檢查上一動作有無成功(A53 只有一版),前置動作檢查檔案為A53版本為A53最大版
                       (checkName == "A53" ?
                         checkTable.Any(x => x.ReportDate == reportDate &&
                                           x.File_Name == checkName &&
@@ -425,7 +425,8 @@ namespace Transfer.Models.Repository
             if (!dbModel.Any())
                 return datas;
             var dbpros = dbModel.First().GetType().GetProperties();
-            dbModel.ToList().ForEach(db => {
+            dbModel.ToList().ForEach(db =>
+            {
                 obj = FactoryRegistry.GetInstance(type);
                 foreach (var item in viewpros)
                 {
@@ -611,6 +612,46 @@ namespace Transfer.Models.Repository
             if (!double.TryParse(val, out d))
                 return null;
             return DateTime.FromOADate(d).ToString("yyyy/MM/dd");
+        }
+
+        /// <summary>
+        /// get User Name
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public string GetUserName(string data)
+        {
+            List<string> result = new List<string>();
+
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                result = db.IFRS9_User
+                    .AsNoTracking()
+                    .Where(x => x.User_Account == data)
+                    .Select(x => x.User_Name)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+
+            return string.Join(",", result);
+        }
+
+        /// <summary>
+        /// get Database Field Name
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public List<string> GetDatabaseFieldName(string data)
+        {
+            List<string> result = new List<string>();
+
+            using (IFRS9DBEntities db = new IFRS9DBEntities())
+            {
+                result = db.Database.SqlQuery<string>("SELECT COLUMN_NAME FROM IFRS9.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME ='" + data + "'").ToList();
+            }
+
+            return result;
         }
     }
 }

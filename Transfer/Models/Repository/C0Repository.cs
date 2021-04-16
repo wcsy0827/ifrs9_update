@@ -835,33 +835,35 @@ namespace Transfer.Models.Repository
         #endregion
 
         #region getC07Advanced
-        public Tuple<string, List<C07AdvancedViewModel>> getC07Advanced(string groupProductCode, string productCode, string reportDate, string version, string assessmentSubKind, string watchIND)
+        public Tuple<string, List<C07AdvancedViewModel>> getC07Advanced(string groupProductCode, string productCode, string reportDate, string version, string assessmentSubKind, string watchIND,bool isReport=false)
         {
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
                 string _reportDate1 = string.Empty;
-                if (db.EL_Data_Out.Any())
+                string reportDate1 = string.Empty;
+                string reportDate2 = string.Empty;
+
+                if (reportDate.IsNullOrWhiteSpace() == false)
                 {
-                    List<EL_Data_Out> C07Data = db.EL_Data_Out.AsNoTracking().ToList();
+                    reportDate1 = DateTime.Parse(reportDate).ToString("yyyy-MM-dd");
+                    _reportDate1 = reportDate1;
+                    reportDate2 = DateTime.Parse(reportDate).ToString("yyyy/MM/dd");
+                }
+                //200326 John.風控覆核專區修改C07Advanced查詢效能
+                if (db.EL_Data_Out.Where(x=>x.Report_Date == reportDate1 || x.Report_Date == reportDate2).Any())
+                {
+                    var C07DataTemp = db.EL_Data_Out.AsNoTracking().Where(x => x.Report_Date == reportDate1 || x.Report_Date == reportDate2);
 
                     if (productCode.IsNullOrWhiteSpace() == false)
                     {
-                        C07Data = C07Data.Where(x => productCode.Contains(x.Product_Code)).ToList();
-                    }
-
-                    if (reportDate.IsNullOrWhiteSpace() == false)
-                    {
-                        string reportDate1 = DateTime.Parse(reportDate).ToString("yyyy-MM-dd");
-                        _reportDate1 = reportDate1;
-                        string reportDate2 = DateTime.Parse(reportDate).ToString("yyyy/MM/dd");
-                        C07Data = C07Data.Where(x => x.Report_Date == reportDate1 || x.Report_Date == reportDate2).ToList();
+                        C07DataTemp.Where(x => productCode.Contains(x.Product_Code));
                     }
 
                     if (version.IsNullOrWhiteSpace() == false)
                     {
-                        C07Data = C07Data.Where(x => x.Version.ToString() == version).ToList();
+                        C07DataTemp.Where(x => x.Version.ToString() == version).ToList();
                     }
-
+                    List<EL_Data_Out> C07Data = C07DataTemp.ToList();
                     DateTime dtReportDate = DateTime.Parse(reportDate);
 
                     List<Bond_Account_Info> A41Data = db.Bond_Account_Info.AsNoTracking()
@@ -879,11 +881,6 @@ namespace Transfer.Models.Repository
                                                                 && x.Version.ToString() == version)
                                                             .ToList();
 
-                    //if (watchIND.IsNullOrWhiteSpace() == false)
-                    //{
-                    //    D62Data = D62Data.Where(x => x.Watch_IND == watchIND).ToList();
-                    //}
-
                     List<Group_Product_Code_Mapping> D05Data = db.Group_Product_Code_Mapping.AsNoTracking()
                                                                  .Where(x => x.Group_Product_Code == groupProductCode
                                                                           && productCode.Contains(x.Product_Code))
@@ -892,13 +889,6 @@ namespace Transfer.Models.Repository
                                                 .Where(x => x.Group_Product_Code == groupProductCode
                                                          && x.Apply_Off_Date.ToString() == "")
                                                 .ToList();
-                    //D01Data = (
-                    //              from a in D01Data
-                    //              join b in D05Data
-                    //              on new { a.Group_Product_Code }
-                    //              equals new { b.Group_Product_Code }
-                    //              select a
-                    //          ).ToList();
                     #region 190510 PG&E需求，排除A41註記為N的部位
                     DateTime reportDate3 = DateTime.Parse(reportDate);
                     List<Bond_Account_Info> AssessmentCheckList = db.Bond_Account_Info.AsNoTracking()
@@ -912,7 +902,6 @@ namespace Transfer.Models.Repository
                         on a.Reference_Nbr equals b.Reference_Nbr
                         select a
                         ).ToList();
-
 
                     #endregion                    
 
@@ -1031,10 +1020,9 @@ namespace Transfer.Models.Repository
                                 (TypeTransfer.doubleNToDecimal(oneA41?.Amort_Amt_Tw) + TypeTransfer.doubleNToDecimal(oneA41.Interest_Receivable_Tw)).Normalize().ToString();
                         }
 
-
-
                         var C09 = C09s.FirstOrDefault(x => x.Reference_Nbr == Reference_Nbr &&
                         x.Product_Code == Product_Code);
+
 
                         C07AdvancedViewModel c07Advanced = new C07AdvancedViewModel();
                         c07Advanced.Group_Product_Code = Group_Product_Code;
@@ -1047,14 +1035,15 @@ namespace Transfer.Models.Repository
                         c07Advanced.Bond_Number = Bond_Number;
                         c07Advanced.Lots = Lots;
                         c07Advanced.Portfolio = Portfolio;
-                        c07Advanced.PD = PD;
+                        c07Advanced.PD = isReport? (Math.Floor(TypeTransfer.stringToDouble(PD)*1000000)/ 1000000).ToString():PD;
                         c07Advanced.LGD = TypeTransfer.doubleNToString(C09?.Current_LGD);
-                        c07Advanced.Exposure_EL = Exposure_EL;
-                        c07Advanced.Exposure_Ex = Exposure_Ex;
-                        c07Advanced.Y1_EL = C07Data[i].Y1_EL.ToString();
-                        c07Advanced.Lifetime_EL = C07Data[i].Lifetime_EL.ToString();
-                        c07Advanced.Y1_EL_Ex = (C07Data[i].Y1_EL * TypeTransfer.doubleNToDouble(oneA41.Ex_rate)).ToString();
-                        c07Advanced.Lifetime_EL_Ex = (C07Data[i].Lifetime_EL * TypeTransfer.doubleNToDouble(oneA41.Ex_rate)).ToString();
+                        c07Advanced.Exposure_EL =isReport?Extension.formateThousand( Exposure_EL.ToString()): Exposure_EL;
+                        c07Advanced.Exposure_Ex = isReport?Extension.formateThousand(Exposure_Ex.ToString()): Exposure_Ex;
+                        c07Advanced.Y1_EL = isReport?Extension.formateThousand(Math.Round(C07Data[i].Y1_EL,2).ToString()): C07Data[i].Y1_EL.ToString();
+                        c07Advanced.Lifetime_EL = isReport ? Extension.formateThousand(Math.Round(C07Data[i].Lifetime_EL,2).ToString()): C07Data[i].Lifetime_EL.ToString();
+                        c07Advanced.Y1_EL_Ex = isReport ? Extension.formateThousand(Math.Round((C07Data[i].Y1_EL * TypeTransfer.doubleNToDouble(oneA41.Ex_rate)),2).ToString()):(C07Data[i].Y1_EL * TypeTransfer.doubleNToDouble(oneA41.Ex_rate)).ToString();
+                        c07Advanced.Lifetime_EL_Ex = isReport ? Extension.formateThousand(Math.Round((C07Data[i].Lifetime_EL * TypeTransfer.doubleNToDouble(oneA41.Ex_rate)),2).ToString()):(C07Data[i].Lifetime_EL * TypeTransfer.doubleNToDouble(oneA41.Ex_rate)).ToString();
+
                         c07Advanced.Impairment_Stage = C07Data[i].Impairment_Stage;
                         c07Advanced.Ex_rate = Ex_rate;
                         if (!c07Advanced.Portfolio.IsNullOrWhiteSpace() &&
@@ -1078,7 +1067,10 @@ namespace Transfer.Models.Repository
                                 c07AdvancedList.Add(c07Advanced);
                         }
                         else
+                        {
                             c07AdvancedList.Add(c07Advanced);
+                        }
+                            
                     }
 
                     return new Tuple<string, List<C07AdvancedViewModel>>("", c07AdvancedList);
@@ -1089,6 +1081,173 @@ namespace Transfer.Models.Repository
         }
 
         #endregion
+
+        //#region GetSummary
+        //public Tuple<bool,List<SummaryViewModel>> getSum(string reportDate, string version, string groupProductCode, string groupProductName, string referenceNbr, string assessmentSubKind, string watchIND, string productCode)
+        //{
+        //    List<C07AdvancedSumViewModel> c07AdvancedSumList = new List<C07AdvancedSumViewModel>();
+        //    C0Repository c0Repository = new C0Repository();
+        //    List<SummaryViewModel> SummaryList = new List<SummaryViewModel>();
+        //    using (IFRS9DBEntities db = new IFRS9DBEntities())
+        //    {
+        //        List<Bond_Account_Info> A41s = new List<Bond_Account_Info>();
+        //        //List<EL_Data_In> C01s = new List<EL_Data_In>();
+        //        List<EL_Data_Out> C07s = new List<EL_Data_Out>();
+        //        var _reportDate = DateTime.Parse(reportDate);
+        //        int _version = Int32.Parse(version);
+        //        //test
+        //        //抓C07Advanced彙總
+        //        Tuple<string, List<C07AdvancedViewModel>> queryData = c0Repository.getC07Advanced(groupProductCode, productCode, reportDate, version, "", "");
+        //        var C07Advanced_tmp = queryData.Item2;
+        //        //var _TotalExposure_EX_test = C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Exposure_Ex)).Normalize().ToString();
+        //        var _TotalExposure_EX_temp =Math.Round( C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Exposure_Ex))).ToString("N0");
+        //        //var _TotalY1_EL_EX_temp = C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Y1_EL_Ex)).Normalize().ToString();
+        //        var _TotalY1_EL_EX_temp = Math.Round( C07Advanced_tmp.Sum(x => double.Parse(x.Y1_EL))).ToString("N0");
+        //        //var _TotalLifetime_EL_EX_temp = C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Lifetime_EL_Ex)).Normalize().ToString();
+        //        var _TotalLifetime_EL_EX_temp =Math.Round( C07Advanced_tmp.Sum(x => double.Parse(x.Lifetime_EL_Ex))).ToString("N0");
+
+        //        //抓基本要件測試
+        //        int count_BBA_pass = 0;
+        //        int count_BBA_notpass = 0;
+        //        List<SummaryReportInfo> result_BBA_pass = new List<SummaryReportInfo>();
+        //        List<SummaryReportInfo> result_BBA_notpass = new List<SummaryReportInfo>();
+        //        count_BBA_pass = db.Bond_Basic_Assessment.AsNoTracking()
+        //            .Where(x => x.Report_Date == _reportDate && x.Basic_Pass == "Y").Count();
+        //        count_BBA_notpass = db.Bond_Basic_Assessment.AsNoTracking()
+        //            .Where(x => x.Report_Date == _reportDate && x.Basic_Pass == "N").Count();
+
+
+        //        result_BBA_pass = db.Bond_Basic_Assessment
+        //                .AsNoTracking()
+        //                .Join(db.Basic_Assessment_Parm
+        //                .AsNoTracking()
+        //                , BondBasicAssessment => BondBasicAssessment.Map_Rule_Id_D69
+        //                , BasicAssessmentParm => BasicAssessmentParm.Rule_ID
+        //                , (BondBasicAssessment, BasicAssessmentParm) => new { BondBasicAssessment, BasicAssessmentParm })
+        //                .Where(
+        //                x => x.BondBasicAssessment.Report_Date == _reportDate &&
+        //                x.BondBasicAssessment.Basic_Pass == "Y")
+        //                .GroupBy(x => new { x.BondBasicAssessment.Map_Rule_Id_D69, x.BasicAssessmentParm.Rule_desc })
+        //                .Select(x => new SummaryReportInfo
+        //                {
+        //                    RuleID = x.Key.Map_Rule_Id_D69.ToString(),
+        //                    RuleDesc = x.Key.Rule_desc,
+        //                    NumberOfPens = x.Count().ToString()
+        //                }).Distinct().OrderBy(x => x).ToList();
+        //        result_BBA_notpass = db.Bond_Basic_Assessment
+        //                .AsNoTracking()
+        //                .Join(db.Basic_Assessment_Parm
+        //                .AsNoTracking()
+        //                , BondBasicAssessment => BondBasicAssessment.Map_Rule_Id_D69
+        //                , BasicAssessmentParm => BasicAssessmentParm.Rule_ID
+        //                , (BondBasicAssessment, BasicAssessmentParm) => new { BondBasicAssessment, BasicAssessmentParm })
+        //                .Where(
+        //                x => x.BondBasicAssessment.Report_Date == _reportDate &&
+        //                x.BondBasicAssessment.Basic_Pass == "N")
+        //                .GroupBy(x => new { x.BondBasicAssessment.Map_Rule_Id_D69, x.BasicAssessmentParm.Rule_desc })
+        //                .Select(x => new SummaryReportInfo
+        //                {
+        //                    RuleID = x.Key.Map_Rule_Id_D69.ToString(),
+        //                    RuleDesc = x.Key.Rule_desc,
+        //                    NumberOfPens = x.Count().ToString()
+        //                }).Distinct().OrderBy(x => x).ToList();
+
+        //        //抓觀察名單
+        //        int count_Watched = 0;
+        //        List<SummaryReportInfo> result_Watched = new List<SummaryReportInfo>();
+        //        count_Watched = db.Bond_Basic_Assessment
+        //                .AsNoTracking()
+        //                .Where(
+        //                x => x.Report_Date == _reportDate &&
+        //                x.Watch_IND == "Y")
+        //                .Count();
+
+        //        result_Watched = db.Bond_Basic_Assessment
+        //                .AsNoTracking()
+        //                .Join(db.Watching_List_Parm
+        //                .AsNoTracking()
+        //                , BondBasicAssessment => BondBasicAssessment.Map_Rule_Id_D70
+        //                , WatchingListParm => WatchingListParm.Rule_ID.ToString()
+        //                , (BondBasicAssessment, WatchingListParm) => new { BondBasicAssessment, WatchingListParm })
+        //                .Where(
+        //                x => x.BondBasicAssessment.Report_Date == _reportDate &&
+        //                x.BondBasicAssessment.Watch_IND == "Y")
+        //                .GroupBy(x => new { x.BondBasicAssessment.Map_Rule_Id_D70, x.WatchingListParm.Rule_desc })
+        //                .Select(x => new SummaryReportInfo
+        //                {
+        //                    RuleID = x.Key.Map_Rule_Id_D70.ToString(),
+        //                    RuleDesc = x.Key.Rule_desc,
+        //                    NumberOfPens = x.Count().ToString()
+        //                })
+        //                .Distinct()
+        //                .OrderBy(x => x)
+        //                .ToList();
+
+        //        //抓預警名單
+        //        int count_Warning = 0;
+        //        List<SummaryReportInfo> result_Warning = new List<SummaryReportInfo>();
+
+        //        count_Warning = db.Bond_Basic_Assessment
+        //            .AsNoTracking()
+        //            .Where(
+        //            x => x.Report_Date == _reportDate &&
+        //            x.Warning_IND == "Y")
+        //            .Count();
+
+        //        result_Warning = db.Bond_Basic_Assessment
+        //            .AsNoTracking()
+        //            .Join(db.Warning_List_Parm
+        //            .AsNoTracking()
+        //            , BondBasicAssessment => BondBasicAssessment.Map_Rule_Id_D71
+        //            , WarningListParm => WarningListParm.Rule_ID.ToString()
+        //            , (BondBasicAssessment, WarningListParm) => new { BondBasicAssessment, WarningListParm })
+        //            .Where(
+        //            x => x.BondBasicAssessment.Report_Date == _reportDate &&
+        //            x.BondBasicAssessment.Warning_IND == "Y")
+        //            .GroupBy(x => new { x.BondBasicAssessment.Map_Rule_Id_D71, x.WarningListParm.Rule_desc })
+        //            .Select(x => new SummaryReportInfo
+        //            {
+        //                RuleID = x.Key.Map_Rule_Id_D71.ToString(),
+        //                RuleDesc = x.Key.Rule_desc,
+        //                NumberOfPens = x.Count().ToString()
+        //            })
+        //            .Distinct()
+        //            .OrderBy(x => x)
+        //            .ToList();
+
+        //        SummaryList.Add(new SummaryViewModel()
+        //        {
+        //            Report_Date = reportDate,
+        //            Version = version,
+        //            Group_Product_Code = groupProductCode,
+        //            Group_Product_Name = groupProductName,
+        //            Assessment_Sub_Kind = "總計",
+        //            Exposure_EX = _TotalExposure_EX_temp,
+        //            Y1_EL_EX = _TotalY1_EL_EX_temp,
+        //            Lifetime_EL_EX = _TotalLifetime_EL_EX_temp,
+        //            RuleID_BTY = result_BBA_pass.FirstOrDefault().RuleID,
+        //            RuleDesc_BTY = result_BBA_pass.FirstOrDefault().RuleDesc,
+        //            NumberOfPens_BTY = result_BBA_pass.FirstOrDefault().NumberOfPens,
+        //            RuleID_BTN = result_BBA_notpass.FirstOrDefault().RuleID,
+        //            RuleDesc_BTN = result_BBA_notpass.FirstOrDefault().RuleDesc,
+        //            NumberOfPens_BTN = result_BBA_notpass.FirstOrDefault().NumberOfPens,
+        //            RuleID_WAT = result_Watched.FirstOrDefault().RuleID,
+        //            RuleDesc_WAT = result_Watched.FirstOrDefault().RuleDesc,
+        //            NumberOfPens_WAT = result_Watched.FirstOrDefault().NumberOfPens,
+        //            RuleID_WAR = result_Warning.FirstOrDefault().RuleID,
+        //            RuleDesc_WAR = result_Warning.FirstOrDefault().RuleDesc,
+        //            NumberOfPens_WAR = result_Warning.FirstOrDefault().NumberOfPens
+
+        //        });
+
+        //    }
+
+        //    return new Tuple<bool, List<SummaryViewModel>>(SummaryList.Any(), SummaryList);
+        //}
+        //#endregion
+
+
+
 
         #region DownloadC07AdvancedExcel
         public MSGReturnModel DownloadC07AdvancedExcel(string type, string path, List<C07AdvancedViewModel> dbDatas)
@@ -1123,7 +1282,8 @@ namespace Transfer.Models.Repository
         public Tuple<bool, List<C07AdvancedSumViewModel>> getC07AdvancedSum(string reportDate, string version, string groupProductCode, string groupProductName, string referenceNbr, string assessmentSubKind, string watchIND, string productCode)
         {
             List<C07AdvancedSumViewModel> c07AdvancedSumList = new List<C07AdvancedSumViewModel>();
-
+            C0Repository c0Repository = new C0Repository();
+            List<SummaryViewModel> SummaryList = new List<SummaryViewModel>();
             using (IFRS9DBEntities db = new IFRS9DBEntities())
             {
                 List<Bond_Account_Info> A41s = new List<Bond_Account_Info>();
@@ -1203,6 +1363,13 @@ namespace Transfer.Models.Repository
                 var _TotalY1_EL_EX = c07AdvancedSumList.Sum(x => TypeTransfer.stringToDecimal(x.Y1_EL_EX)).Normalize().ToString();
                 var _TotalLifetime_EL_EX = c07AdvancedSumList.Sum(x => TypeTransfer.stringToDecimal(x.Lifetime_EL_EX)).Normalize().ToString();
 
+
+                Tuple<string, List<C07AdvancedViewModel>> queryData = c0Repository.getC07Advanced(groupProductCode, productCode, reportDate, version, "", "");
+                var C07Advanced_tmp = queryData.Item2;
+                var _TotalExposure_EX_temp =Math.Round( C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Exposure_Ex))).Normalize().ToString().formateThousand();
+                var _TotalY1_EL_EX_temp = Math.Round( C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Y1_EL_Ex))).Normalize().ToString().formateThousand();
+                var _TotalLifetime_EL_EX_temp = Math.Round( C07Advanced_tmp.Sum(x => TypeTransfer.stringToDecimal(x.Lifetime_EL_Ex))).Normalize().ToString().formateThousand();
+
                 c07AdvancedSumList.Add(new C07AdvancedSumViewModel()
                 {
                     Report_Date = reportDate,
@@ -1210,10 +1377,13 @@ namespace Transfer.Models.Repository
                     Group_Product_Code = groupProductCode,
                     Group_Product_Name = groupProductName,
                     Assessment_Sub_Kind = "總計",
-                    Exposure_EX = _TotalExposure_EX,
-                    Y1_EL_EX = _TotalY1_EL_EX,
-                    Lifetime_EL_EX = _TotalLifetime_EL_EX
+                    Exposure_EX = _TotalExposure_EX_temp,
+                    Y1_EL_EX = _TotalY1_EL_EX_temp,
+                    Lifetime_EL_EX =_TotalLifetime_EL_EX_temp
                 });
+
+
+
             }
 
             return new Tuple<bool, List<C07AdvancedSumViewModel>>(c07AdvancedSumList.Any(), c07AdvancedSumList);
